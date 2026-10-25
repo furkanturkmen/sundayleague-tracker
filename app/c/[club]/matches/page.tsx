@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { GetStarted, PageHeader, PlayerLink, ResultBadge, TeamLogo } from "@/components/ui";
+import { Crest, GetStarted, PageHeader, PlayerLink, ResultBadge, TeamLogo } from "@/components/ui";
 import { loadClub } from "@/lib/club";
-import { formatDate, seasonLabel, seasonOf, summarise } from "@/lib/stats";
+import { formatDate, seasonLabel, seasonOf, summarise, type PlayedMatch, type Stats } from "@/lib/stats";
 
 export const metadata: Metadata = { title: "Matches" };
 
 export default async function MatchesPage({ params }: { params: Promise<{ club: string }> }) {
-  const { st, admin } = await loadClub((await params).club);
+  const { data, st, admin } = await loadClub((await params).club);
+  const last = st.played[st.played.length - 1];
 
   return (
     <>
@@ -16,6 +17,8 @@ export default async function MatchesPage({ params }: { params: Promise<{ club: 
         kicker="Fixtures & results"
         actions={admin && <Link href={`${st.base}/matches/new`} className="btn">+ Add match</Link>}
       />
+
+      {last && <LastMatch st={st} m={last} club={data.club} />}
 
       {st.upcoming.length > 0 && (
         <div className="card" style={{ marginBottom: 24 }}>
@@ -107,5 +110,81 @@ export default async function MatchesPage({ params }: { params: Promise<{ club: 
       })}
       {st.played.length > 0 && <p className="small muted">Scores are shown with ours first.</p>}
     </>
+  );
+}
+
+/** The most recent result, in full, above the fixture list. */
+function LastMatch({ st, m, club }: { st: Stats; m: PlayedMatch; club: { name: string; shortName: string; logo: string | null } }) {
+  const us = <Crest short={club.shortName} logo={club.logo} size={44} />;
+  const them = <TeamLogo code={m.opponentCode} name={m.opponent} size={52} />;
+  const home = m.venue === "H" ? { crest: us, name: club.name } : { crest: them, name: m.opponent };
+  const away = m.venue === "H" ? { crest: them, name: m.opponent } : { crest: us, name: club.name };
+  const [hs, as] = m.venue === "H" ? [m.gf, m.ga] : [m.ga, m.gf];
+  const unassigned = m.gf - m.goals.length;
+
+  return (
+    <section className="card last-match">
+      <h2>
+        <span className="h2-title">Last match</span>
+        <Link href={`${st.base}/matches/${m.id}`} className="card-link">
+          Match details →
+        </Link>
+      </h2>
+      <div className="scoreboard">
+        <div className="team">
+          {home.crest}
+          <span>{home.name}</span>
+        </div>
+        <div className="big">
+          {hs}–{as}
+        </div>
+        <div className="team">
+          {away.crest}
+          <span>{away.name}</span>
+        </div>
+      </div>
+      <div className="meta-row">
+        <ResultBadge result={m.result} />
+        <span>{formatDate(m.date, { weekday: "long", day: "numeric", month: "long" })}</span>
+        <span>{m.competition}</span>
+      </div>
+      <ul className="last-match-events">
+        {m.goals.map((g, i) => (
+          <li key={i}>
+            <span className="muted">Goal</span>
+            <span>
+              <strong>
+                <PlayerLink st={st} id={g.scorer} />
+              </strong>
+              {g.minute !== undefined && <span className="muted"> {g.minute}′</span>}
+              {g.penalty && <span className="muted"> (pen)</span>}
+              {g.assist && <span className="muted small"> · assist {st.playerName(g.assist)}</span>}
+            </span>
+          </li>
+        ))}
+        {unassigned > 0 && (
+          <li>
+            <span className="muted">Goal</span>
+            <span className="muted">
+              {unassigned} {unassigned === 1 ? "goal" : "goals"} without a scorer yet
+            </span>
+          </li>
+        )}
+        {m.motm && (
+          <li>
+            <span className="muted">MOTM</span>
+            <strong>
+              <PlayerLink st={st} id={m.motm} />
+            </strong>
+          </li>
+        )}
+        {m.cards.map((c, i) => (
+          <li key={`c${i}`}>
+            <span className="muted">{c.type === "Y" ? "Yellow" : "Red"}</span>
+            <PlayerLink st={st} id={c.player} />
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }

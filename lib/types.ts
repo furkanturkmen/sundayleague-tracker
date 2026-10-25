@@ -1,6 +1,47 @@
-export type Position = "GK" | "DEF" | "MID" | "FWD";
+/** The broad line a position belongs to. Stats that depend on position (clean sheets, The Sieve) go by this. */
+export type PositionGroup = "GK" | "DEF" | "MID" | "FWD";
 
-export const POSITIONS: Position[] = ["GK", "DEF", "MID", "FWD"];
+/** A specific position, or just the line (DEF, MID, FWD) when a player doesn't have a fixed spot. */
+export type Position =
+  | PositionGroup
+  | "LB" | "CB" | "RB" | "LWB" | "RWB"
+  | "CDM" | "CM" | "CAM" | "LM" | "RM"
+  | "LW" | "RW" | "CF" | "ST";
+
+/** Every position by line, in pitch order from the back. Also the order the squad is listed in. */
+export const POSITION_LINES: { group: PositionGroup; label: string; positions: Position[] }[] = [
+  { group: "GK", label: "Goalkeeper", positions: ["GK"] },
+  { group: "DEF", label: "Defence", positions: ["DEF", "LB", "CB", "RB", "LWB", "RWB"] },
+  { group: "MID", label: "Midfield", positions: ["MID", "CDM", "CM", "CAM", "LM", "RM"] },
+  { group: "FWD", label: "Attack", positions: ["FWD", "LW", "RW", "CF", "ST"] },
+];
+
+export const POSITIONS: Position[] = POSITION_LINES.flatMap((l) => l.positions);
+
+export const POSITION_NAMES: Record<Position, string> = {
+  GK: "Goalkeeper",
+  DEF: "Defender",
+  LB: "Left back",
+  CB: "Centre back",
+  RB: "Right back",
+  LWB: "Left wing-back",
+  RWB: "Right wing-back",
+  MID: "Midfielder",
+  CDM: "Defensive midfielder",
+  CM: "Central midfielder",
+  CAM: "Attacking midfielder",
+  LM: "Left midfielder",
+  RM: "Right midfielder",
+  FWD: "Forward",
+  LW: "Left winger",
+  RW: "Right winger",
+  CF: "Centre forward",
+  ST: "Striker",
+};
+
+export function positionGroup(p: Position): PositionGroup {
+  return POSITION_LINES.find((l) => l.positions.includes(p))?.group ?? "MID";
+}
 
 export interface Club {
   id: string;

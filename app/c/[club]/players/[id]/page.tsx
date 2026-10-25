@@ -3,11 +3,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Empty, ResultBadge, StatTile } from "@/components/ui";
 import { loadClub } from "@/lib/club";
+import { POSITION_NAMES, positionGroup } from "@/lib/types";
 import { formatDate, seasonLabel, statsFor } from "@/lib/stats";
 
 type Props = { params: Promise<{ club: string; id: string }> };
-
-const POSITION = { GK: "Goalkeeper", DEF: "Defender", MID: "Midfielder", FWD: "Forward" };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { club, id } = await params;
@@ -38,7 +37,7 @@ export default async function PlayerPage({ params }: Props) {
           <div>
             <h1>{player.name}</h1>
             <div className="muted">
-              {POSITION[player.position]}
+              {POSITION_NAMES[player.position]}
               {player.nickname && <> · “{player.nickname}”</>}
               {!player.active && <> · no longer active</>}
             </div>
@@ -53,7 +52,7 @@ export default async function PlayerPage({ params }: Props) {
         <StatTile label="Assists" value={all.assists} />
         <StatTile label="Man of the Match" value={all.motm} />
         <StatTile label="Win rate" value={all.apps ? `${Math.round(all.winPct)}%` : "–"} sub={`${all.wins}W ${all.draws}D ${all.losses}L`} />
-        {(player.position === "GK" || player.position === "DEF") && <StatTile label="Clean sheets" value={all.cleanSheets} />}
+        {["GK", "DEF"].includes(positionGroup(player.position)) && <StatTile label="Clean sheets" value={all.cleanSheets} />}
         <StatTile label="Cards" value={`${all.yellows} / ${all.reds}`} sub="yellow / red" />
         {all.ownGoals + all.pensMissed > 0 && <StatTile label="Shame" value={all.ownGoals + all.pensMissed} sub={`${all.ownGoals} OG, ${all.pensMissed} pen miss`} />}
       </div>

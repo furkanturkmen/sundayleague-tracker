@@ -36,6 +36,14 @@ create table if not exists players (
   created_at timestamptz not null default now()
 );
 create index if not exists players_club_idx on players(club_id);
+-- Specific positions (LB, CDM, ST, ...) on top of the original four lines.
+do $$ begin
+  if not exists (select 1 from pg_constraint where conname = 'players_position_v2') then
+    alter table players drop constraint if exists players_position_check;
+    alter table players add constraint players_position_v2 check (position in (
+      'GK', 'DEF', 'LB', 'CB', 'RB', 'LWB', 'RWB', 'MID', 'CDM', 'CM', 'CAM', 'LM', 'RM', 'FWD', 'LW', 'RW', 'CF', 'ST'));
+  end if;
+end $$;
 
 create table if not exists matches (
   id uuid primary key default gen_random_uuid(),

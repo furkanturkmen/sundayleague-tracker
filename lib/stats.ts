@@ -1,4 +1,4 @@
-import type { ClubData, IconName, Match, Player } from "@/lib/types";
+import { positionGroup, type ClubData, type IconName, type Match, type Player } from "@/lib/types";
 
 export type Result = "W" | "D" | "L";
 
@@ -89,7 +89,7 @@ export function statsFor(player: Player, ms: PlayedMatch[]): PlayerStats {
   const cards = ms.flatMap((m) => m.cards.filter((c) => c.player === player.id));
   const wins = apps.filter((m) => m.result === "W").length;
   const draws = apps.filter((m) => m.result === "D").length;
-  const defensive = player.position === "GK" || player.position === "DEF";
+  const defensive = ["GK", "DEF"].includes(positionGroup(player.position));
   return {
     player,
     apps: apps.length,
@@ -289,7 +289,7 @@ function hallOfShame(stats: PlayerStats[]): Award[] {
       blurb: `Fewest goal involvements per game, outfield (${MIN_APPS}+ apps)`,
       value: (s) => perGame(s.involvements, s.apps),
       display: (s) => `${s.involvements} G+A in ${s.apps}`,
-      eligible: (s) => s.apps >= MIN_APPS && s.player.position !== "GK",
+      eligible: (s) => s.apps >= MIN_APPS && positionGroup(s.player.position) !== "GK",
       ascending: true,
       allowZero: true,
     }),
@@ -299,7 +299,7 @@ function hallOfShame(stats: PlayerStats[]): Award[] {
       blurb: "Most conceded per game in goal",
       value: (s) => perGame(s.conceded, s.apps),
       display: (s) => `${perGame(s.conceded, s.apps).toFixed(1)} per game`,
-      eligible: (s) => s.player.position === "GK",
+      eligible: (s) => positionGroup(s.player.position) === "GK",
     }),
   ];
 }

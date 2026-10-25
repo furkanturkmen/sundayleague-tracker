@@ -5,7 +5,7 @@ import { useFormStatus } from "react-dom";
 import { Crest } from "@/components/ui";
 import type { FormState } from "@/lib/actions";
 import { inkFor } from "@/lib/color";
-import { POSITIONS, type Club, type Player } from "@/lib/types";
+import { POSITION_LINES, POSITION_NAMES, type Club, type Player } from "@/lib/types";
 
 type Action = (state: FormState, f: FormData) => Promise<FormState>;
 
@@ -342,6 +342,22 @@ function useResetOnOk(state: FormState) {
   return ref;
 }
 
+function PositionSelect({ defaultValue }: { defaultValue: string }) {
+  return (
+    <select name="position" defaultValue={defaultValue}>
+      {POSITION_LINES.map((line) => (
+        <optgroup key={line.group} label={line.label}>
+          {line.positions.map((p) => (
+            <option key={p} value={p}>
+              {p === line.group && p !== "GK" ? `${p} · any` : `${p} · ${POSITION_NAMES[p]}`}
+            </option>
+          ))}
+        </optgroup>
+      ))}
+    </select>
+  );
+}
+
 export function AddPlayerForm({ action }: { action: Action }) {
   const [state, formAction] = useActionState(action, {});
   const ref = useResetOnOk(state);
@@ -358,11 +374,7 @@ export function AddPlayerForm({ action }: { action: Action }) {
         </label>
         <label>
           Position
-          <select name="position" defaultValue="MID">
-            {POSITIONS.map((p) => (
-              <option key={p}>{p}</option>
-            ))}
-          </select>
+          <PositionSelect defaultValue="MID" />
         </label>
         <label>
           Nickname
@@ -406,11 +418,7 @@ export function EditPlayerRow({ player, save, remove }: { player: Player; save: 
               </label>
               <label>
                 Position
-                <select name="position" defaultValue={player.position}>
-                  {POSITIONS.map((p) => (
-                    <option key={p}>{p}</option>
-                  ))}
-                </select>
+                <PositionSelect defaultValue={player.position} />
               </label>
               <label>
                 Nickname

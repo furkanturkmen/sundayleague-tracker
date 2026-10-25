@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { BarChart } from "@/components/BarChart";
-import { Empty, FormGuide, PageHeader, PlayerLink, SeasonTabs, StatTile } from "@/components/ui";
+import { Empty, FormGuide, PageHeader, PlayerLink, SeasonTabs, StatsTabs, StatTile } from "@/components/ui";
 import { loadClub } from "@/lib/club";
 import { MINUTE_BUCKETS, byMonth, formatMonth, goalsByMinute, groupSummary, partnerships, seasonLabel, summarise, type Summary } from "@/lib/stats";
 
-export const metadata: Metadata = { title: "Analysis" };
+export const metadata: Metadata = { title: "Stats" };
 
 function SplitTable({ rows, label }: { rows: ({ name: string } & Summary)[]; label: string }) {
   return (
@@ -73,8 +73,9 @@ export default async function AnalysisPage({ params, searchParams }: Props) {
 
   return (
     <>
-      <PageHeader title="Analysis" kicker={seasonLabel(season)}>
-        <SeasonTabs base={`${st.base}/analysis`} seasons={st.seasons} active={season} />
+      <PageHeader title="Stats" kicker={seasonLabel(season)}>
+        <StatsTabs base={st.base} active="overview" />
+        <SeasonTabs base={`${st.base}/stats`} seasons={st.seasons} active={season} />
       </PageHeader>
 
       {ms.length === 0 ? (

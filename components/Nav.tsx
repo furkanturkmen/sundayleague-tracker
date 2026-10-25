@@ -10,8 +10,7 @@ export function Nav({ base, admin }: { base: string; admin: boolean }) {
     { href: `${base}/matches`, label: "Matches" },
     { href: `${base}/table`, label: "Table" },
     { href: `${base}/players`, label: "Players" },
-    { href: `${base}/records`, label: "Records" },
-    { href: `${base}/analysis`, label: "Analysis" },
+    { href: `${base}/stats`, label: "Stats" },
     { href: `${base}/halls`, label: "Fame & Shame" },
     ...(admin ? [{ href: `${base}/settings`, label: "Settings" }] : []),
   ];

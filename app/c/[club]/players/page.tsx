@@ -2,11 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { GetStarted, PageHeader, SeasonTabs } from "@/components/ui";
 import { loadClub } from "@/lib/club";
+import { POSITION_LINES, POSITION_NAMES, POSITIONS, positionGroup, type Position } from "@/lib/types";
 import { seasonLabel, type PlayerStats } from "@/lib/stats";
 
 export const metadata: Metadata = { title: "Players" };
 
-const POS_ORDER = { GK: 0, DEF: 1, MID: 2, FWD: 3 };
+// Squad order: back to front, then by shirt number.
+const posOrder = (p: Position) => POSITIONS.indexOf(p);
 
 const columns: { key: string; label: string; title: string; value: (s: PlayerStats) => number; show?: (s: PlayerStats) => string }[] = [
   { key: "apps", label: "Apps", title: "Appearances", value: (s) => s.apps },
@@ -35,7 +37,9 @@ export default async function PlayersPage({ params, searchParams }: Props) {
     .sort((a, b) =>
       col
         ? col.value(b) - col.value(a) || b.apps - a.apps
-        : POS_ORDER[a.player.position] - POS_ORDER[b.player.position] || (a.player.number ?? 999) - (b.player.number ?? 999),
+        : POSITION_LINES.findIndex((l) => l.group === positionGroup(a.player.position)) - POSITION_LINES.findIndex((l) => l.group === positionGroup(b.player.position)) ||
+          posOrder(a.player.position) - posOrder(b.player.position) ||
+          (a.player.number ?? 999) - (b.player.number ?? 999),
     );
 
   const href = (sort?: string) => `${st.base}/players?season=${season}${sort ? `&sort=${sort}` : ""}`;
@@ -81,7 +85,7 @@ export default async function PlayersPage({ params, searchParams }: Props) {
                         {s.player.nickname && <span className="muted small"> “{s.player.nickname}”</span>}
                       </td>
                       <td>
-                        <span className="chip">{s.player.position}</span>
+                        <span className="chip" title={POSITION_NAMES[s.player.position]}>{s.player.position}</span>
                       </td>
                       {columns.map((c) => (
                         <td key={c.key} className={`num${col?.key === c.key ? " strong" : ""}`}>

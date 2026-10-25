@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { PageHeader, ResultBadge } from "@/components/ui";
+import { PageHeader, ResultBadge, StatsTabs } from "@/components/ui";
 import { loadClub } from "@/lib/club";
 import {
   assistsInMatch,
@@ -53,7 +53,9 @@ export default async function RecordsPage({ params }: { params: Promise<{ club: 
   const { seasons, inSeason, allStats, playerName } = st;
   if (ms.length === 0) return (
     <>
-      <PageHeader title="Club records" kicker="All time" />
+      <PageHeader title="Stats" kicker="All-time records">
+        <StatsTabs base={st.base} active="records" />
+      </PageHeader>
       <p className="empty">Records start once the first result is in.</p>
     </>
   );
@@ -91,7 +93,9 @@ export default async function RecordsPage({ params }: { params: Promise<{ club: 
 
   return (
     <>
-      <PageHeader title="Club records" kicker="All time" />
+      <PageHeader title="Stats" kicker="All-time records">
+        <StatsTabs base={st.base} active="records" />
+      </PageHeader>
 
       <h2>Results</h2>
       <div className="grid grid-3">

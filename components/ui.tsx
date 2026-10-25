@@ -82,6 +82,23 @@ export function PageHeader({ title, kicker, children, actions }: { title: string
   );
 }
 
+/** Overview | Records under the Stats tab. */
+export function StatsTabs({ base, active }: { base: string; active: "overview" | "records" }) {
+  const tabs = [
+    { key: "overview", href: `${base}/stats`, label: "Overview" },
+    { key: "records", href: `${base}/stats/records`, label: "Records" },
+  ] as const;
+  return (
+    <nav className="subnav" aria-label="Stats">
+      {tabs.map((t) => (
+        <Link key={t.key} href={t.href} className={t.key === active ? "active" : undefined} aria-current={t.key === active ? "page" : undefined}>
+          {t.label}
+        </Link>
+      ))}
+    </nav>
+  );
+}
+
 export function SeasonTabs({ base, seasons, active, extra = "" }: { base: string; seasons: string[]; active: string; extra?: string }) {
   if (seasons.length < 2) return null;
   const opts = ["all", ...[...seasons].reverse()];
