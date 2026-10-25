@@ -1,6 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Photos and the logo are sent as data URLs in the form (up to ~0.9 MB each; the club form can carry a logo
+  // and the coach photo together), over the 1 MB default.
+  experimental: {
+    serverActions: { bodySizeLimit: "3mb" },
+  },
   // Records and Analysis moved under Stats; keep old links working.
   async redirects() {
     return [
