@@ -31,7 +31,7 @@ export default async function Landing() {
                 className="club-card"
                 style={{ ["--accent" as string]: c.accent, ["--gold" as string]: c.gold, ["--accent-ink" as string]: inkFor(c.accent) }}
               >
-                <Crest short={c.shortName} size={40} />
+                <Crest short={c.shortName} logo={c.logo} size={40} />
                 <div>
                   <strong>{c.name}</strong>
                   <div className="small muted">

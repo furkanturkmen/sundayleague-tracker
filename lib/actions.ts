@@ -46,11 +46,25 @@ function clubFields(f: FormData): { error: string } | { name: string; shortName:
   return { name, shortName, tagline: text(f, "tagline", 120), accent, gold, founded: optInt(f.get("founded"), 1850, 2100) };
 }
 
+const LOGO = /^data:image\/(png|webp|jpeg);base64,[A-Za-z0-9+/]+=*$/;
+const LOGO_MAX = 400_000;
+
+/** The form sends a shrunk data URL for a new logo, "remove" to clear it, or nothing to keep it. */
+function logoField(f: FormData): { error: string } | { logo: string | null | undefined } {
+  const v = String(f.get("logo") ?? "");
+  if (!v) return { logo: undefined };
+  if (v === "remove") return { logo: null };
+  if (v.length > LOGO_MAX || !LOGO.test(v)) return { error: "That logo couldn't be used. Try a PNG, JPG or SVG under 5 MB." };
+  return { logo: v };
+}
+
 // ---------- clubs ----------
 
 export async function createClub(_: FormState, f: FormData): Promise<FormState> {
   const fields = clubFields(f);
   if ("error" in fields) return fields;
+  const logo = logoField(f);
+  if ("error" in logo) return logo;
   const slug = text(f, "slug", 40).toLowerCase();
   const password = String(f.get("password") ?? "");
   if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(slug) || slug.length < 2) return { error: "The web address can only use lowercase letters, numbers and dashes." };
@@ -61,8 +75,8 @@ export async function createClub(_: FormState, f: FormData): Promise<FormState> 
   const sql = await db();
   const hash = await hashPassword(password);
   const [row] = await sql<{ id: string }[]>`
-    insert into clubs (slug, name, short_name, tagline, accent, gold, founded, password_hash)
-    values (${slug}, ${fields.name}, ${fields.shortName}, ${fields.tagline}, ${fields.accent}, ${fields.gold}, ${fields.founded}, ${hash})
+    insert into clubs (slug, name, short_name, tagline, accent, gold, founded, logo, password_hash)
+    values (${slug}, ${fields.name}, ${fields.shortName}, ${fields.tagline}, ${fields.accent}, ${fields.gold}, ${fields.founded}, ${logo.logo ?? null}, ${hash})
     on conflict (slug) do nothing
     returning id`;
   if (!row) return { error: "That web address is taken. Try another." };
@@ -76,11 +90,14 @@ export async function updateClub(slug: string, _: FormState, f: FormData): Promi
   const club = await requireAdmin(slug);
   const fields = clubFields(f);
   if ("error" in fields) return fields;
+  const logo = logoField(f);
+  if ("error" in logo) return logo;
   const sql = await db();
   await sql`
     update clubs set name = ${fields.name}, short_name = ${fields.shortName}, tagline = ${fields.tagline},
       accent = ${fields.accent}, gold = ${fields.gold}, founded = ${fields.founded}
     where id = ${club.id}`;
+  if (logo.logo !== undefined) await sql`update clubs set logo = ${logo.logo}, logo_version = logo_version + 1 where id = ${club.id}`;
   refresh(slug);
   return { ok: "Club settings saved." };
 }

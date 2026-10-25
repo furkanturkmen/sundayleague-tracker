@@ -12,6 +12,7 @@ interface Recent {
   shortName: string;
   accent: string;
   gold: string;
+  logo?: string | null;
 }
 
 function read(): Recent[] {
@@ -46,7 +47,7 @@ export function RecentClubs({ existing }: { existing: string[] }) {
       <div className="club-grid">
         {list.map((c) => (
           <Link key={c.slug} href={`/c/${c.slug}`} className="club-card" style={{ ["--accent" as string]: c.accent, ["--gold" as string]: c.gold }}>
-            <Crest short={c.shortName} size={40} />
+            <Crest short={c.shortName} logo={c.logo} size={40} />
             <strong>{c.name}</strong>
           </Link>
         ))}

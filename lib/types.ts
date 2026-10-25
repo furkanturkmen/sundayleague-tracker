@@ -11,6 +11,8 @@ export interface Club {
   accent: string;
   gold: string;
   founded: number | null;
+  /** URL of the uploaded crest, or null to draw the shield. */
+  logo: string | null;
 }
 
 export interface Player {

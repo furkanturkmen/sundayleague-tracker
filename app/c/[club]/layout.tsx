@@ -12,7 +12,10 @@ type Props = { children: ReactNode; params: Promise<{ club: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { data } = await loadClub((await params).club);
-  return { title: { default: data.club.name, template: `%s · ${data.club.name}` } };
+  return {
+    title: { default: data.club.name, template: `%s · ${data.club.name}` },
+    ...(data.club.logo && { icons: { icon: data.club.logo } }),
+  };
 }
 
 export default async function ClubLayout({ children, params }: Props) {
@@ -23,11 +26,11 @@ export default async function ClubLayout({ children, params }: Props) {
 
   return (
     <div className="club-theme" style={theme}>
-      <RememberClub club={{ slug: club.slug, name: club.name, shortName: club.shortName, accent: club.accent, gold: club.gold }} />
+      <RememberClub club={{ slug: club.slug, name: club.name, shortName: club.shortName, accent: club.accent, gold: club.gold, logo: club.logo }} />
       <header className="site-header">
         <div className="container header-inner">
           <Link href={st.base} className="brand">
-            <Crest short={club.shortName} size={32} />
+            <Crest short={club.shortName} logo={club.logo} size={32} />
             <span>{club.name}</span>
           </Link>
           <Nav base={st.base} admin={admin} />

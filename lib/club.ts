@@ -16,11 +16,25 @@ interface ClubRow {
   accent: string;
   gold: string;
   founded: number | null;
+  has_logo: boolean;
+  logo_version: number;
   password_hash: string;
 }
 
+const logoUrl = (slug: string, hasLogo: boolean, version: number) => (hasLogo ? `/c/${slug}/logo?v=${version}` : null);
+
 function toClub(r: ClubRow): Club {
-  return { id: r.id, slug: r.slug, name: r.name, shortName: r.short_name, tagline: r.tagline, accent: r.accent, gold: r.gold, founded: r.founded };
+  return {
+    id: r.id,
+    slug: r.slug,
+    name: r.name,
+    shortName: r.short_name,
+    tagline: r.tagline,
+    accent: r.accent,
+    gold: r.gold,
+    founded: r.founded,
+    logo: logoUrl(r.slug, r.has_logo, r.logo_version),
+  };
 }
 
 export interface ClubSummary {
@@ -29,6 +43,7 @@ export interface ClubSummary {
   shortName: string;
   accent: string;
   gold: string;
+  logo: string | null;
   players: number;
   matches: number;
 }
@@ -36,22 +51,42 @@ export interface ClubSummary {
 export async function listClubs(): Promise<ClubSummary[]> {
   await connection();
   const sql = await db();
-  const rows = await sql<{ slug: string; name: string; short_name: string; accent: string; gold: string; players: number; matches: number }[]>`
-    select c.slug, c.name, c.short_name, c.accent, c.gold,
+  const rows = await sql<{ slug: string; name: string; short_name: string; accent: string; gold: string; has_logo: boolean; logo_version: number; players: number; matches: number }[]>`
+    select c.slug, c.name, c.short_name, c.accent, c.gold, c.logo is not null as has_logo, c.logo_version,
       (select count(*)::int from players p where p.club_id = c.id) as players,
       (select count(*)::int from matches m where m.club_id = c.id and m.goals_against is not null) as matches
     from clubs c
     order by lower(c.name)
   `;
-  return rows.map((r) => ({ slug: r.slug, name: r.name, shortName: r.short_name, accent: r.accent, gold: r.gold, players: r.players, matches: r.matches }));
+  return rows.map((r) => ({
+    slug: r.slug,
+    name: r.name,
+    shortName: r.short_name,
+    accent: r.accent,
+    gold: r.gold,
+    logo: logoUrl(r.slug, r.has_logo, r.logo_version),
+    players: r.players,
+    matches: r.matches,
+  }));
 }
 
+// The logo itself stays out of page loads; /c/<club>/logo serves it.
 const clubRow = cache(async (slug: string): Promise<ClubRow | undefined> => {
   await connection();
   const sql = await db();
-  const [row] = await sql<ClubRow[]>`select * from clubs where slug = ${slug}`;
+  const [row] = await sql<ClubRow[]>`
+    select id, slug, name, short_name, tagline, accent, gold, founded, logo is not null as has_logo, logo_version, password_hash
+    from clubs where slug = ${slug}`;
   return row;
 });
+
+/** The stored crest image, decoded for the logo route. */
+export async function getClubLogo(slug: string): Promise<{ type: string; body: Buffer } | undefined> {
+  const sql = await db();
+  const [row] = await sql<{ logo: string | null }[]>`select logo from clubs where slug = ${slug}`;
+  const m = row?.logo?.match(/^data:(image\/(?:png|webp|jpeg));base64,(.+)$/);
+  return m ? { type: m[1], body: Buffer.from(m[2], "base64") } : undefined;
+}
 
 export async function getClubAuth(slug: string): Promise<{ club: Club; passwordHash: string } | undefined> {
   const row = await clubRow(slug);

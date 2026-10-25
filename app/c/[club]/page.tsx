@@ -22,7 +22,7 @@ export default async function ClubHome({ params }: { params: Promise<{ club: str
   return (
     <>
       <section className="hero">
-        <Crest short={club.shortName} size={72} />
+        <Crest short={club.shortName} logo={club.logo} size={72} />
         <div>
           <h1>{club.name}</h1>
           {club.tagline && <p>{club.tagline}</p>}

@@ -14,6 +14,9 @@ create table if not exists clubs (
   password_hash text not null,
   created_at timestamptz not null default now()
 );
+-- Uploaded crest as a data URL, shrunk in the browser. logo_version busts the image cache on change.
+alter table clubs add column if not exists logo text;
+alter table clubs add column if not exists logo_version int not null default 0;
 
 create table if not exists players (
   id uuid primary key default gen_random_uuid(),

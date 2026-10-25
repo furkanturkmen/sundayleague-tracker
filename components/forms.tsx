@@ -28,6 +28,90 @@ function slugify(s: string) {
   return s.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40);
 }
 
+const LOGO_PX = 256;
+
+/** Draws the picked image onto a canvas no bigger than LOGO_PX, so uploads stay small whatever the source. */
+async function shrinkLogo(file: File): Promise<string> {
+  const url = URL.createObjectURL(file);
+  try {
+    const img = new Image();
+    img.src = url;
+    await img.decode();
+    // SVGs without width/height decode at 0×0; give them a square to fill.
+    const w = img.naturalWidth || LOGO_PX;
+    const h = img.naturalHeight || LOGO_PX;
+    const scale = Math.min(1, LOGO_PX / Math.max(w, h));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, Math.round(w * scale));
+    canvas.height = Math.max(1, Math.round(h * scale));
+    canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
+    const webp = canvas.toDataURL("image/webp", 0.9);
+    // Safari can't encode WebP and quietly hands back a PNG instead.
+    return webp.startsWith("data:image/webp") ? webp : canvas.toDataURL("image/png");
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
+function LogoField({ initial, onChange }: { initial: string | null; onChange: (preview: string | null) => void }) {
+  const [value, setValue] = useState("");
+  const [has, setHas] = useState(Boolean(initial));
+  const [error, setError] = useState("");
+  const input = useRef<HTMLInputElement>(null);
+
+  return (
+    <div className="logo-field">
+      <span className="logo-field-label">
+        Logo <span className="muted">(optional, PNG, JPG or SVG)</span>
+      </span>
+      <input type="hidden" name="logo" value={value} />
+      <div className="logo-field-actions">
+        <input
+          ref={input}
+          type="file"
+          accept="image/png,image/jpeg,image/webp,image/svg+xml"
+          onChange={async (e) => {
+            const file = e.target.files?.[0];
+            if (!file) return;
+            setError("");
+            if (file.size > 5_000_000) {
+              setError("That file is over 5 MB. Pick a smaller one.");
+              return;
+            }
+            try {
+              const data = await shrinkLogo(file);
+              setValue(data);
+              setHas(true);
+              onChange(data);
+            } catch {
+              setError("Couldn't read that image. Try a PNG or JPG.");
+            }
+          }}
+        />
+        {has && (
+          <button
+            type="button"
+            className="btn-link danger"
+            onClick={() => {
+              setValue(initial ? "remove" : "");
+              setHas(false);
+              onChange(null);
+              if (input.current) input.current.value = "";
+            }}
+          >
+            Remove logo
+          </button>
+        )}
+      </div>
+      {error ? (
+        <p className="notice notice-error" role="alert">{error}</p>
+      ) : (
+        <p className="small muted">Without one, the badge is a shield in your colours with the short name on it.</p>
+      )}
+    </div>
+  );
+}
+
 function initials(name: string) {
   const words = name.replace(/[^A-Za-z0-9 ]/g, " ").split(/\s+/).filter(Boolean);
   return (words.length > 1 ? words.map((w) => (/^\d+$/.test(w) ? w : w[0])).join("") : (words[0] ?? "")).slice(0, 4).toUpperCase();
@@ -44,12 +128,13 @@ export function ClubForm({ action, club }: { action: Action; club?: Club }) {
   const [slugTouched, setSlugTouched] = useState(Boolean(club));
   const [accent, setAccent] = useState(club?.accent ?? "#17663f");
   const [gold, setGold] = useState(club?.gold ?? "#b07d0c");
+  const [logo, setLogo] = useState(club?.logo ?? null);
   const creating = !club;
 
   return (
     <form action={formAction} className="form">
       <div className="club-preview" style={{ ["--accent" as string]: accent, ["--gold" as string]: gold, ["--accent-ink" as string]: inkFor(accent) }}>
-        <Crest short={short || "?"} size={56} />
+        <Crest short={short || "?"} logo={logo} size={56} />
         <div>
           <strong>{name || "Your club"}</strong>
           {creating && <div className="small muted">/c/{slug || "your-club"}</div>}
@@ -123,6 +208,7 @@ export function ClubForm({ action, club }: { action: Action; club?: Club }) {
           <input type="color" name="gold" value={gold} onChange={(e) => setGold(e.target.value)} />
         </label>
       </div>
+      <LogoField initial={club?.logo ?? null} onChange={setLogo} />
 
       {creating && (
         <fieldset>

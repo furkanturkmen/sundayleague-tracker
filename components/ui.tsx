@@ -2,7 +2,9 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { formatDate, seasonLabel, type PlayedMatch, type Result, type Stats } from "@/lib/stats";
 
-export function Crest({ short, size = 44 }: { short: string; size?: number }) {
+/** The club's uploaded logo, or a shield drawn in its colours when there isn't one. */
+export function Crest({ short, logo, size = 44 }: { short: string; logo?: string | null; size?: number }) {
+  if (logo) return <img src={logo} alt="" width={size} height={Math.round(size * 1.15)} className="crest crest-logo" />;
   const fontSize = short.length <= 3 ? 11 : short.length === 4 ? 9 : 7.5;
   return (
     <svg width={size} height={size * 1.15} viewBox="0 0 40 46" aria-hidden="true" className="crest">
