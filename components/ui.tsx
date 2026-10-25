@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { formatDate, seasonLabel, type PlayedMatch, type Result, type Stats } from "@/lib/stats";
+import type { Standing } from "@/lib/types";
 
 /** The club's uploaded logo, or a shield drawn in its colours when there isn't one. */
 export function Crest({ short, logo, size = 44 }: { short: string; logo?: string | null; size?: number }) {
@@ -113,6 +114,53 @@ export function GetStarted({ st, admin, what }: { st: Stats; admin: boolean; wha
       ) : (
         <p className="muted small">The club admin can add them after signing in.</p>
       )}
+    </div>
+  );
+}
+
+/** The league table from voetbal.nl, with our row picked out. */
+export function LeagueTable({ rows, league }: { rows: Standing[]; league: string | null }) {
+  const penalties = rows.some((r) => r.penaltyPoints > 0);
+  return (
+    <div className="card">
+      <h2>
+        League table {league && <span className="small muted">{league}</span>}
+      </h2>
+      <div className="table-wrap">
+        <table className="league-table">
+          <thead>
+            <tr>
+              <th className="num">#</th>
+              <th>Team</th>
+              <th className="num" title="Played">P</th>
+              <th className="num" title="Won">W</th>
+              <th className="num" title="Drawn">D</th>
+              <th className="num" title="Lost">L</th>
+              <th className="num" title="Goals for and against">Goals</th>
+              {penalties && <th className="num" title="Penalty points deducted">Pen</th>}
+              <th className="num" title="Points">Pts</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r) => (
+              <tr key={r.team} className={r.isUs ? "is-us" : undefined}>
+                <td className="num muted">{r.position}</td>
+                <td className="strong">{r.team}</td>
+                <td className="num">{r.played}</td>
+                <td className="num">{r.won}</td>
+                <td className="num">{r.drawn}</td>
+                <td className="num">{r.lost}</td>
+                <td className="num">
+                  {r.goalsFor}–{r.goalsAgainst}
+                </td>
+                {penalties && <td className="num">{r.penaltyPoints ? `−${r.penaltyPoints}` : ""}</td>}
+                <td className="num strong">{r.points}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p className="small muted" style={{ marginBottom: 0 }}>From voetbal.nl.</p>
     </div>
   );
 }

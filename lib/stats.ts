@@ -312,7 +312,8 @@ export function analyse({ club, players, matches }: ClubData) {
   const played: PlayedMatch[] = sorted
     .filter((m) => m.against !== null)
     .map((m) => {
-      const gf = m.goals.length;
+      // The official score wins; for matches logged by hand the goals list is the score.
+      const gf = m.goalsFor ?? m.goals.length;
       const ga = m.against ?? 0;
       return { ...m, gf, ga, result: gf > ga ? "W" : gf < ga ? "L" : "D", season: seasonOf(m.date) };
     });

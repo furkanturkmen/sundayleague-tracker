@@ -6,6 +6,8 @@ import { endSession, hashPassword, hasSession, startSession, verifyPassword } fr
 import { getClubAuth } from "@/lib/club";
 import { db } from "@/lib/db";
 import { POSITIONS, type Position } from "@/lib/types";
+import { linkLineup, syncClub, voetbalConfigured } from "@/lib/voetbal";
+import { parseTeamId, sameName } from "@/lib/voetbal-parse";
 
 export interface FormState {
   error?: string;
@@ -142,6 +144,61 @@ export async function logout(slug: string): Promise<void> {
   if (auth) await endSession(auth.club.id);
   refresh(slug);
   redirect(`/c/${slug}`);
+}
+
+// ---------- voetbal.nl ----------
+
+export async function saveVoetbalLink(slug: string, _: FormState, f: FormData): Promise<FormState> {
+  const club = await requireAdmin(slug);
+  const raw = text(f, "team", 300);
+  const teamId = raw ? parseTeamId(raw) : null;
+  if (raw && !teamId) return { error: "That isn't a voetbal.nl team link. Open your team on voetbal.nl and copy the address, it contains something like T1628317720." };
+  const sql = await db();
+  if (!teamId) {
+    await sql`update clubs set voetbal_team_id = null, voetbal_team_name = null, voetbal_league = null, voetbal_synced_at = null, voetbal_error = null where id = ${club.id}`;
+    await sql`delete from standings where club_id = ${club.id}`;
+    refresh(slug);
+    return { ok: "Disconnected from voetbal.nl. Matches already synced stay." };
+  }
+  await sql`update clubs set voetbal_team_id = ${teamId}, voetbal_error = null where id = ${club.id}`;
+  if (!voetbalConfigured()) {
+    refresh(slug);
+    return { ok: "Team saved. Syncing needs the voetbal.nl login on the server first." };
+  }
+  return syncVoetbal(slug);
+}
+
+export async function syncVoetbal(slug: string): Promise<FormState> {
+  const club = await requireAdmin(slug);
+  try {
+    const s = await syncClub(club.id);
+    refresh(slug);
+    const parts = [
+      s.added && `${s.added} new ${s.added === 1 ? "match" : "matches"}`,
+      s.updated && `${s.updated} updated`,
+      s.lineups && `${s.lineups} ${s.lineups === 1 ? "line-up" : "line-ups"}`,
+      s.table && "league table",
+    ].filter(Boolean);
+    return { ok: `Synced from voetbal.nl: ${parts.join(", ") || "nothing new"}.` };
+  } catch (err) {
+    refresh(slug);
+    return { error: err instanceof Error ? err.message : "The sync failed." };
+  }
+}
+
+/** Adds someone from a voetbal.nl line-up to the squad and puts them in every synced match they played. */
+export async function addLineupPlayer(slug: string, _: FormState, f: FormData): Promise<FormState> {
+  const club = await requireAdmin(slug);
+  const name = text(f, "name", 60);
+  if (name.length < 2) return { error: "Unknown player." };
+  const sql = await db();
+  const existing = await sql<{ id: string; name: string }[]>`select id, name from players where club_id = ${club.id}`;
+  if (existing.some((p) => sameName(p.name, name))) return { error: `${name} is already in the squad.` };
+  const [player] = await sql<{ id: string; name: string }[]>`insert into players (club_id, name) values (${club.id}, ${name}) returning id, name`;
+  const played = await sql<{ id: string; lineup: string[] }[]>`select id, lineup from matches where club_id = ${club.id} and lineup is not null`;
+  for (const m of played) if (m.lineup.some((n) => sameName(n, name))) await linkLineup(m.id, m.lineup, [player]);
+  refresh(slug);
+  return { ok: `${name} added to the squad. Set their number and position below.` };
 }
 
 // ---------- players ----------

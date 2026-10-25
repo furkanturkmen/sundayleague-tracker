@@ -17,6 +17,12 @@ create table if not exists clubs (
 -- Uploaded crest as a data URL, shrunk in the browser. logo_version busts the image cache on change.
 alter table clubs add column if not exists logo text;
 alter table clubs add column if not exists logo_version int not null default 0;
+-- voetbal.nl link: the team id (T1234567890) to sync fixtures, results and the league table from.
+alter table clubs add column if not exists voetbal_team_id text;
+alter table clubs add column if not exists voetbal_team_name text;
+alter table clubs add column if not exists voetbal_league text;
+alter table clubs add column if not exists voetbal_synced_at timestamptz;
+alter table clubs add column if not exists voetbal_error text;
 
 create table if not exists players (
   id uuid primary key default gen_random_uuid(),
@@ -44,6 +50,13 @@ create table if not exists matches (
   created_at timestamptz not null default now()
 );
 create index if not exists matches_club_idx on matches(club_id, date);
+-- Filled by the voetbal.nl sync. goals_for is the official score; scorers are still logged by hand in goals,
+-- so a synced match can have fewer goal rows than goals_for. lineup holds the names voetbal.nl shows.
+alter table matches add column if not exists external_id text;
+alter table matches add column if not exists goals_for int check (goals_for >= 0);
+alter table matches add column if not exists kickoff text;
+alter table matches add column if not exists lineup text[];
+create unique index if not exists matches_external_idx on matches(club_id, external_id);
 
 create table if not exists match_players (
   match_id uuid not null references matches(id) on delete cascade,
@@ -83,6 +96,23 @@ create table if not exists moments (
   created_at timestamptz not null default now()
 );
 create index if not exists moments_club_idx on moments(club_id);
+
+-- League table from voetbal.nl, replaced whole on every sync.
+create table if not exists standings (
+  club_id uuid not null references clubs(id) on delete cascade,
+  position int not null,
+  team text not null,
+  played int not null,
+  won int not null,
+  drawn int not null,
+  lost int not null,
+  points int not null,
+  goals_for int not null,
+  goals_against int not null,
+  penalty_points int not null default 0,
+  is_us boolean not null default false,
+  primary key (club_id, position, team)
+);
 `;
 
 const globalForDb = globalThis as unknown as { sql?: postgres.Sql; schema?: Promise<unknown> };

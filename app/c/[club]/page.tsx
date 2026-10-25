@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Icon } from "@/components/Icon";
-import { Crest, Empty, FormGuide, GetStarted, MatchLine, PlayerLink, StatTile } from "@/components/ui";
+import { Crest, Empty, FormGuide, GetStarted, LeagueTable, MatchLine, PlayerLink, StatTile } from "@/components/ui";
 import { loadClub } from "@/lib/club";
 import { currentRun, formatDate, seasonLabel, summarise } from "@/lib/stats";
 
@@ -19,6 +19,7 @@ export default async function ClubHome({ params }: { params: Promise<{ club: str
   const run = currentRun(st.played);
   const fame = st.hallOfFame(st.played)[0];
   const shame = st.hallOfShame(st.played)[0];
+  const us = data.standings.find((r) => r.isUs);
 
   return (
     <>
@@ -27,6 +28,12 @@ export default async function ClubHome({ params }: { params: Promise<{ club: str
         <div>
           <h1>{club.name}</h1>
           {club.tagline && <p>{club.tagline}</p>}
+          {us && (
+            <p className="hero-league">
+              {ordinal(us.position)} of {data.standings.length}
+              {club.voetbal?.league && <> · {club.voetbal.league}</>}
+            </p>
+          )}
         </div>
         <div className="hero-record" aria-label={`${seasonLabel(st.currentSeason)} record`}>
           <div><strong>{s.w}</strong><span>Won</span></div>
@@ -46,7 +53,8 @@ export default async function ClubHome({ params }: { params: Promise<{ club: str
             <Link href={`${st.base}/matches/${next.id}`} style={{ textDecoration: "none" }}>
               <div style={{ fontSize: "1.25rem", fontWeight: 800 }}>{st.fixtureTitle(next)}</div>
               <div className="muted">
-                {formatDate(next.date, { weekday: "long", day: "numeric", month: "long" })} · {next.competition}
+                {formatDate(next.date, { weekday: "long", day: "numeric", month: "long" })}
+                {next.kickoff && <>, {next.kickoff}</>} · {next.competition}
               </div>
             </Link>
           ) : (
@@ -122,6 +130,12 @@ export default async function ClubHome({ params }: { params: Promise<{ club: str
         </div>
       </div>
 
+      {data.standings.length > 0 && (
+        <div className="section">
+          <LeagueTable rows={data.standings} league={club.voetbal?.league ?? null} />
+        </div>
+      )}
+
       <div className="grid grid-2 section">
         {[
           { hall: "Hall of Fame", cls: "hall-fame", award: fame },
@@ -140,4 +154,9 @@ export default async function ClubHome({ params }: { params: Promise<{ club: str
       </div>
     </>
   );
+}
+
+function ordinal(n: number) {
+  const suffix = n % 100 >= 11 && n % 100 <= 13 ? "th" : ["th", "st", "nd", "rd"][n % 10] ?? "th";
+  return `${n}${suffix}`;
 }

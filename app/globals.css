@@ -125,6 +125,9 @@ main.container { padding-top: 32px; padding-bottom: 56px; }
 .hero { display: flex; gap: 24px; align-items: center; padding: 28px; border-radius: 18px; background: linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 70%, #000) 100%); color: var(--accent-ink); margin-bottom: 24px; flex-wrap: wrap; }
 .hero h1 { font-size: clamp(2.6rem, 8vw, 4.6rem); }
 .hero p { margin: 6px 0 0; opacity: 0.85; }
+.hero .hero-league { font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; opacity: 0.75; }
+.league-table tr.is-us td { background: var(--accent-soft); }
+.league-table tr.is-us td:first-child { box-shadow: inset 3px 0 0 var(--accent-fill); }
 .hero .crest text:first-of-type { fill: var(--accent-ink); }
 .hero-record { margin-left: auto; display: flex; gap: 18px; font-variant-numeric: tabular-nums; }
 .hero-record div { text-align: center; }
@@ -355,6 +358,10 @@ fieldset p { margin: 0; }
 .squad-list { list-style: none; margin: 16px 0 0; padding: 0; border-top: 1px solid var(--line); }
 .squad-row { border-bottom: 1px solid var(--line); padding: 10px 0; }
 .squad-row-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.sync-status { display: flex; flex-wrap: wrap; gap: 8px 32px; margin: 0 0 14px; font-size: 0.9rem; }
+.sync-status dt { color: var(--muted); font-size: 0.78rem; font-weight: 600; }
+.sync-status dd { margin: 0; font-weight: 600; }
+.section-sub { margin: 24px 0 4px; }
 .squad-row-head .btn-link:last-child { margin-left: auto; }
 .squad-row-body { padding: 12px 0 4px; }
 .welcome { border-color: var(--accent); background: var(--accent-soft); }

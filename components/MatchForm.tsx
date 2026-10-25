@@ -114,8 +114,19 @@ export function MatchForm({ action, players, match, opponents, competitions }: P
             <h2>Score</h2>
             <div className="score-entry">
               <div>
-                <div className="score-num">{p.goals.length}</div>
-                <div className="small muted">Scored (from the goals below)</div>
+                {match?.goalsFor !== undefined ? (
+                  <>
+                    <div className="score-num">{match.goalsFor}</div>
+                    <div className="small muted">
+                      Scored, from voetbal.nl. {Math.min(p.goals.length, match.goalsFor)} of {match.goalsFor} have a scorer.
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="score-num">{p.goals.length}</div>
+                    <div className="small muted">Scored (from the goals below)</div>
+                  </>
+                )}
               </div>
               <span className="score-dash">–</span>
               <label>

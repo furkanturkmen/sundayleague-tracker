@@ -5,7 +5,7 @@ import { cache } from "react";
 import { hasSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { analyse, type Stats } from "@/lib/stats";
-import type { Card, Club, ClubData, Goal, Match, Moment, Player, Position, Venue } from "@/lib/types";
+import type { Card, Club, ClubData, Goal, Match, Moment, Player, Position, Standing, Venue } from "@/lib/types";
 
 interface ClubRow {
   id: string;
@@ -18,6 +18,11 @@ interface ClubRow {
   founded: number | null;
   has_logo: boolean;
   logo_version: number;
+  voetbal_team_id: string | null;
+  voetbal_team_name: string | null;
+  voetbal_league: string | null;
+  voetbal_synced_at: Date | null;
+  voetbal_error: string | null;
   password_hash: string;
 }
 
@@ -34,6 +39,15 @@ function toClub(r: ClubRow): Club {
     gold: r.gold,
     founded: r.founded,
     logo: logoUrl(r.slug, r.has_logo, r.logo_version),
+    voetbal: r.voetbal_team_id
+      ? {
+          teamId: r.voetbal_team_id,
+          teamName: r.voetbal_team_name,
+          league: r.voetbal_league,
+          syncedAt: r.voetbal_synced_at?.toISOString() ?? null,
+          error: r.voetbal_error,
+        }
+      : null,
   };
 }
 
@@ -75,7 +89,8 @@ const clubRow = cache(async (slug: string): Promise<ClubRow | undefined> => {
   await connection();
   const sql = await db();
   const [row] = await sql<ClubRow[]>`
-    select id, slug, name, short_name, tagline, accent, gold, founded, logo is not null as has_logo, logo_version, password_hash
+    select id, slug, name, short_name, tagline, accent, gold, founded, logo is not null as has_logo, logo_version,
+      voetbal_team_id, voetbal_team_name, voetbal_league, voetbal_synced_at, voetbal_error, password_hash
     from clubs where slug = ${slug}`;
   return row;
 });
@@ -107,11 +122,25 @@ export const loadClubData = cache(async (slug: string): Promise<ClubData | undef
   const sql = await db();
   const id = row.id;
 
-  const [playerRows, matchRows, squadRows, goalRows, eventRows, momentRows] = await Promise.all([
+  const [playerRows, matchRows, squadRows, goalRows, eventRows, momentRows, standingRows] = await Promise.all([
     sql<{ id: string; name: string; number: number | null; position: Position; nickname: string | null; bio: string | null; active: boolean }[]>`
       select id, name, number, position, nickname, bio, active from players where club_id = ${id} order by number nulls last, name`,
-    sql<{ id: string; date: Date; opponent: string; venue: Venue; competition: string; goals_against: number | null; motm: string | null; notes: string | null }[]>`
-      select id, date, opponent, venue, competition, goals_against, motm, notes from matches where club_id = ${id} order by date, created_at`,
+    sql<{
+      id: string;
+      date: Date;
+      opponent: string;
+      venue: Venue;
+      competition: string;
+      goals_for: number | null;
+      goals_against: number | null;
+      kickoff: string | null;
+      external_id: string | null;
+      lineup: string[] | null;
+      motm: string | null;
+      notes: string | null;
+    }[]>`
+      select id, date, opponent, venue, competition, goals_for, goals_against, kickoff, external_id, lineup, motm, notes
+      from matches where club_id = ${id} order by date, created_at`,
     sql<{ match_id: string; player_id: string }[]>`
       select mp.match_id, mp.player_id from match_players mp join matches m on m.id = mp.match_id where m.club_id = ${id}`,
     sql<{ match_id: string; scorer_id: string | null; assist_id: string | null; minute: number | null; penalty: boolean }[]>`
@@ -121,6 +150,8 @@ export const loadClubData = cache(async (slug: string): Promise<ClubData | undef
       select e.match_id, e.player_id, e.kind from match_events e join matches m on m.id = e.match_id where m.club_id = ${id} order by e.ord`,
     sql<{ id: string; kind: "fame" | "shame"; title: string; story: string; player_id: string | null; match_id: string | null }[]>`
       select id, kind, title, story, player_id, match_id from moments where club_id = ${id} order by created_at`,
+    sql<{ position: number; team: string; played: number; won: number; drawn: number; lost: number; points: number; goals_for: number; goals_against: number; penalty_points: number; is_us: boolean }[]>`
+      select * from standings where club_id = ${id} order by position`,
   ]);
 
   const byMatch = <T extends { match_id: string }>(rows: T[]) => {
@@ -142,6 +173,10 @@ export const loadClubData = cache(async (slug: string): Promise<ClubData | undef
       venue: m.venue,
       competition: m.competition,
       against: m.goals_against,
+      goalsFor: m.goals_for ?? undefined,
+      kickoff: m.kickoff ?? undefined,
+      externalId: m.external_id ?? undefined,
+      lineup: m.lineup ?? undefined,
       squad: (squads.get(m.id) ?? []).map((s) => s.player_id),
       goals: (goals.get(m.id) ?? []).map(
         (g): Goal => ({ scorer: g.scorer_id ?? "og", assist: g.assist_id ?? undefined, minute: g.minute ?? undefined, penalty: g.penalty || undefined }),
@@ -162,7 +197,21 @@ export const loadClubData = cache(async (slug: string): Promise<ClubData | undef
     matchId: r.match_id ?? undefined,
   }));
 
-  return { club: toClub(row), players, matches, moments };
+  const standings: Standing[] = standingRows.map((r) => ({
+    position: r.position,
+    team: r.team,
+    played: r.played,
+    won: r.won,
+    drawn: r.drawn,
+    lost: r.lost,
+    points: r.points,
+    goalsFor: r.goals_for,
+    goalsAgainst: r.goals_against,
+    penaltyPoints: r.penalty_points,
+    isUs: r.is_us,
+  }));
+
+  return { club: toClub(row), players, matches, moments, standings };
 });
 
 /** Everything a club page needs. 404s when the club doesn't exist. */

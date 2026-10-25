@@ -66,7 +66,7 @@ export default async function MatchPage({ params }: Props) {
         <div className="grid grid-3 section">
           <div className="card">
             <h2>Goals</h2>
-            {m.goals.length ? (
+            {m.gf > 0 ? (
               <ul className="event-list">
                 {m.goals.map((g, i) => (
                   <li key={i}>
@@ -78,6 +78,15 @@ export default async function MatchPage({ params }: Props) {
                     </span>
                   </li>
                 ))}
+                {/* The official score can come from voetbal.nl before anyone has said who scored. */}
+                {m.gf > m.goals.length && (
+                  <li>
+                    <span className="min">–</span>
+                    <span className="muted">
+                      {m.gf - m.goals.length} {m.gf - m.goals.length === 1 ? "goal" : "goals"} without a scorer yet
+                    </span>
+                  </li>
+                )}
               </ul>
             ) : (
               <Empty>Didn&apos;t trouble the scorers.</Empty>

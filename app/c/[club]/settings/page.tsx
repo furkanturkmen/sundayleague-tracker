@@ -2,11 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Icon } from "@/components/Icon";
-import { AddPlayerForm, ClubForm, ConfirmSubmit, DeleteClubForm, EditPlayerRow, MomentForm, PasswordForm } from "@/components/forms";
+import { AddLineupPlayer, AddPlayerForm, ClubForm, ConfirmSubmit, DeleteClubForm, EditPlayerRow, MomentForm, PasswordForm, VoetbalForm } from "@/components/forms";
 import { Empty, PageHeader } from "@/components/ui";
-import { changePassword, deleteClub, deleteMoment, deletePlayer, saveMoment, savePlayer, updateClub } from "@/lib/actions";
+import { addLineupPlayer, changePassword, deleteClub, deleteMoment, deletePlayer, saveMoment, savePlayer, saveVoetbalLink, syncVoetbal, updateClub } from "@/lib/actions";
 import { loadClub } from "@/lib/club";
 import { formatDate } from "@/lib/stats";
+import { voetbalConfigured } from "@/lib/voetbal";
+import { sameName } from "@/lib/voetbal-parse";
 
 export const metadata: Metadata = { title: "Settings" };
 
@@ -20,6 +22,12 @@ export default async function SettingsPage({ params, searchParams }: Props) {
 
   const { club, players, moments } = data;
   const matchOptions = [...data.matches].reverse().map((m) => ({ id: m.id, label: `${formatDate(m.date)} vs ${m.opponent}` }));
+
+  // Names from voetbal.nl line-ups that aren't in the squad yet, most appearances first.
+  const lineupCounts = new Map<string, number>();
+  for (const m of data.matches) for (const n of m.lineup ?? []) if (!players.some((p) => sameName(p.name, n))) lineupCounts.set(n, (lineupCounts.get(n) ?? 0) + 1);
+  const suggestions = [...lineupCounts].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+  const vnl = club.voetbal;
 
   return (
     <div className="narrow-wide">
@@ -37,6 +45,7 @@ export default async function SettingsPage({ params, searchParams }: Props) {
 
       <nav className="tabs settings-nav" aria-label="Settings sections">
         <a href="#squad">Squad</a>
+        <a href="#voetbal">voetbal.nl</a>
         <a href="#moments">Fame & Shame</a>
         <a href="#club">Club details</a>
         <a href="#password">Password</a>
@@ -55,6 +64,49 @@ export default async function SettingsPage({ params, searchParams }: Props) {
           </ul>
         ) : (
           <Empty>No players yet. Add the first one above.</Empty>
+        )}
+      </section>
+
+      <section id="voetbal" className="card section">
+        <h2>voetbal.nl</h2>
+        <p className="small muted">
+          Connect your team to pull fixtures, results, line-ups and the league table from voetbal.nl. It syncs by itself every day. Scorers, assists and cards
+          aren&apos;t on voetbal.nl, so you still add those to each match.
+        </p>
+        {vnl && (
+          <dl className="sync-status">
+            {vnl.teamName && (
+              <div>
+                <dt>Team</dt>
+                <dd>
+                  {vnl.teamName}
+                  {vnl.league && <span className="muted"> · {vnl.league}</span>}
+                </dd>
+              </div>
+            )}
+            <div>
+              <dt>Last synced</dt>
+              <dd>{vnl.syncedAt ? new Date(vnl.syncedAt).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short", timeZone: "Europe/Amsterdam" }) : "Not yet"}</dd>
+            </div>
+          </dl>
+        )}
+        {vnl?.error && <p className="notice notice-error">Last sync failed: {vnl.error}</p>}
+        {!voetbalConfigured() && (
+          <p className="notice notice-error">
+            The voetbal.nl login isn&apos;t set up on this server yet. Add VOETBALNL_EMAIL and VOETBALNL_PASSWORD to its environment variables.
+          </p>
+        )}
+        <VoetbalForm save={saveVoetbalLink.bind(null, slug)} sync={syncVoetbal.bind(null, slug)} teamId={vnl?.teamId ?? null} configured={voetbalConfigured()} />
+        {suggestions.length > 0 && (
+          <>
+            <h3 className="section-sub">In voetbal.nl line-ups, not in your squad</h3>
+            <p className="small muted">Add who should show up in the stats. Players who keep their voetbal.nl profile private aren&apos;t listed.</p>
+            <ul className="squad-list">
+              {suggestions.map(([name, count]) => (
+                <AddLineupPlayer key={name} action={addLineupPlayer.bind(null, slug)} name={name} matches={count} />
+              ))}
+            </ul>
+          </>
         )}
       </section>
 
