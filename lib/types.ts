@@ -73,3 +73,8 @@ export interface ClubData {
   matches: Match[];
   moments: Moment[];
 }
+
+/** Icons the UI draws, mapped to Font Awesome in components/Icon.tsx. */
+export type IconName =
+  | "ball" | "target" | "calendar" | "star" | "wall" | "hat" | "clover" | "ice" | "card" | "bath"
+  | "wrong-way" | "bottle" | "cat" | "ghost" | "sieve" | "trophy" | "thumbs-down" | "miss";

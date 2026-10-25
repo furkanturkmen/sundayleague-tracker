@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { Icon } from "@/components/Icon";
 import { AddPlayerForm, ClubForm, ConfirmSubmit, DeleteClubForm, EditPlayerRow, MomentForm, PasswordForm } from "@/components/forms";
 import { Empty, PageHeader } from "@/components/ui";
 import { changePassword, deleteClub, deleteMoment, deletePlayer, saveMoment, savePlayer, updateClub } from "@/lib/actions";
@@ -26,7 +27,7 @@ export default async function SettingsPage({ params, searchParams }: Props) {
 
       {welcome && (
         <div className="card welcome">
-          <h2>Your club is live 🎉</h2>
+          <h2>Your club is live</h2>
           <p>
             Next: add the squad below, then <Link href={`${st.base}/matches/new`}>log your first match</Link>. Anyone with the link can view the club at{" "}
             <Link href={st.base}>{st.base}</Link>. Only people with the admin password can edit it.
@@ -66,7 +67,7 @@ export default async function SettingsPage({ params, searchParams }: Props) {
             {moments.map((m) => (
               <li key={m.id} className="squad-row">
                 <div className="squad-row-head">
-                  <span>{m.kind === "fame" ? "🏆" : "🤡"}</span>
+                  <Icon name={m.kind === "fame" ? "trophy" : "thumbs-down"} className={m.kind === "fame" ? "fame-ink" : "shame-ink"} />
                   <strong>{m.title}</strong>
                   {m.player && <span className="muted small">{st.playerName(m.player)}</span>}
                   <form action={deleteMoment.bind(null, slug)} style={{ marginLeft: "auto" }}>

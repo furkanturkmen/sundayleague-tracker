@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Icon } from "@/components/Icon";
 import { ConfirmSubmit } from "@/components/forms";
 import { Empty, PlayerLink, ResultBadge } from "@/components/ui";
 import { deleteMatch } from "@/lib/actions";
@@ -87,7 +88,7 @@ export default async function MatchPage({ params }: Props) {
                   <li key={`og${i}`}><span className="min">OG</span><span><PlayerLink st={st} id={p} /> <span className="muted">scored an own goal</span></span></li>
                 ))}
                 {m.penaltiesMissed.map((p, i) => (
-                  <li key={`pm${i}`}><span className="min">✗</span><span><PlayerLink st={st} id={p} /> <span className="muted">missed a penalty</span></span></li>
+                  <li key={`pm${i}`}><span className="min"><Icon name="miss" /></span><span><PlayerLink st={st} id={p} /> <span className="muted">missed a penalty</span></span></li>
                 ))}
               </ul>
             )}
@@ -97,7 +98,7 @@ export default async function MatchPage({ params }: Props) {
             <h2>Awards & discipline</h2>
             <ul className="event-list">
               <li>
-                <span className="min">⭐</span>
+                <span className="min"><Icon name="star" className="motm-star" /></span>
                 <span>
                   {m.motm ? (
                     <>

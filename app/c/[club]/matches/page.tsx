@@ -29,7 +29,7 @@ export default async function MatchesPage({ params }: { params: Promise<{ club: 
                     <td className="strong">
                       <Link href={`${st.base}/matches/${m.id}`}>{st.fixtureTitle(m)}</Link>
                     </td>
-                    <td><span className="chip">{m.competition}</span></td>
+                    <td>{m.competition !== "League" && <span className="chip">{m.competition}</span>}</td>
                   </tr>
                 ))}
               </tbody>

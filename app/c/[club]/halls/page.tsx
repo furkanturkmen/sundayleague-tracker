@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Icon } from "@/components/Icon";
 import { PageHeader, PlayerLink, SeasonTabs } from "@/components/ui";
 import { loadClub } from "@/lib/club";
 import { formatDate, seasonLabel, type Award, type Stats } from "@/lib/stats";
@@ -12,7 +13,7 @@ function AwardCard({ st, award }: { st: Stats; award: Award }) {
   return (
     <div className="award">
       <div className="award-head">
-        <span className="award-icon" aria-hidden="true">{award.icon}</span>
+        <Icon name={award.icon} className="award-icon" />
         <div>
           <h3>{award.title}</h3>
           <div className="award-blurb">{award.blurb}</div>
@@ -96,7 +97,7 @@ export default async function HallsPage({ params, searchParams }: Props) {
       </PageHeader>
 
       <section className="hall hall-fame">
-        <h2>🏆 Hall of Fame</h2>
+        <h2 className="hall-title"><Icon name="trophy" /> Hall of Fame</h2>
         <p>Legends of the Sunday morning. Their names will be sung (by themselves, mostly).</p>
         <div className="grid grid-3">
           {fame.map((a) => (
@@ -112,7 +113,7 @@ export default async function HallsPage({ params, searchParams }: Props) {
       </section>
 
       <section className="hall hall-shame section">
-        <h2>🤡 Hall of Shame</h2>
+        <h2 className="hall-title"><Icon name="thumbs-down" /> Hall of Shame</h2>
         <p>Every club has them. Ours just happen to keep turning up.</p>
         <div className="grid grid-3">
           {shame.map((a) => (

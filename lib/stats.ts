@@ -1,4 +1,4 @@
-import type { ClubData, Match, Player } from "@/lib/types";
+import type { ClubData, IconName, Match, Player } from "@/lib/types";
 
 export type Result = "W" | "D" | "L";
 
@@ -210,14 +210,14 @@ export interface AwardLeader {
 export interface Award {
   title: string;
   blurb: string;
-  icon: string;
+  icon: IconName;
   leaders: AwardLeader[];
 }
 
 interface AwardSpec {
   title: string;
   blurb: string;
-  icon: string;
+  icon: IconName;
   value: (s: PlayerStats) => number;
   display?: (s: PlayerStats) => string;
   eligible?: (s: PlayerStats) => boolean;
@@ -243,21 +243,21 @@ const MIN_APPS = 5;
 
 function hallOfFame(stats: PlayerStats[]): Award[] {
   return [
-    award(stats, { title: "Golden Boot", icon: "⚽", blurb: "Most goals", value: (s) => s.goals }),
-    award(stats, { title: "Playmaker", icon: "🎯", blurb: "Most assists", value: (s) => s.assists }),
-    award(stats, { title: "Mr Reliable", icon: "📅", blurb: "Most appearances", value: (s) => s.apps }),
-    award(stats, { title: "Main Character", icon: "⭐", blurb: "Most Man of the Match awards", value: (s) => s.motm }),
-    award(stats, { title: "The Wall", icon: "🧱", blurb: "Most clean sheets (keepers and defenders)", value: (s) => s.cleanSheets }),
-    award(stats, { title: "Hat-trick Hero", icon: "🎩", blurb: "Most hat-tricks", value: (s) => s.hatTricks }),
+    award(stats, { title: "Golden Boot", icon: "ball", blurb: "Most goals", value: (s) => s.goals }),
+    award(stats, { title: "Playmaker", icon: "target", blurb: "Most assists", value: (s) => s.assists }),
+    award(stats, { title: "Mr Reliable", icon: "calendar", blurb: "Most appearances", value: (s) => s.apps }),
+    award(stats, { title: "Main Character", icon: "star", blurb: "Most Man of the Match awards", value: (s) => s.motm }),
+    award(stats, { title: "The Wall", icon: "wall", blurb: "Most clean sheets (keepers and defenders)", value: (s) => s.cleanSheets }),
+    award(stats, { title: "Hat-trick Hero", icon: "hat", blurb: "Most hat-tricks", value: (s) => s.hatTricks }),
     award(stats, {
       title: "Lucky Charm",
-      icon: "🍀",
+      icon: "clover",
       blurb: `Best win rate (${MIN_APPS}+ apps)`,
       value: (s) => s.winPct,
       display: (s) => `${pct(s.winPct)} of ${s.apps}`,
       eligible: (s) => s.apps >= MIN_APPS,
     }),
-    award(stats, { title: "Ice Cold", icon: "🧊", blurb: "Most penalties scored", value: (s) => s.pens }),
+    award(stats, { title: "Ice Cold", icon: "ice", blurb: "Most penalties scored", value: (s) => s.pens }),
   ];
 }
 
@@ -265,17 +265,17 @@ function hallOfShame(stats: PlayerStats[]): Award[] {
   return [
     award(stats, {
       title: "Card Collector",
-      icon: "🟨",
+      icon: "card",
       blurb: "Most bookings (red counts as three)",
       value: (s) => s.yellows + s.reds * 3,
-      display: (s) => `${s.yellows}Y ${s.reds}R`,
+      display: (s) => [s.yellows && `${s.yellows} yellow`, s.reds && `${s.reds} red`].filter(Boolean).join(", "),
     }),
-    award(stats, { title: "Early Bath", icon: "🟥", blurb: "Most red cards", value: (s) => s.reds }),
-    award(stats, { title: "Wrong End", icon: "🙃", blurb: "Most own goals", value: (s) => s.ownGoals }),
-    award(stats, { title: "Bottle Job", icon: "🍾", blurb: "Most penalties missed", value: (s) => s.pensMissed }),
+    award(stats, { title: "Early Bath", icon: "bath", blurb: "Most red cards", value: (s) => s.reds }),
+    award(stats, { title: "Wrong End", icon: "wrong-way", blurb: "Most own goals", value: (s) => s.ownGoals }),
+    award(stats, { title: "Bottle Job", icon: "bottle", blurb: "Most penalties missed", value: (s) => s.pensMissed }),
     award(stats, {
       title: "The Jinx",
-      icon: "🐈‍⬛",
+      icon: "cat",
       blurb: `Worst win rate (${MIN_APPS}+ apps)`,
       value: (s) => s.winPct,
       display: (s) => `${pct(s.winPct)} of ${s.apps}`,
@@ -285,7 +285,7 @@ function hallOfShame(stats: PlayerStats[]): Award[] {
     }),
     award(stats, {
       title: "Ghost Mode",
-      icon: "👻",
+      icon: "ghost",
       blurb: `Fewest goal involvements per game, outfield (${MIN_APPS}+ apps)`,
       value: (s) => perGame(s.involvements, s.apps),
       display: (s) => `${s.involvements} G+A in ${s.apps}`,
@@ -295,7 +295,7 @@ function hallOfShame(stats: PlayerStats[]): Award[] {
     }),
     award(stats, {
       title: "The Sieve",
-      icon: "🥅",
+      icon: "sieve",
       blurb: "Most conceded per game in goal",
       value: (s) => perGame(s.conceded, s.apps),
       display: (s) => `${perGame(s.conceded, s.apps).toFixed(1)} per game`,

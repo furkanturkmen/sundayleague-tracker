@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Icon } from "@/components/Icon";
 import { Crest, Empty, FormGuide, GetStarted, MatchLine, PlayerLink, StatTile } from "@/components/ui";
 import { loadClub } from "@/lib/club";
 import { currentRun, formatDate, seasonLabel, summarise } from "@/lib/stats";
@@ -128,8 +129,8 @@ export default async function ClubHome({ params }: { params: Promise<{ club: str
         ].map(({ hall, cls, award }) => (
           <Link key={hall} href={`${st.base}/halls`} className={`hall ${cls}`} style={{ textDecoration: "none" }}>
             <div className="kicker" style={{ color: "inherit" }}>{hall}</div>
-            <h2 style={{ margin: "6px 0" }}>
-              {award.icon} {award.title}
+            <h2 className="hall-title" style={{ margin: "6px 0" }}>
+              <Icon name={award.icon} /> {award.title}
             </h2>
             <p style={{ margin: 0 }}>
               {award.leaders[0] ? `${award.leaders[0].player.name} · ${award.leaders[0].display}` : "Vacant"} · see the full list →
