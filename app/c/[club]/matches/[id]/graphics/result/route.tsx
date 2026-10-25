@@ -52,37 +52,51 @@ export async function GET(req: Request, ctx: RouteContext<"/c/[club]/matches/[id
   const download = new URL(req.url).searchParams.has("download") ? `uitslag-${m.date}.png` : null;
 
   const Score = ({ team }: { team: typeof us }) => (
-    <div style={{ ...display, display: "flex", alignItems: "center", justifyContent: "center", width: 150, height: 170, paddingTop: 14, fontSize: 150, background: team.ours ? p.bright : "#fff", color: team.ours ? "#fff" : "#07101f" }}>
+    <div
+      style={{
+        ...display,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        width: 150,
+        height: 170,
+        paddingTop: 14,
+        fontSize: 150,
+        background: team.ours ? p.bright : "#fff",
+        color: team.ours ? "#fff" : "#07101f",
+      }}
+    >
       {String(team.score)}
     </div>
   );
 
   return new ImageResponse(
-    (
-      <div style={{ position: "relative", width: "100%", height: "100%", display: "flex", fontFamily: "DM Sans", color: "#fff" }}>
-        <Backdrop p={p} logo={null} />
-        <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, display: "flex", flexDirection: "column", alignItems: "center", padding: "76px 60px 110px" }}>
-          <Kicker p={p}>{`${club.name.toUpperCase()} · EINDSTAND`}</Kicker>
-          <div style={{ ...display, fontSize: 200, marginTop: 6, letterSpacing: 2 }}>{title}</div>
+    <div style={{ position: "relative", width: "100%", height: "100%", display: "flex", fontFamily: "DM Sans", color: "#fff" }}>
+      <Backdrop p={p} logo={null} />
+      <div
+        style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, display: "flex", flexDirection: "column", alignItems: "center", padding: "76px 60px 110px" }}
+      >
+        <Kicker p={p}>{`${club.name.toUpperCase()} · EINDSTAND`}</Kicker>
+        <div style={{ ...display, fontSize: 200, marginTop: 6, letterSpacing: 2 }}>{title}</div>
 
-          <div style={{ display: "flex", flex: 1, flexDirection: "column", alignItems: "center", justifyContent: "space-around", width: "100%" }}>
+        <div style={{ display: "flex", flex: 1, flexDirection: "column", alignItems: "center", justifyContent: "space-around", width: "100%" }}>
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "center" }}>
-            <div style={{ display: "flex", width: 300, justifyContent: "center" }}>
-              <TeamBlock p={p} logo={home.logo} name={home.name} size={200} width={300} />
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "center" }}>
+              <div style={{ display: "flex", width: 300, justifyContent: "center" }}>
+                <TeamBlock p={p} logo={home.logo} name={home.name} size={200} width={300} />
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 14, marginTop: 15 }}>
+                <Score team={home} />
+                <div style={{ ...display, fontSize: 80, color: "#8d9bb3" }}>-</div>
+                <Score team={away} />
+              </div>
+              <div style={{ display: "flex", width: 300, justifyContent: "center" }}>
+                <TeamBlock p={p} logo={away.logo} name={away.name} size={200} width={300} />
+              </div>
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 14, marginTop: 15 }}>
-              <Score team={home} />
-              <div style={{ ...display, fontSize: 80, color: "#8d9bb3" }}>-</div>
-              <Score team={away} />
+            <div style={{ fontSize: 24, fontWeight: 700, letterSpacing: 5, color: "#c3cfe2", marginTop: 26 }}>
+              {`${dutchDate(m.date)} · ${competitionLabel(m.competition, club.voetbal?.league)}`}
             </div>
-            <div style={{ display: "flex", width: 300, justifyContent: "center" }}>
-              <TeamBlock p={p} logo={away.logo} name={away.name} size={200} width={300} />
-            </div>
-          </div>
-          <div style={{ fontSize: 24, fontWeight: 700, letterSpacing: 5, color: "#c3cfe2", marginTop: 26 }}>
-            {`${dutchDate(m.date)} · ${competitionLabel(m.competition, club.voetbal?.league)}`}
-          </div>
           </div>
 
           {(scorers.length > 0 || motm) && (
@@ -114,10 +128,9 @@ export async function GET(req: Request, ctx: RouteContext<"/c/[club]/matches/[id
               )}
             </div>
           )}
-          </div>
         </div>
       </div>
-    ),
+    </div>,
     { ...POST, fonts: await graphicFonts(), headers: pngHeaders(download) },
   );
 }
