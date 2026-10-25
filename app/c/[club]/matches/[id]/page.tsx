@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Icon } from "@/components/Icon";
 import { ConfirmSubmit } from "@/components/forms";
-import { Empty, PlayerLink, ResultBadge } from "@/components/ui";
+import { Crest, Empty, PlayerLink, ResultBadge, TeamLogo } from "@/components/ui";
 import { deleteMatch } from "@/lib/actions";
 import { loadClub } from "@/lib/club";
 import { formatDate, seasonLabel, seasonOf } from "@/lib/stats";
@@ -47,9 +47,15 @@ export default async function MatchPage({ params }: Props) {
       </div>
       <div className="card" style={{ marginTop: 12 }}>
         <div className="scoreboard">
-          <div className="team">{home}</div>
+          <div className="team">
+            {fixture.venue === "H" ? <Crest short={club.shortName} logo={club.logo} size={52} /> : <TeamLogo code={fixture.opponentCode} name={fixture.opponent} size={60} />}
+            <span>{home}</span>
+          </div>
           <div className="big">{m ? `${homeScore}–${awayScore}` : "vs"}</div>
-          <div className="team">{away}</div>
+          <div className="team">
+            {fixture.venue === "A" ? <Crest short={club.shortName} logo={club.logo} size={52} /> : <TeamLogo code={fixture.opponentCode} name={fixture.opponent} size={60} />}
+            <span>{away}</span>
+          </div>
         </div>
         <div className="meta-row">
           {m && <ResultBadge result={m.result} />}

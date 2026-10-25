@@ -13,6 +13,9 @@ export interface ScheduleRow {
   date: string;
   home: string;
   away: string;
+  /** voetbal.nl club codes, which logoapi.voetbal.nl turns into crests. */
+  homeCode: string | null;
+  awayCode: string | null;
   /** Which side is the followed team, or null when this row is someone else's match. */
   us: "home" | "away" | null;
   score: { home: number; away: number } | null;
@@ -24,6 +27,7 @@ export interface ScheduleRow {
 export interface StandingRow {
   position: number;
   team: string;
+  clubCode: string | null;
   played: number;
   won: number;
   drawn: number;
@@ -36,6 +40,9 @@ export interface StandingRow {
 }
 
 const clean = (s: string) => s.replace(/\s+/g, " ").trim();
+
+/** The club code in a logoapi.voetbal.nl image link, e.g. "BBCY43G". */
+const clubCode = (src: string | undefined) => src?.match(/clubcode=([A-Z0-9]+)/i)?.[1] ?? null;
 
 /** Same team, however voetbal.nl happens to space or capitalise it ("DWS AFC 2" vs "DWS afc 2"). */
 export const sameName = (a: string, b: string) => clean(a).toLowerCase() === clean(b).toLowerCase();
@@ -84,6 +91,8 @@ export function parseSchedule(html: string): ScheduleRow[] {
           date,
           home,
           away,
+          homeCode: clubCode($(a).find(".value.home img").attr("src")),
+          awayCode: clubCode($(a).find(".value.away img").attr("src")),
           us,
           score: score ? { home: Number(score[1]), away: Number(score[2]) } : null,
           kickoff: time ? center : null,
@@ -108,6 +117,7 @@ export function parseStandings(html: string): StandingRow[] {
     rows.push({
       position: num(pick("position")?.text() ?? ""),
       team,
+      clubCode: clubCode($(a).find(".value.logo img").attr("src")),
       played: stats[0],
       won: stats[1],
       drawn: stats[2],

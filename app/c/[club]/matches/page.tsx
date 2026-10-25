@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { GetStarted, PageHeader, PlayerLink, ResultBadge } from "@/components/ui";
+import { GetStarted, PageHeader, PlayerLink, ResultBadge, TeamLogo } from "@/components/ui";
 import { loadClub } from "@/lib/club";
 import { formatDate, seasonLabel, summarise } from "@/lib/stats";
 
@@ -27,7 +27,11 @@ export default async function MatchesPage({ params }: { params: Promise<{ club: 
                   <tr key={m.id}>
                     <td className="muted">{formatDate(m.date, { weekday: "short", day: "numeric", month: "short" })}</td>
                     <td className="strong">
-                      <Link href={`${st.base}/matches/${m.id}`}>{st.fixtureTitle(m)}</Link>
+                      <span className="with-logo">
+                        <TeamLogo code={m.opponentCode} name={m.opponent} />
+                        <Link href={`${st.base}/matches/${m.id}`}>{st.fixtureTitle(m)}</Link>
+                        {m.kickoff && <span className="muted small">{m.kickoff}</span>}
+                      </span>
                     </td>
                     <td>{m.competition !== "League" && <span className="chip">{m.competition}</span>}</td>
                   </tr>
@@ -69,7 +73,10 @@ export default async function MatchesPage({ params }: { params: Promise<{ club: 
                       <td><ResultBadge result={m.result} /></td>
                       <td className="muted">{formatDate(m.date, { day: "numeric", month: "short" })}</td>
                       <td className="strong">
-                        <Link href={`${st.base}/matches/${m.id}`}>{m.opponent}</Link> <span className="muted small">({m.venue})</span>
+                        <span className="with-logo">
+                          <TeamLogo code={m.opponentCode} name={m.opponent} />
+                          <Link href={`${st.base}/matches/${m.id}`}>{m.opponent}</Link> <span className="muted small">({m.venue})</span>
+                        </span>
                       </td>
                       <td>{m.competition !== "League" && <span className="chip">{m.competition}</span>}</td>
                       <td className="num strong">

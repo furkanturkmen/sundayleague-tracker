@@ -152,6 +152,7 @@ export async function syncClub(clubId: string): Promise<SyncSummary> {
       for (const r of rows.values()) {
         const venue = r.us === "home" ? "H" : "A";
         const opponent = r.us === "home" ? r.away : r.home;
+        const opponentCode = r.us === "home" ? r.awayCode : r.homeCode;
         const gf = r.score ? (r.us === "home" ? r.score.home : r.score.away) : null;
         const ga = r.score ? (r.us === "home" ? r.score.away : r.score.home) : null;
 
@@ -168,14 +169,14 @@ export async function syncClub(clubId: string): Promise<SyncSummary> {
         if (existing) {
           await tx`
             update matches set external_id = ${r.id}, date = ${r.date}, opponent = ${opponent}, venue = ${venue},
-              kickoff = coalesce(${r.kickoff}, kickoff),
+              kickoff = coalesce(${r.kickoff}, kickoff), opponent_code = coalesce(${opponentCode}, opponent_code),
               goals_for = coalesce(${gf}, goals_for), goals_against = coalesce(${ga}, goals_against)
             where id = ${existing.id}`;
           summary.updated++;
         } else {
           await tx`
-            insert into matches (club_id, external_id, date, opponent, venue, competition, kickoff, goals_for, goals_against)
-            values (${clubId}, ${r.id}, ${r.date}, ${opponent}, ${venue}, ${r.cup ? "Cup" : "League"}, ${r.kickoff}, ${gf}, ${ga})`;
+            insert into matches (club_id, external_id, date, opponent, opponent_code, venue, competition, kickoff, goals_for, goals_against)
+            values (${clubId}, ${r.id}, ${r.date}, ${opponent}, ${opponentCode}, ${venue}, ${r.cup ? "Cup" : "League"}, ${r.kickoff}, ${gf}, ${ga})`;
           summary.added++;
         }
         if (r.score) summary.results++;
@@ -188,6 +189,7 @@ export async function syncClub(clubId: string): Promise<SyncSummary> {
             club_id: clubId,
             position: t.position,
             team: t.team,
+            club_code: t.clubCode,
             played: t.played,
             won: t.won,
             drawn: t.drawn,

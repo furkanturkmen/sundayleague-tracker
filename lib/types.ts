@@ -29,6 +29,7 @@ export interface VoetbalLink {
 export interface Standing {
   position: number;
   team: string;
+  clubCode: string | null;
   played: number;
   won: number;
   drawn: number;
@@ -78,6 +79,8 @@ export interface Match {
   goalsFor?: number;
   /** Kick-off time as voetbal.nl shows it, e.g. "13:00". */
   kickoff?: string;
+  /** voetbal.nl club code of the opponent, for its crest. */
+  opponentCode?: string;
   /** voetbal.nl match id, for matches that came from the sync. */
   externalId?: string;
   /** Names on our side of the voetbal.nl line-up. */

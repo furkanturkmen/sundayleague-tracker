@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Icon } from "@/components/Icon";
-import { Crest, Empty, FormGuide, GetStarted, LeagueTable, MatchLine, PlayerLink, StatTile } from "@/components/ui";
+import { Crest, Empty, FormGuide, GetStarted, LeagueTable, MatchLine, PlayerLink, StatTile, TeamLogo } from "@/components/ui";
 import { loadClub } from "@/lib/club";
 import { currentRun, formatDate, seasonLabel, summarise } from "@/lib/stats";
 
@@ -51,7 +51,10 @@ export default async function ClubHome({ params }: { params: Promise<{ club: str
           <h2>Next up</h2>
           {next ? (
             <Link href={`${st.base}/matches/${next.id}`} style={{ textDecoration: "none" }}>
-              <div style={{ fontSize: "1.25rem", fontWeight: 800 }}>{st.fixtureTitle(next)}</div>
+              <div className="with-logo" style={{ fontSize: "1.25rem", fontWeight: 800 }}>
+                <TeamLogo code={next.opponentCode} name={next.opponent} size={32} />
+                {st.fixtureTitle(next)}
+              </div>
               <div className="muted">
                 {formatDate(next.date, { weekday: "long", day: "numeric", month: "long" })}
                 {next.kickoff && <>, {next.kickoff}</>} · {next.competition}

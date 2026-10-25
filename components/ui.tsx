@@ -22,6 +22,16 @@ export function Crest({ short, logo, size = 44 }: { short: string; logo?: string
   );
 }
 
+/** An opponent's crest from voetbal.nl, or a neutral disc with their initial for matches logged by hand. */
+export function TeamLogo({ code, name, size = 22 }: { code?: string | null; name: string; size?: number }) {
+  if (code) return <img src={`/logos/${code}`} alt="" width={size} height={size} className="team-logo" loading="lazy" />;
+  return (
+    <span className="team-logo team-logo-blank" style={{ width: size, height: size, fontSize: size * 0.45 }} aria-hidden="true">
+      {name.replace(/^(afc|asv|avv|sv|vv|rksv|sc|fc)\s+/i, "").charAt(0).toUpperCase()}
+    </span>
+  );
+}
+
 const resultWord: Record<Result, string> = { W: "Win", D: "Draw", L: "Loss" };
 
 export function ResultBadge({ result }: { result: Result }) {
@@ -90,7 +100,10 @@ export function MatchLine({ st, m }: { st: Stats; m: PlayedMatch }) {
   return (
     <Link href={`${st.base}/matches/${m.id}`} className="match-line">
       <ResultBadge result={m.result} />
-      <span className="match-line-title">{st.fixtureTitle(m)}</span>
+      <span className="match-line-title with-logo">
+        <TeamLogo code={m.opponentCode} name={m.opponent} />
+        <span>{st.fixtureTitle(m)}</span>
+      </span>
       {/* Same order as the title, home side first, so "Pancratius 4 vs DWS" reads 2–0, not 0–2. */}
       <span className="match-line-score">{m.venue === "H" ? `${m.gf}–${m.ga}` : `${m.ga}–${m.gf}`}</span>
       <span className="muted small">{formatDate(m.date)}</span>
@@ -133,9 +146,9 @@ export function LeagueTable({ rows, league }: { rows: Standing[]; league: string
               <th className="num">#</th>
               <th>Team</th>
               <th className="num" title="Played">P</th>
-              <th className="num" title="Won">W</th>
-              <th className="num" title="Drawn">D</th>
-              <th className="num" title="Lost">L</th>
+              <th className="num hide-sm" title="Won">W</th>
+              <th className="num hide-sm" title="Drawn">D</th>
+              <th className="num hide-sm" title="Lost">L</th>
               <th className="num" title="Goals for and against">Goals</th>
               {penalties && <th className="num" title="Penalty points deducted">Pen</th>}
               <th className="num" title="Points">Pts</th>
@@ -145,11 +158,16 @@ export function LeagueTable({ rows, league }: { rows: Standing[]; league: string
             {rows.map((r) => (
               <tr key={r.team} className={r.isUs ? "is-us" : undefined}>
                 <td className="num muted">{r.position}</td>
-                <td className="strong">{r.team}</td>
+                <td className="strong">
+                  <span className="with-logo">
+                    <TeamLogo code={r.clubCode} name={r.team} />
+                    {r.team}
+                  </span>
+                </td>
                 <td className="num">{r.played}</td>
-                <td className="num">{r.won}</td>
-                <td className="num">{r.drawn}</td>
-                <td className="num">{r.lost}</td>
+                <td className="num hide-sm">{r.won}</td>
+                <td className="num hide-sm">{r.drawn}</td>
+                <td className="num hide-sm">{r.lost}</td>
                 <td className="num">
                   {r.goalsFor}–{r.goalsAgainst}
                 </td>

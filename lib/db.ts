@@ -56,6 +56,7 @@ alter table matches add column if not exists external_id text;
 alter table matches add column if not exists goals_for int check (goals_for >= 0);
 alter table matches add column if not exists kickoff text;
 alter table matches add column if not exists lineup text[];
+alter table matches add column if not exists opponent_code text;
 create unique index if not exists matches_external_idx on matches(club_id, external_id);
 
 create table if not exists match_players (
@@ -113,6 +114,7 @@ create table if not exists standings (
   is_us boolean not null default false,
   primary key (club_id, position, team)
 );
+alter table standings add column if not exists club_code text;
 `;
 
 const globalForDb = globalThis as unknown as { sql?: postgres.Sql; schema?: Promise<unknown> };
