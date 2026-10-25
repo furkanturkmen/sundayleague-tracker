@@ -59,7 +59,7 @@ export default async function SettingsPage({ params, searchParams }: Props) {
         {players.length > 0 ? (
           <ul className="squad-list">
             {players.map((p) => (
-              <EditPlayerRow key={p.id} player={p} save={savePlayer.bind(null, slug)} remove={deletePlayer.bind(null, slug)} />
+              <EditPlayerRow key={p.id} player={p} squad={data.players} save={savePlayer.bind(null, slug)} remove={deletePlayer.bind(null, slug)} />
             ))}
           </ul>
         ) : (

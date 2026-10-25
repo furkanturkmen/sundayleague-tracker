@@ -23,10 +23,15 @@ interface ClubRow {
   voetbal_league: string | null;
   voetbal_synced_at: Date | null;
   voetbal_error: string | null;
+  coach_name: string | null;
+  has_coach_photo: boolean;
+  coach_photo_version: number;
   password_hash: string;
 }
 
 const logoUrl = (slug: string, hasLogo: boolean, version: number) => (hasLogo ? `/c/${slug}/logo?v=${version}` : null);
+/** Player photos by id, and the coach's as "coach". */
+const photoUrl = (slug: string, who: string, has: boolean, version: number) => (has ? `/c/${slug}/photos/${who}?v=${version}` : null);
 
 function toClub(r: ClubRow): Club {
   return {
@@ -48,6 +53,7 @@ function toClub(r: ClubRow): Club {
           error: r.voetbal_error,
         }
       : null,
+    coach: { name: r.coach_name, photo: photoUrl(r.slug, "coach", r.has_coach_photo, r.coach_photo_version) },
   };
 }
 
@@ -90,17 +96,44 @@ const clubRow = cache(async (slug: string): Promise<ClubRow | undefined> => {
   const sql = await db();
   const [row] = await sql<ClubRow[]>`
     select id, slug, name, short_name, tagline, accent, gold, founded, logo is not null as has_logo, logo_version,
-      voetbal_team_id, voetbal_team_name, voetbal_league, voetbal_synced_at, voetbal_error, password_hash
+      voetbal_team_id, voetbal_team_name, voetbal_league, voetbal_synced_at, voetbal_error,
+      coach_name, coach_photo is not null as has_coach_photo, coach_photo_version, password_hash
     from clubs where slug = ${slug}`;
   return row;
 });
+
+export const decodeDataUrl = (url: string | null | undefined): { type: string; body: Buffer } | undefined => {
+  const m = url?.match(/^data:(image\/(?:png|webp|jpeg));base64,(.+)$/);
+  return m ? { type: m[1], body: Buffer.from(m[2], "base64") } : undefined;
+};
 
 /** The stored crest image, decoded for the logo route. */
 export async function getClubLogo(slug: string): Promise<{ type: string; body: Buffer } | undefined> {
   const sql = await db();
   const [row] = await sql<{ logo: string | null }[]>`select logo from clubs where slug = ${slug}`;
-  const m = row?.logo?.match(/^data:(image\/(?:png|webp|jpeg));base64,(.+)$/);
-  return m ? { type: m[1], body: Buffer.from(m[2], "base64") } : undefined;
+  return decodeDataUrl(row?.logo);
+}
+
+/** A player's photo, or the coach's for "coach", decoded for the photos route. */
+export async function getPhoto(slug: string, who: string): Promise<{ type: string; body: Buffer } | undefined> {
+  const sql = await db();
+  if (who === "coach") {
+    const [row] = await sql<{ photo: string | null }[]>`select coach_photo as photo from clubs where slug = ${slug}`;
+    return decodeDataUrl(row?.photo);
+  }
+  if (!/^[0-9a-f-]{36}$/i.test(who)) return undefined;
+  const [row] = await sql<{ photo: string | null }[]>`
+    select p.photo from players p join clubs c on c.id = p.club_id where c.slug = ${slug} and p.id = ${who}`;
+  return decodeDataUrl(row?.photo);
+}
+
+/** The images themselves (data URLs), for drawing graphics on the server. */
+export async function getGraphicImages(slug: string): Promise<{ logo: string | null; coach: string | null; players: Map<string, string> }> {
+  const sql = await db();
+  const [club] = await sql<{ id: string; logo: string | null; coach_photo: string | null }[]>`select id, logo, coach_photo from clubs where slug = ${slug}`;
+  if (!club) return { logo: null, coach: null, players: new Map() };
+  const rows = await sql<{ id: string; photo: string }[]>`select id, photo from players where club_id = ${club.id} and photo is not null`;
+  return { logo: club.logo, coach: club.coach_photo, players: new Map(rows.map((r) => [r.id, r.photo])) };
 }
 
 export async function getClubAuth(slug: string): Promise<{ club: Club; passwordHash: string } | undefined> {
@@ -123,8 +156,9 @@ export const loadClubData = cache(async (slug: string): Promise<ClubData | undef
   const id = row.id;
 
   const [playerRows, matchRows, squadRows, goalRows, eventRows, momentRows, standingRows] = await Promise.all([
-    sql<{ id: string; name: string; number: number | null; position: Position; nickname: string | null; bio: string | null; active: boolean }[]>`
-      select id, name, number, position, nickname, bio, active from players where club_id = ${id} order by number nulls last, name`,
+    sql<{ id: string; name: string; number: number | null; position: Position; nickname: string | null; bio: string | null; active: boolean; display_name: string | null; has_photo: boolean; photo_version: number }[]>`
+      select id, name, number, position, nickname, bio, active, display_name, photo is not null as has_photo, photo_version
+      from players where club_id = ${id} order by number nulls last, name`,
     sql<{
       id: string;
       date: Date;
@@ -138,10 +172,14 @@ export const loadClubData = cache(async (slug: string): Promise<ClubData | undef
       opponent_code: string | null;
       status: MatchStatus | null;
       lineup: string[] | null;
+      formation: string | null;
+      starters: (string | null)[] | null;
+      bench: string[] | null;
       motm: string | null;
       notes: string | null;
     }[]>`
-      select id, date, opponent, venue, competition, goals_for, goals_against, kickoff, external_id, opponent_code, status, lineup, motm, notes
+      select id, date, opponent, venue, competition, goals_for, goals_against, kickoff, external_id, opponent_code, status, lineup,
+        formation, starters, bench, motm, notes
       from matches where club_id = ${id} order by date, created_at`,
     sql<{ match_id: string; player_id: string }[]>`
       select mp.match_id, mp.player_id from match_players mp join matches m on m.id = mp.match_id where m.club_id = ${id}`,
@@ -165,7 +203,11 @@ export const loadClubData = cache(async (slug: string): Promise<ClubData | undef
   const goals = byMatch(goalRows);
   const events = byMatch(eventRows);
 
-  const players: Player[] = playerRows.map((p) => ({ ...p }));
+  const players: Player[] = playerRows.map(({ display_name, has_photo, photo_version, ...p }) => ({
+    ...p,
+    displayName: display_name,
+    photo: photoUrl(row.slug, p.id, has_photo, photo_version),
+  }));
   const matches: Match[] = matchRows.map((m) => {
     const ev = events.get(m.id) ?? [];
     return {
@@ -181,6 +223,9 @@ export const loadClubData = cache(async (slug: string): Promise<ClubData | undef
       opponentCode: m.opponent_code ?? undefined,
       status: m.status ?? undefined,
       lineup: m.lineup ?? undefined,
+      formation: m.formation ?? undefined,
+      starters: m.starters ?? undefined,
+      bench: m.bench ?? undefined,
       squad: (squads.get(m.id) ?? []).map((s) => s.player_id),
       goals: (goals.get(m.id) ?? []).map(
         (g): Goal => ({ scorer: g.scorer_id ?? "og", assist: g.assist_id ?? undefined, minute: g.minute ?? undefined, penalty: g.penalty || undefined }),

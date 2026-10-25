@@ -23,6 +23,10 @@ alter table clubs add column if not exists voetbal_team_name text;
 alter table clubs add column if not exists voetbal_league text;
 alter table clubs add column if not exists voetbal_synced_at timestamptz;
 alter table clubs add column if not exists voetbal_error text;
+-- Head coach, shown on the line-up graphic. The photo is a PNG data URL like the logo.
+alter table clubs add column if not exists coach_name text;
+alter table clubs add column if not exists coach_photo text;
+alter table clubs add column if not exists coach_photo_version int not null default 0;
 
 create table if not exists players (
   id uuid primary key default gen_random_uuid(),
@@ -36,6 +40,10 @@ create table if not exists players (
   created_at timestamptz not null default now()
 );
 create index if not exists players_club_idx on players(club_id);
+-- For the graphics: a short name ("BURAK C") and a photo, ideally cut out on a transparent background.
+alter table players add column if not exists display_name text;
+alter table players add column if not exists photo text;
+alter table players add column if not exists photo_version int not null default 0;
 -- Specific positions (LB, CDM, ST, ...) on top of the original four lines.
 do $$ begin
   if not exists (select 1 from pg_constraint where conname = 'players_position_v2') then
@@ -68,6 +76,11 @@ alter table matches add column if not exists opponent_code text;
 -- Set when voetbal.nl has no result: 'abandoned' (gestaakt) or 'called-off' (afgelast). Not counted in any stats.
 alter table matches add column if not exists status text;
 create unique index if not exists matches_external_idx on matches(club_id, external_id);
+-- The line-up graphic: formation (e.g. '4-2-3-1'), starters in the formation's slot order (null for an empty
+-- slot) and the bench.
+alter table matches add column if not exists formation text;
+alter table matches add column if not exists starters uuid[];
+alter table matches add column if not exists bench uuid[];
 
 create table if not exists match_players (
   match_id uuid not null references matches(id) on delete cascade,

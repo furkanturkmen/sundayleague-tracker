@@ -55,6 +55,7 @@ export interface Club {
   /** URL of the uploaded crest, or null to draw the shield. */
   logo: string | null;
   voetbal: VoetbalLink | null;
+  coach: { name: string | null; photo: string | null };
 }
 
 /** The club's link to a voetbal.nl team, set in Settings. */
@@ -93,6 +94,10 @@ export interface Player {
   nickname: string | null;
   bio: string | null;
   active: boolean;
+  /** Name on the graphics, e.g. "BURAK C". Null means work one out from the name. */
+  displayName: string | null;
+  /** URL of the uploaded photo, or null. */
+  photo: string | null;
 }
 
 export type Venue = "H" | "A";
@@ -131,6 +136,10 @@ export interface Match {
   externalId?: string;
   /** Names on our side of the voetbal.nl line-up. */
   lineup?: string[];
+  /** Set on the line-up page for the graphic: a formation key from lib/formations, starters per slot, bench. */
+  formation?: string;
+  starters?: (string | null)[];
+  bench?: string[];
   squad: string[];
   cards: Card[];
   motm?: string;

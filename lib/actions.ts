@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { endSession, hashPassword, hasSession, startSession, verifyPassword } from "@/lib/auth";
 import { getClubAuth } from "@/lib/club";
 import { db } from "@/lib/db";
+import { FORMATIONS, formationSlots, MAX_BENCH } from "@/lib/lineup";
 import { POSITIONS, type Position } from "@/lib/types";
 import { linkLineup, syncClub, voetbalConfigured } from "@/lib/voetbal";
 import { parseTeamId, sameName } from "@/lib/voetbal-parse";
@@ -60,6 +61,19 @@ function logoField(f: FormData): { error: string } | { logo: string | null | und
   return { logo: v };
 }
 
+// Photos are drawn into the graphics, which can't read WebP, so the browser always sends a PNG or JPEG.
+const PHOTO = /^data:image\/(png|jpeg);base64,[A-Za-z0-9+/]+=*$/;
+const PHOTO_MAX = 900_000;
+
+/** Same contract as logoField: a data URL, "remove", or nothing to keep the current one. */
+function photoField(f: FormData, key: string): { error: string } | { photo: string | null | undefined } {
+  const v = String(f.get(key) ?? "");
+  if (!v) return { photo: undefined };
+  if (v === "remove") return { photo: null };
+  if (v.length > PHOTO_MAX || !PHOTO.test(v)) return { error: "That photo couldn't be used. Try a PNG or JPG." };
+  return { photo: v };
+}
+
 // ---------- clubs ----------
 
 export async function createClub(_: FormState, f: FormData): Promise<FormState> {
@@ -94,12 +108,16 @@ export async function updateClub(slug: string, _: FormState, f: FormData): Promi
   if ("error" in fields) return fields;
   const logo = logoField(f);
   if ("error" in logo) return logo;
+  const coachPhoto = photoField(f, "coachPhoto");
+  if ("error" in coachPhoto) return coachPhoto;
   const sql = await db();
   await sql`
     update clubs set name = ${fields.name}, short_name = ${fields.shortName}, tagline = ${fields.tagline},
-      accent = ${fields.accent}, gold = ${fields.gold}, founded = ${fields.founded}
+      accent = ${fields.accent}, gold = ${fields.gold}, founded = ${fields.founded}, coach_name = ${text(f, "coach", 40) || null}
     where id = ${club.id}`;
   if (logo.logo !== undefined) await sql`update clubs set logo = ${logo.logo}, logo_version = logo_version + 1 where id = ${club.id}`;
+  if (coachPhoto.photo !== undefined)
+    await sql`update clubs set coach_photo = ${coachPhoto.photo}, coach_photo_version = coach_photo_version + 1 where id = ${club.id}`;
   refresh(slug);
   return { ok: "Club settings saved." };
 }
@@ -213,16 +231,24 @@ export async function savePlayer(slug: string, _: FormState, f: FormData): Promi
   const number = optInt(f.get("number"), 0, 999);
   const nickname = text(f, "nickname", 40) || null;
   const bio = text(f, "bio", 300) || null;
+  const displayName = text(f, "displayName", 16).toUpperCase() || null;
   const active = id ? f.get("active") === "on" : true;
+  const photo = photoField(f, "photo");
+  if ("error" in photo) return photo;
 
   const sql = await db();
   if (id) {
     if (!UUID.test(id)) return { error: "Unknown player." };
     await sql`
-      update players set name = ${name}, number = ${number}, position = ${position}, nickname = ${nickname}, bio = ${bio}, active = ${active}
+      update players set name = ${name}, number = ${number}, position = ${position}, nickname = ${nickname}, bio = ${bio}, active = ${active},
+        display_name = ${displayName}
       where id = ${id} and club_id = ${club.id}`;
+    if (photo.photo !== undefined)
+      await sql`update players set photo = ${photo.photo}, photo_version = photo_version + 1 where id = ${id} and club_id = ${club.id}`;
   } else {
-    await sql`insert into players (club_id, name, number, position, nickname, bio) values (${club.id}, ${name}, ${number}, ${position}, ${nickname}, ${bio})`;
+    await sql`
+      insert into players (club_id, name, number, position, nickname, bio, display_name, photo)
+      values (${club.id}, ${name}, ${number}, ${position}, ${nickname}, ${bio}, ${displayName}, ${photo.photo ?? null})`;
   }
   refresh(slug);
   return { ok: id ? `${name} updated.` : `${name} added to the squad.` };
@@ -339,6 +365,31 @@ export async function saveMatch(slug: string, _: FormState, f: FormData): Promis
 
   refresh(slug);
   redirect(`/c/${slug}/matches/${matchId}`);
+}
+
+/** Formation, starters and bench for the line-up graphic. Doesn't touch the match squad or stats. */
+export async function saveLineup(slug: string, matchId: string, _: FormState, f: FormData): Promise<FormState> {
+  const club = await requireAdmin(slug);
+  if (!UUID.test(matchId)) return { error: "Unknown match." };
+  const formation = text(f, "formation", 10);
+  if (!FORMATIONS[formation]) return { error: "Pick a formation." };
+  const sql = await db();
+  const owned = new Set((await sql<{ id: string }[]>`select id from players where club_id = ${club.id}`).map((r) => r.id));
+  const starters = formationSlots(formation).map((_, i) => {
+    const id = text(f, `slot${i}`, 36);
+    return owned.has(id) ? id : null;
+  });
+  const dupe = starters.find((id, i) => id && starters.indexOf(id) !== i);
+  if (dupe) return { error: "Someone is in the line-up twice. Each player can only take one spot." };
+  const bench = [...new Set(f.getAll("bench").map(String))].filter((id) => owned.has(id) && !starters.includes(id)).slice(0, MAX_BENCH);
+  // As Postgres array literals: ids are checked uuids, so nothing needs quoting, and an empty slot is NULL.
+  const array = (ids: (string | null)[]) => `{${ids.map((id) => id ?? "NULL").join(",")}}`;
+  const [row] = await sql<{ id: string }[]>`
+    update matches set formation = ${formation}, starters = ${array(starters)}::uuid[], bench = ${array(bench)}::uuid[]
+    where id = ${matchId} and club_id = ${club.id} returning id`;
+  if (!row) return { error: "Match not found." };
+  refresh(slug);
+  return { ok: "Line-up saved." };
 }
 
 export async function deleteMatch(slug: string, f: FormData): Promise<void> {

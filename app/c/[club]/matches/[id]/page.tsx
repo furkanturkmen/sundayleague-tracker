@@ -37,6 +37,7 @@ export default async function MatchPage({ params }: Props) {
         <Link href={`${st.base}/matches`} className="small muted">← All matches</Link>
         {admin && (
           <div className="form-actions">
+            {!fixture.status && <Link href={`${st.base}/matches/${id}/lineup`} className="btn btn-secondary">Line-up graphic</Link>}
             <Link href={`${st.base}/matches/${id}/edit`} className="btn btn-secondary">Edit</Link>
             <form action={deleteMatch.bind(null, slug)}>
               <input type="hidden" name="id" value={id} />

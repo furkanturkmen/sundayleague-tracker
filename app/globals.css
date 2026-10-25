@@ -419,3 +419,14 @@ fieldset p { margin: 0; }
 .danger-zone { border-color: color-mix(in srgb, var(--shame) 40%, var(--line)); }
 .get-started { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
 .get-started p { margin: 0; }
+
+/* Line-up graphic editor: the form beside the preview, stacked on small screens. */
+.lineup-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 16px; align-items: start; margin-top: 16px; }
+@media (max-width: 860px) { .lineup-layout { grid-template-columns: 1fr; } }
+.lineup-slots { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.lineup-slots li { display: grid; grid-template-columns: 52px 1fr; align-items: center; gap: 10px; }
+.lineup-slots .chip { text-align: center; }
+.lineup-bench { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 6px 16px; }
+.lineup-preview { position: sticky; top: 76px; display: grid; gap: 14px; }
+@media (max-width: 860px) { .lineup-preview { position: static; } }
+.lineup-preview img { width: 100%; height: auto; border-radius: 8px; display: block; background: #040915; }
