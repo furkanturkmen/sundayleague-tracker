@@ -4,7 +4,11 @@ import { formatDate, seasonLabel, type PlayedMatch, type Result, type Stats } fr
 
 /** The club's uploaded logo, or a shield drawn in its colours when there isn't one. */
 export function Crest({ short, logo, size = 44 }: { short: string; logo?: string | null; size?: number }) {
-  if (logo) return <img src={logo} alt="" width={size} height={Math.round(size * 1.15)} className="crest crest-logo" />;
+  // Same height as the shield; wide crests get up to twice its width instead of shrinking to fit.
+  if (logo) {
+    const height = Math.round(size * 1.15);
+    return <img src={logo} alt="" height={height} className="crest crest-logo" style={{ height, maxWidth: size * 2 }} />;
+  }
   const fontSize = short.length <= 3 ? 11 : short.length === 4 ? 9 : 7.5;
   return (
     <svg width={size} height={size * 1.15} viewBox="0 0 40 46" aria-hidden="true" className="crest">

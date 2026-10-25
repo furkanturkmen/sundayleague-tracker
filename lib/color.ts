@@ -6,5 +6,5 @@ export function inkFor(hex: string): string {
     return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
   });
   const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-  return lum > 0.4 ? "#0c1310" : "#ffffff";
+  return lum > 0.4 ? "#0b0b0c" : "#ffffff";
 }

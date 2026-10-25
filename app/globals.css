@@ -1,12 +1,12 @@
 /* Default colours. Each club overrides --accent and --gold from its settings. */
 :root {
-  --bg: #f4f6f4;
+  --bg: #f5f5f6;
   --surface: #ffffff;
-  --surface-2: #eef2ef;
-  --ink: #13201a;
-  --ink-2: #44554c;
-  --muted: #74847b;
-  --line: #dce3de;
+  --surface-2: #efeff1;
+  --ink: #141416;
+  --ink-2: #4a4a52;
+  --muted: #76767e;
+  --line: #e0e0e4;
   --accent: #17663f;
   --accent-ink: #ffffff;
   --gold: #b07d0c;
@@ -16,7 +16,7 @@
   --win: #17663f;
   --draw: #9a6200;
   --loss: #b3261e;
-  --against: #8b968f;
+  --against: #8e8e96;
   --radius: 12px;
   --shadow: 0 1px 2px rgb(0 0 0 / 0.05), 0 2px 8px rgb(0 0 0 / 0.04);
   color-scheme: light;
@@ -24,13 +24,13 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #0c1310;
-    --surface: #131c17;
-    --surface-2: #1a251f;
-    --ink: #e7eee9;
-    --ink-2: #a8b7ae;
-    --muted: #7c8c83;
-    --line: #25322b;
+    --bg: #0b0b0c;
+    --surface: #141416;
+    --surface-2: #1c1c1f;
+    --ink: #ededee;
+    --ink-2: #a9a9b1;
+    --muted: #7f7f88;
+    --line: #2a2a2e;
     --accent: #3aae74;
     --accent-ink: #06130c;
     --gold: #e2b54a;
@@ -40,7 +40,7 @@
     --win: #3aae74;
     --draw: #e0a43a;
     --loss: #f06b61;
-    --against: #66756c;
+    --against: #6b6b73;
     --shadow: none;
     color-scheme: dark;
   }
@@ -67,6 +67,8 @@ h1, h2, h3 { line-height: 1.2; margin: 0; }
 h1, h2, .display { font-family: var(--font-display), Impact, "Arial Narrow", sans-serif; font-weight: 400; line-height: 0.95; letter-spacing: 0.01em; }
 h1 { font-size: clamp(2.2rem, 5vw, 3.2rem); }
 h2 { font-size: 1.55rem; margin-bottom: 12px; }
+/* Counts and links tucked into a heading stay in the body font. */
+h2 > * { font-family: var(--font-body), sans-serif; letter-spacing: normal; line-height: 1.5; }
 h3 { font-size: 1rem; }
 
 .container { max-width: 1120px; margin: 0 auto; padding: 0 16px; }
@@ -129,7 +131,7 @@ main { padding: 28px 16px 48px; }
 .badge-W { background: var(--win); }
 .badge-D { background: var(--draw); }
 .badge-L { background: var(--loss); }
-@media (prefers-color-scheme: dark) { .badge { color: #0c1310; } }
+@media (prefers-color-scheme: dark) { .badge { color: #0b0b0c; } }
 .form-guide { display: flex; gap: 4px; flex-wrap: wrap; }
 .form-guide a { text-decoration: none; }
 
@@ -281,9 +283,11 @@ td.strong { font-weight: 700; }
 /* forms */
 .form { display: grid; gap: 14px; }
 .form h2 { margin-bottom: 0; }
-.form label { display: grid; gap: 5px; font-size: 0.85rem; font-weight: 600; color: var(--ink-2); }
+.form label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--ink-2); }
+.form label > :is(input:not([type=checkbox]), select, textarea, .input-prefix) { display: block; margin-top: 5px; }
+.form label > .input-prefix { display: flex; }
 .form label.check { display: flex; align-items: center; gap: 8px; font-weight: 500; }
-.form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+.form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; align-items: end; }
 .form-row-player { grid-template-columns: 2fr 0.7fr 1fr 1.3fr; }
 @media (max-width: 640px) { .form-row-player { grid-template-columns: 1fr 1fr; } }
 .form-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
@@ -304,7 +308,7 @@ fieldset p { margin: 0; }
 .notice-ok { background: var(--accent-soft); color: var(--accent-text); }
 .club-preview { display: flex; align-items: center; gap: 14px; padding: 12px; border-radius: var(--radius); background: var(--surface-2); }
 .crest { flex: none; }
-.crest-logo { object-fit: contain; }
+.crest-logo { object-fit: contain; width: auto; }
 .logo-field { display: grid; gap: 6px; }
 .logo-field-label { font-weight: 600; font-size: 0.85rem; color: var(--ink-2); }
 .logo-field-actions { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
