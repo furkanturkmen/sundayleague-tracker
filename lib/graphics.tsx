@@ -130,3 +130,49 @@ export const pngHeaders = (download: string | null) => ({
   "Cache-Control": "no-store",
   ...(download ? { "Content-Disposition": `attachment; filename="${download}"` } : {}),
 });
+
+/** An opponent's crest from voetbal.nl as a data URL, or null when there's no code or no usable image. */
+export async function opponentLogo(code: string | undefined): Promise<string | null> {
+  if (!code || !/^[A-Z0-9]{5,10}$/i.test(code)) return null;
+  try {
+    const res = await fetch(`https://logoapi.voetbal.nl/logo.php?clubcode=${code}`, { next: { revalidate: 60 * 60 * 24 * 7 } });
+    const type = res.headers.get("content-type") ?? "";
+    if (!res.ok || !/^image\/(png|jpeg)/.test(type)) return null;
+    return `data:${type};base64,${Buffer.from(await res.arrayBuffer()).toString("base64")}`;
+  } catch {
+    return null;
+  }
+}
+
+/** A crest with the team name under it, for the poster face-offs. Teams without a crest get their initials in a circle. */
+export function TeamBlock({ p, logo, name, size = 250, width = 380 }: { p: Palette; logo: string | null; name: string; size?: number; width?: number }) {
+  const initials = name.split(/\s+/).filter((w) => /^[a-z]/i.test(w)).map((w) => w[0]).join("").slice(0, 3).toUpperCase();
+  return (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width }}>
+      {/* Crests sit on a white disc: voetbal.nl serves many of them on a white square, which a disc hides. */}
+      <div style={{ display: "flex", width: size, height: size, alignItems: "center", justifyContent: "center", borderRadius: size, background: logo ? "#fff" : "transparent", border: `5px solid ${p.bright}`, boxShadow: `0 0 70px ${p.bright}66` }}>
+        {logo ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={logo} width={size * 0.74} height={size * 0.74} style={{ objectFit: "contain" }} alt="" />
+        ) : (
+          <div style={{ ...display, fontSize: size * 0.3 }}>{initials}</div>
+        )}
+      </div>
+      <div style={{ ...display, fontSize: name.length > 16 ? 46 : 56, textAlign: "center", marginTop: 18, maxWidth: width, display: "flex", justifyContent: "center" }}>
+        {name.toUpperCase()}
+      </div>
+    </div>
+  );
+}
+
+/** Small spaced-out label, e.g. "AFC DWS 2 · MATCHDAY". */
+export function Kicker({ p, children }: { p: Palette; children: string }) {
+  return <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: 5, color: p.bright }}>{children}</div>;
+}
+
+/** "Mannen Zondag - 3e klasse 2" → "3E KLASSE 2"; the cup is BEKER. */
+export function competitionLabel(competition: string, league: string | null | undefined): string {
+  if (/cup|beker/i.test(competition)) return "BEKER";
+  const klasse = league?.match(/\d+e klasse.*$/i)?.[0];
+  return (klasse ?? (competition === "League" ? "COMPETITIE" : competition)).toUpperCase();
+}

@@ -430,3 +430,11 @@ fieldset p { margin: 0; }
 .lineup-preview { position: sticky; top: 76px; display: grid; gap: 14px; }
 @media (max-width: 860px) { .lineup-preview { position: static; } }
 .lineup-preview img { width: 100%; height: auto; border-radius: 8px; display: block; background: #040915; }
+
+/* Match page: the post previews. */
+.graphics-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 220px)); gap: 16px; }
+.graphics-grid figure { margin: 0; display: grid; gap: 8px; }
+.graphics-grid img { width: 100%; height: auto; display: block; border-radius: 8px; background: #040915; }
+.graphics-grid figcaption { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; }
+.graphics-grid figcaption strong { margin-right: auto; white-space: nowrap; }
+@media (max-width: 400px) { .graphics-grid { grid-template-columns: 1fr 1fr; } }

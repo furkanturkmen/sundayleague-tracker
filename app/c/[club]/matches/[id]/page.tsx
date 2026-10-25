@@ -37,7 +37,6 @@ export default async function MatchPage({ params }: Props) {
         <Link href={`${st.base}/matches`} className="small muted">← All matches</Link>
         {admin && (
           <div className="form-actions">
-            {!fixture.status && <Link href={`${st.base}/matches/${id}/lineup`} className="btn btn-secondary">Line-up graphic</Link>}
             <Link href={`${st.base}/matches/${id}/edit`} className="btn btn-secondary">Edit</Link>
             <form action={deleteMatch.bind(null, slug)}>
               <input type="hidden" name="id" value={id} />
@@ -66,6 +65,8 @@ export default async function MatchPage({ params }: Props) {
           <span>{fixture.venue === "H" ? "Home" : "Away"}</span>
         </div>
       </div>
+
+      {admin && !fixture.status && <Graphics base={`${st.base}/matches/${id}`} played={Boolean(m)} />}
 
       {!m ? (
         <p className="section muted">
@@ -161,5 +162,33 @@ export default async function MatchPage({ params }: Props) {
         {next && <Link href={`${st.base}/matches/${next.id}`}>{next.opponent} →</Link>}
       </div>
     </>
+  );
+}
+
+/** Instagram posts for this match: matchday before it, the result after, and the line-up either way. */
+function Graphics({ base, played }: { base: string; played: boolean }) {
+  const posts = [
+    played ? { key: "result", label: "Result" } : { key: "matchday", label: "Matchday" },
+    { key: "lineup", label: "Line-up", edit: `${base}/lineup` },
+  ];
+  return (
+    <section className="card section">
+      <h2>Graphics</h2>
+      <div className="graphics-grid">
+        {posts.map((g) => (
+          <figure key={g.key}>
+            <a href={`${base}/graphics/${g.key}`} target="_blank" rel="noreferrer">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={`${base}/graphics/${g.key}`} width={1080} height={1350} alt={`${g.label} graphic`} loading="lazy" />
+            </a>
+            <figcaption>
+              <strong>{g.label}</strong>
+              <a href={`${base}/graphics/${g.key}?download=1`} className="btn-link" download>Download</a>
+              {g.edit && <Link href={g.edit} className="btn-link">Edit</Link>}
+            </figcaption>
+          </figure>
+        ))}
+      </div>
+    </section>
   );
 }
