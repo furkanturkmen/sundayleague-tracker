@@ -21,6 +21,9 @@ export default async function ClubHome({ params }: { params: Promise<{ club: str
   const shame = st.hallOfShame(st.played)[0];
   const league = data.standings.filter((r) => r.competition === "league");
   const us = league.find((r) => r.isUs);
+  // League only. The official table wins when there is one, so point deductions show too.
+  const ls = summarise(season.filter((m) => m.competition === "League"));
+  const record = us ? { w: us.won, d: us.drawn, l: us.lost, pts: us.points } : { w: ls.w, d: ls.d, l: ls.l, pts: ls.pts };
 
   return (
     <>
@@ -36,11 +39,11 @@ export default async function ClubHome({ params }: { params: Promise<{ club: str
             </p>
           )}
         </div>
-        <div className="hero-record" aria-label={`${seasonLabel(st.currentSeason)} record`}>
-          <div><strong>{s.w}</strong><span>Won</span></div>
-          <div><strong>{s.d}</strong><span>Drawn</span></div>
-          <div><strong>{s.l}</strong><span>Lost</span></div>
-          <div><strong>{s.pts}</strong><span>Points</span></div>
+        <div className="hero-record" aria-label={`${seasonLabel(st.currentSeason)} league record`}>
+          <div><strong>{record.w}</strong><span>Won</span></div>
+          <div><strong>{record.d}</strong><span>Drawn</span></div>
+          <div><strong>{record.l}</strong><span>Lost</span></div>
+          <div><strong>{record.pts}</strong><span>Points</span></div>
         </div>
       </section>
 
