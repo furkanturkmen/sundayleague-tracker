@@ -25,8 +25,11 @@ export interface VoetbalLink {
   error: string | null;
 }
 
-/** A row of the league table, as voetbal.nl last showed it. */
+export type MatchStatus = "abandoned" | "called-off";
+
+/** A row of the league or cup group table, as voetbal.nl last showed it. */
 export interface Standing {
+  competition: "league" | "cup";
   position: number;
   team: string;
   clubCode: string | null;
@@ -79,6 +82,8 @@ export interface Match {
   goalsFor?: number;
   /** Kick-off time as voetbal.nl shows it, e.g. "13:00". */
   kickoff?: string;
+  /** No result because voetbal.nl lists it as abandoned or called off. Left out of every stat. */
+  status?: MatchStatus;
   /** voetbal.nl club code of the opponent, for its crest. */
   opponentCode?: string;
   /** voetbal.nl match id, for matches that came from the sync. */

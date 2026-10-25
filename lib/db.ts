@@ -57,6 +57,8 @@ alter table matches add column if not exists goals_for int check (goals_for >= 0
 alter table matches add column if not exists kickoff text;
 alter table matches add column if not exists lineup text[];
 alter table matches add column if not exists opponent_code text;
+-- Set when voetbal.nl has no result: 'abandoned' (gestaakt) or 'called-off' (afgelast). Not counted in any stats.
+alter table matches add column if not exists status text;
 create unique index if not exists matches_external_idx on matches(club_id, external_id);
 
 create table if not exists match_players (
@@ -115,6 +117,14 @@ create table if not exists standings (
   primary key (club_id, position, team)
 );
 alter table standings add column if not exists club_code text;
+-- 'league' or 'cup' (the cup group). Older databases had a key without it.
+alter table standings add column if not exists competition text not null default 'league';
+do $$ begin
+  if not exists (select 1 from pg_constraint where conname = 'standings_competition_pk') then
+    alter table standings drop constraint if exists standings_pkey;
+    alter table standings add constraint standings_competition_pk primary key (club_id, competition, position, team);
+  end if;
+end $$;
 `;
 
 const globalForDb = globalThis as unknown as { sql?: postgres.Sql; schema?: Promise<unknown> };

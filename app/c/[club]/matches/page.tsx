@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { GetStarted, PageHeader, PlayerLink, ResultBadge, TeamLogo } from "@/components/ui";
 import { loadClub } from "@/lib/club";
-import { formatDate, seasonLabel, summarise } from "@/lib/stats";
+import { formatDate, seasonLabel, seasonOf, summarise } from "@/lib/stats";
 
 export const metadata: Metadata = { title: "Matches" };
 
@@ -47,6 +47,11 @@ export default async function MatchesPage({ params }: { params: Promise<{ club: 
       {[...st.seasons].reverse().map((season) => {
         const list = st.inSeason(season).reverse();
         const s = summarise(list);
+        const voided = st.voided.filter((m) => seasonOf(m.date) === season);
+        // Abandoned and called-off matches sit between the results by date, without counting.
+        const rows = [...list.map((m) => ({ m, played: m })), ...voided.map((m) => ({ m, played: undefined }))].sort((a, b) =>
+          b.m.date.localeCompare(a.m.date),
+        );
         return (
           <section key={season} className="card" style={{ marginBottom: 24 }}>
             <h2>
@@ -68,9 +73,9 @@ export default async function MatchesPage({ params }: { params: Promise<{ club: 
                   </tr>
                 </thead>
                 <tbody>
-                  {list.map((m) => (
-                    <tr key={m.id}>
-                      <td><ResultBadge result={m.result} /></td>
+                  {rows.map(({ m, played }) => (
+                    <tr key={m.id} className={played ? undefined : "voided"}>
+                      <td>{played ? <ResultBadge result={played.result} /> : <span className="chip">{m.status === "abandoned" ? "Abandoned" : "Called off"}</span>}</td>
                       <td className="muted">{formatDate(m.date, { day: "numeric", month: "short" })}</td>
                       <td className="strong">
                         <span className="with-logo">
@@ -80,7 +85,7 @@ export default async function MatchesPage({ params }: { params: Promise<{ club: 
                       </td>
                       <td>{m.competition !== "League" && <span className="chip">{m.competition}</span>}</td>
                       <td className="num strong">
-                        <Link href={`${st.base}/matches/${m.id}`}>{m.gf}–{m.ga}</Link>
+                        <Link href={`${st.base}/matches/${m.id}`}>{played ? `${played.gf}–${played.ga}` : "–"}</Link>
                       </td>
                       <td className="small">
                         {m.goals.length === 0 && <span className="muted">–</span>}

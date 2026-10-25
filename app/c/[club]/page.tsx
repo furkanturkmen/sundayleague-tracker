@@ -19,7 +19,8 @@ export default async function ClubHome({ params }: { params: Promise<{ club: str
   const run = currentRun(st.played);
   const fame = st.hallOfFame(st.played)[0];
   const shame = st.hallOfShame(st.played)[0];
-  const us = data.standings.find((r) => r.isUs);
+  const league = data.standings.filter((r) => r.competition === "league");
+  const us = league.find((r) => r.isUs);
 
   return (
     <>
@@ -30,7 +31,7 @@ export default async function ClubHome({ params }: { params: Promise<{ club: str
           {club.tagline && <p>{club.tagline}</p>}
           {us && (
             <p className="hero-league">
-              {ordinal(us.position)} of {data.standings.length}
+              {ordinal(us.position)} of {league.length}
               {club.voetbal?.league && <> · {club.voetbal.league}</>}
             </p>
           )}
@@ -133,9 +134,17 @@ export default async function ClubHome({ params }: { params: Promise<{ club: str
         </div>
       </div>
 
-      {data.standings.length > 0 && (
+      {league.length > 0 && (
         <div className="section">
-          <LeagueTable rows={data.standings} league={club.voetbal?.league ?? null} />
+          <LeagueTable
+            rows={tableSlice(league)}
+            subtitle={club.voetbal?.league}
+            action={
+              <Link href={`${st.base}/table`} className="card-link">
+                Full table →
+              </Link>
+            }
+          />
         </div>
       )}
 
@@ -162,4 +171,11 @@ export default async function ClubHome({ params }: { params: Promise<{ club: str
 function ordinal(n: number) {
   const suffix = n % 100 >= 11 && n % 100 <= 13 ? "th" : ["th", "st", "nd", "rd"][n % 10] ?? "th";
   return `${n}${suffix}`;
+}
+
+/** Five rows of the table with us in the middle, or the top five when we're not in it. */
+function tableSlice<T extends { isUs: boolean }>(rows: T[]): T[] {
+  const i = rows.findIndex((r) => r.isUs);
+  const start = i < 0 ? 0 : Math.max(0, Math.min(i - 2, rows.length - 5));
+  return rows.slice(start, start + 5);
 }

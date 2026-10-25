@@ -131,13 +131,16 @@ export function GetStarted({ st, admin, what }: { st: Stats; admin: boolean; wha
   );
 }
 
-/** The league table from voetbal.nl, with our row picked out. */
-export function LeagueTable({ rows, league }: { rows: Standing[]; league: string | null }) {
+/** A league or cup group table from voetbal.nl, with our row picked out. */
+export function LeagueTable({ rows, title = "League table", subtitle, action }: { rows: Standing[]; title?: string; subtitle?: string | null; action?: ReactNode }) {
   const penalties = rows.some((r) => r.penaltyPoints > 0);
   return (
     <div className="card">
       <h2>
-        League table {league && <span className="small muted">{league}</span>}
+        <span className="h2-title">
+          {title} {subtitle && <span className="small muted">{subtitle}</span>}
+        </span>
+        {action}
       </h2>
       <div className="table-wrap">
         <table className="league-table">
@@ -178,7 +181,6 @@ export function LeagueTable({ rows, league }: { rows: Standing[]; league: string
           </tbody>
         </table>
       </div>
-      <p className="small muted" style={{ marginBottom: 0 }}>From voetbal.nl.</p>
     </div>
   );
 }

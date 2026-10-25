@@ -67,7 +67,13 @@ export default async function MatchPage({ params }: Props) {
       </div>
 
       {!m ? (
-        <p className="section muted">Not played yet.{admin && " Edit the match to add the result once it's done."}</p>
+        <p className="section muted">
+          {fixture.status === "abandoned"
+            ? "Abandoned. voetbal.nl has no result for this match, so it doesn't count in any stats."
+            : fixture.status === "called-off"
+              ? "Called off. It doesn't count in any stats."
+              : <>Not played yet.{admin && " Edit the match to add the result once it's done."}</>}
+        </p>
       ) : (
         <div className="grid grid-3 section">
           <div className="card">

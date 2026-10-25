@@ -74,7 +74,9 @@ h1, h2, .display { font-family: var(--font-display), Impact, "Arial Narrow", san
 h1 { font-size: clamp(2.2rem, 5vw, 3.2rem); }
 h2 { font-size: 1.55rem; margin-bottom: 12px; }
 /* Counts and links tucked into a heading stay in the body font. */
-h2 > * { font-family: var(--font-body), sans-serif; letter-spacing: normal; line-height: 1.5; }
+h2 > *, h2 .h2-title > * { font-family: var(--font-body), sans-serif; letter-spacing: normal; line-height: 1.5; }
+/* A title wrapped so a link can sit beside it keeps the heading font. */
+h2 > .h2-title { font-family: inherit; letter-spacing: inherit; line-height: inherit; }
 h3 { font-size: 1rem; }
 
 .container { max-width: 1120px; margin: 0 auto; padding: 0 16px; }
@@ -82,23 +84,22 @@ h3 { font-size: 1rem; }
 .small { font-size: 0.85rem; }
 .num { text-align: right; font-variant-numeric: tabular-nums; }
 
-/* backdrop: a glow in the club colour, faint pitch markings and shirt stripes, fading out down the page.
-   Club pages draw it on .club-theme so it picks up their colour; other pages use the default. */
-.club-theme, body:not(:has(.club-theme)) { position: relative; isolation: isolate; }
+/* backdrop: shirt stripes and pitch markings down the whole page, with a glow in the club colour at the top.
+   Club pages draw it on .club-theme so it picks up their colour; other pages use the default. It scrolls with the content. */
+.club-theme, body:not(:has(.club-theme)) { position: relative; isolation: isolate; min-height: 100vh; }
 .club-theme::before, body:not(:has(.club-theme))::before {
-  content: ""; position: absolute; inset: 0 0 auto; height: min(1100px, 140vh); z-index: -1; pointer-events: none;
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
   background:
     radial-gradient(1000px 460px at 50% -120px, color-mix(in srgb, var(--accent) 38%, transparent), transparent 72%),
     repeating-linear-gradient(90deg, color-mix(in srgb, var(--accent) 6%, transparent) 0 64px, transparent 64px 128px);
-  -webkit-mask-image: linear-gradient(#000 30%, transparent);
-  mask-image: linear-gradient(#000 30%, transparent);
+  /* full strength at the top, settling to a quieter level further down instead of disappearing */
+  -webkit-mask-image: linear-gradient(#000 0, rgb(0 0 0 / 0.55) 1100px);
+  mask-image: linear-gradient(#000 0, rgb(0 0 0 / 0.55) 1100px);
 }
 .club-theme::after, body:not(:has(.club-theme))::after {
-  content: ""; position: absolute; inset: 40px 0 auto; height: 900px; z-index: -1; pointer-events: none;
-  background: var(--pitch-lines) center top / min(1400px, 160vw) auto no-repeat;
+  content: ""; position: absolute; inset: 40px 0 0; z-index: -1; pointer-events: none;
+  background: var(--pitch-lines) center top / min(1400px, 160vw) auto repeat-y;
   opacity: var(--pitch-opacity);
-  -webkit-mask-image: linear-gradient(#000 40%, transparent);
-  mask-image: linear-gradient(#000 40%, transparent);
 }
 
 /* header */

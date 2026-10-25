@@ -1,6 +1,6 @@
 import "server-only";
 import { db } from "@/lib/db";
-import { parseLineups, parseSchedule, parseStandings, parseTeamHeader, sameName, type ScheduleRow } from "@/lib/voetbal-parse";
+import { parseLineups, parseSchedule, parseStandings, parseTeamHeader, sameName, type ScheduleRow, type StandingRow } from "@/lib/voetbal-parse";
 
 // Fixtures, results, line-ups and the league table come from voetbal.nl, which needs a login to show team pages.
 // The login (VOETBALNL_EMAIL / VOETBALNL_PASSWORD) belongs to whoever runs this site: use a separate account,
@@ -143,7 +143,16 @@ export async function syncClub(clubId: string): Promise<SyncSummary> {
         if (ours) rows.set(r.id, { ...r, us: ours, cup: s.cup });
       }
     }
-    const table = parseStandings(await page(`${base}/stand/competitie`));
+    const table: (StandingRow & { competition: "league" | "cup" })[] = parseStandings(await page(`${base}/stand/competitie`)).map((t) => ({
+      ...t,
+      competition: "league",
+    }));
+    // The cup group table, when the team plays in the cup.
+    try {
+      table.push(...parseStandings(await page(`${base}/stand/beker`)).map((t) => ({ ...t, competition: "cup" as const })));
+    } catch {
+      // no cup this season
+    }
 
     const summary: SyncSummary = { added: 0, updated: 0, results: 0, lineups: 0, table: table.length };
     const players = await sql<{ id: string; name: string }[]>`select id, name from players where club_id = ${clubId}`;
@@ -156,11 +165,8 @@ export async function syncClub(clubId: string): Promise<SyncSummary> {
         const gf = r.score ? (r.us === "home" ? r.score.home : r.score.away) : null;
         const ga = r.score ? (r.us === "home" ? r.score.away : r.score.home) : null;
 
-        // Called off or abandoned without a result: drop it if we only had it as an upcoming fixture.
-        if (!r.score && r.status) {
-          await tx`delete from matches where club_id = ${clubId} and external_id = ${r.id} and goals_against is null`;
-          continue;
-        }
+        // Abandoned (GST) or called off (AFG) without a result: kept, marked, and left out of the stats.
+        const status = r.score ? null : r.status === "GST" ? "abandoned" : r.status === "AFG" ? "called-off" : null;
 
         // Link to a match logged by hand on the same day before the club was connected, rather than adding a copy.
         const [existing] = await tx<{ id: string }[]>`
@@ -169,14 +175,14 @@ export async function syncClub(clubId: string): Promise<SyncSummary> {
         if (existing) {
           await tx`
             update matches set external_id = ${r.id}, date = ${r.date}, opponent = ${opponent}, venue = ${venue},
-              kickoff = coalesce(${r.kickoff}, kickoff), opponent_code = coalesce(${opponentCode}, opponent_code),
+              kickoff = coalesce(${r.kickoff}, kickoff), opponent_code = coalesce(${opponentCode}, opponent_code), status = ${status},
               goals_for = coalesce(${gf}, goals_for), goals_against = coalesce(${ga}, goals_against)
             where id = ${existing.id}`;
           summary.updated++;
         } else {
           await tx`
-            insert into matches (club_id, external_id, date, opponent, opponent_code, venue, competition, kickoff, goals_for, goals_against)
-            values (${clubId}, ${r.id}, ${r.date}, ${opponent}, ${opponentCode}, ${venue}, ${r.cup ? "Cup" : "League"}, ${r.kickoff}, ${gf}, ${ga})`;
+            insert into matches (club_id, external_id, date, opponent, opponent_code, venue, competition, kickoff, goals_for, goals_against, status)
+            values (${clubId}, ${r.id}, ${r.date}, ${opponent}, ${opponentCode}, ${venue}, ${r.cup ? "Cup" : "League"}, ${r.kickoff}, ${gf}, ${ga}, ${status})`;
           summary.added++;
         }
         if (r.score) summary.results++;
@@ -187,6 +193,7 @@ export async function syncClub(clubId: string): Promise<SyncSummary> {
         await tx`insert into standings ${tx(
           table.map((t) => ({
             club_id: clubId,
+            competition: t.competition,
             position: t.position,
             team: t.team,
             club_code: t.clubCode,

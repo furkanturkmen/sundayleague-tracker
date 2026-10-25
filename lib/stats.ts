@@ -317,7 +317,9 @@ export function analyse({ club, players, matches }: ClubData) {
       const ga = m.against ?? 0;
       return { ...m, gf, ga, result: gf > ga ? "W" : gf < ga ? "L" : "D", season: seasonOf(m.date) };
     });
-  const upcoming = sorted.filter((m) => m.against === null);
+  const upcoming = sorted.filter((m) => m.against === null && !m.status);
+  /** Abandoned or called off: listed with the results, counted nowhere. */
+  const voided = sorted.filter((m) => m.against === null && m.status);
   const seasons = [...new Set(played.map((m) => m.season))];
   const currentSeason = seasons[seasons.length - 1] ?? seasonOf(new Date().toISOString().slice(0, 10));
   const playerMap = new Map(players.map((p) => [p.id, p]));
@@ -332,6 +334,7 @@ export function analyse({ club, players, matches }: ClubData) {
     base,
     played,
     upcoming,
+    voided,
     seasons,
     currentSeason,
     inSeason,

@@ -7,8 +7,9 @@ export function Nav({ base, admin }: { base: string; admin: boolean }) {
   const path = usePathname();
   const links = [
     { href: base, label: "Home" },
-    { href: `${base}/players`, label: "Players" },
     { href: `${base}/matches`, label: "Matches" },
+    { href: `${base}/table`, label: "Table" },
+    { href: `${base}/players`, label: "Players" },
     { href: `${base}/records`, label: "Records" },
     { href: `${base}/analysis`, label: "Analysis" },
     { href: `${base}/halls`, label: "Fame & Shame" },
