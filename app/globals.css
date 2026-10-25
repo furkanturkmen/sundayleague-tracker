@@ -91,8 +91,12 @@ h3 { font-size: 1rem; }
   .nav { margin: 0 -16px; padding: 0 12px 8px; width: calc(100% + 32px); }
 }
 
-main { padding: 28px 16px 48px; }
-.site-footer { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding-top: 20px; padding-bottom: 32px; border-top: 1px solid var(--line); font-size: 0.85rem; }
+/* main also carries .container, whose padding: 0 16px would otherwise wipe the top and bottom. */
+main.container { padding-top: 32px; padding-bottom: 56px; }
+@media (max-width: 640px) { main.container { padding-top: 20px; padding-bottom: 40px; } }
+.site-footer { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding-top: 20px; padding-bottom: 32px; font-size: 0.85rem;
+  /* A border would run into the side padding; this line stops where the content does. */
+  background: linear-gradient(var(--line), var(--line)) center top / calc(100% - 32px) 1px no-repeat; }
 
 /* page header */
 .page-header { margin-bottom: 24px; display: grid; gap: 10px; }
@@ -158,6 +162,12 @@ thead th a.active { color: var(--accent-text); }
 tbody tr:hover { background: var(--surface-2); }
 tbody tr:last-child td, tbody tr:last-child th { border-bottom: 0; }
 td.strong { font-weight: 700; }
+/* The name stays put while the stats scroll sideways under it. */
+.sticky-col { position: sticky; left: 0; z-index: 1; background: var(--surface); }
+/* Covers the card padding to the left, so scrolled columns don't peek out. Tables in collapse mode skip box-shadow on cells. */
+.sticky-col::before { content: ""; position: absolute; top: 0; bottom: 0; right: 100%; width: 18px; background: var(--surface); }
+.sticky-col::after { content: ""; position: absolute; top: 0; bottom: 0; right: 0; width: 1px; background: var(--line); }
+@media (max-width: 640px) { .sticky-col { white-space: normal; min-width: 120px; max-width: 150px; } }
 
 /* tabs */
 .tabs { display: flex; gap: 6px; flex-wrap: wrap; }

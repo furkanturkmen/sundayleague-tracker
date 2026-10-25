@@ -90,9 +90,8 @@ export function MatchLine({ st, m }: { st: Stats; m: PlayedMatch }) {
     <Link href={`${st.base}/matches/${m.id}`} className="match-line">
       <ResultBadge result={m.result} />
       <span className="match-line-title">{st.fixtureTitle(m)}</span>
-      <span className="match-line-score">
-        {m.gf}–{m.ga}
-      </span>
+      {/* Same order as the title, home side first, so "Pancratius 4 vs DWS" reads 2–0, not 0–2. */}
+      <span className="match-line-score">{m.venue === "H" ? `${m.gf}–${m.ga}` : `${m.ga}–${m.gf}`}</span>
       <span className="muted small">{formatDate(m.date)}</span>
     </Link>
   );

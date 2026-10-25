@@ -61,7 +61,7 @@ export default async function PlayersPage({ params, searchParams }: Props) {
                     <th>
                       <Link href={href()} className={!col ? "active" : undefined}>#</Link>
                     </th>
-                    <th>Player</th>
+                    <th className="sticky-col">Player</th>
                     <th>Pos</th>
                     {columns.map((c) => (
                       <th key={c.key} className="num" title={c.title}>
@@ -76,7 +76,7 @@ export default async function PlayersPage({ params, searchParams }: Props) {
                   {rows.map((s) => (
                     <tr key={s.player.id} style={s.apps ? undefined : { opacity: 0.55 }}>
                       <td className="muted">{s.player.number ?? "–"}</td>
-                      <td className="strong">
+                      <td className="strong sticky-col">
                         <Link href={`${st.base}/players/${s.player.id}`}>{s.player.name}</Link>
                         {s.player.nickname && <span className="muted small"> “{s.player.nickname}”</span>}
                       </td>
@@ -94,7 +94,7 @@ export default async function PlayersPage({ params, searchParams }: Props) {
               </table>
             </div>
           </div>
-          <p className="small muted">Click a column to sort. Clean sheets only count for keepers and defenders.</p>
+          <p className="small muted">Tap a column to sort, swipe the table for more stats. Clean sheets only count for keepers and defenders.</p>
         </>
       )}
     </>
