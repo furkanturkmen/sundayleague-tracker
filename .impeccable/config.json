@@ -1,0 +1,17 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "app/globals.css"
+        ],
+        "createdAt": "2026-10-25T17:20:14.060Z",
+        "reason": "user confirmed: keep the moment-card left border on Fame & Shame for now (2026-10-25)"
+      }
+    ]
+  }
+}
