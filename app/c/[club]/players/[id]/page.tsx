@@ -58,7 +58,7 @@ export default async function PlayerPage({ params }: Props) {
           </Link>
           {next && (
             <Link href={`${st.base}/players/${next.id}`} className="ph-nav">
-              Next player
+              <span className="ph-nav-label">Next player</span>
               <span className="ph-round" aria-hidden="true">›</span>
             </Link>
           )}
