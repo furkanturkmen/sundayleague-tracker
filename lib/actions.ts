@@ -33,6 +33,17 @@ async function requireAdmin(slug: string) {
   return auth.club;
 }
 
+/** Line-ups: the coach, or an admin. */
+async function requireLineupAccess(slug: string) {
+  const auth = await getClubAuth(slug);
+  const ok =
+    auth &&
+    ((await hasSession(auth.club.id, auth.passwordHash)) ||
+      (auth.coachPasswordHash !== null && (await hasSession(auth.club.id, auth.coachPasswordHash, "coach"))));
+  if (!ok) throw new Error("You need to sign in as the coach or a club admin to do that.");
+  return auth.club;
+}
+
 function refresh(slug: string) {
   revalidatePath(`/c/${slug}`, "layout");
   revalidatePath("/");
@@ -137,6 +148,25 @@ export async function changePassword(slug: string, _: FormState, f: FormData): P
   return { ok: "Password changed. Everyone else has been signed out." };
 }
 
+/** Sets or replaces the coach password, or removes it with remove=1 (which also signs the coach out). */
+export async function setCoachPassword(slug: string, _: FormState, f: FormData): Promise<FormState> {
+  const club = await requireAdmin(slug);
+  const sql = await db();
+  if (f.get("remove")) {
+    await sql`update clubs set coach_password_hash = null where id = ${club.id}`;
+    refresh(slug);
+    return { ok: "Coach login removed." };
+  }
+  const password = String(f.get("password") ?? "");
+  if (password.length < 6) return { error: "The coach password needs at least 6 characters." };
+  if (password !== f.get("confirm")) return { error: "The passwords don't match." };
+  const auth = await getClubAuth(slug);
+  if (auth && (await verifyPassword(password, auth.passwordHash))) return { error: "Use a different password from the admin one." };
+  await sql`update clubs set coach_password_hash = ${await hashPassword(password)} where id = ${club.id}`;
+  refresh(slug);
+  return { ok: "Coach password saved. The coach signs in with it at the bottom of any club page." };
+}
+
 export async function deleteClub(slug: string, _: FormState, f: FormData): Promise<FormState> {
   const club = await requireAdmin(slug);
   if (text(f, "confirm", 60) !== club.name) return { error: `Type "${club.name}" exactly to confirm.` };
@@ -147,11 +177,15 @@ export async function deleteClub(slug: string, _: FormState, f: FormData): Promi
   redirect("/");
 }
 
+/** One sign-in form for both passwords: the admin one first, then the coach one. */
 export async function login(slug: string, _: FormState, f: FormData): Promise<FormState> {
   const auth = await getClubAuth(slug);
   if (!auth) return { error: "Club not found." };
-  if (!(await verifyPassword(String(f.get("password") ?? ""), auth.passwordHash))) return { error: "Wrong password." };
-  await startSession(auth.club.id, auth.passwordHash);
+  const password = String(f.get("password") ?? "");
+  if (await verifyPassword(password, auth.passwordHash)) await startSession(auth.club.id, auth.passwordHash);
+  else if (auth.coachPasswordHash && (await verifyPassword(password, auth.coachPasswordHash)))
+    await startSession(auth.club.id, auth.coachPasswordHash, "coach");
+  else return { error: "Wrong password." };
   refresh(slug);
   const next = text(f, "next", 200);
   redirect(next.startsWith(`/c/${slug}`) ? next : `/c/${slug}`);
@@ -159,7 +193,10 @@ export async function login(slug: string, _: FormState, f: FormData): Promise<Fo
 
 export async function logout(slug: string): Promise<void> {
   const auth = await getClubAuth(slug);
-  if (auth) await endSession(auth.club.id);
+  if (auth) {
+    await endSession(auth.club.id);
+    await endSession(auth.club.id, "coach");
+  }
   refresh(slug);
   redirect(`/c/${slug}`);
 }
@@ -369,7 +406,7 @@ export async function saveMatch(slug: string, _: FormState, f: FormData): Promis
 
 /** Formation, starters and bench for the line-up graphic. Doesn't touch the match squad or stats. */
 export async function saveLineup(slug: string, matchId: string, _: FormState, f: FormData): Promise<FormState> {
-  const club = await requireAdmin(slug);
+  const club = await requireLineupAccess(slug);
   if (!UUID.test(matchId)) return { error: "Unknown match." };
   const formation = text(f, "formation", 10);
   if (!FORMATIONS[formation]) return { error: "Pick a formation." };

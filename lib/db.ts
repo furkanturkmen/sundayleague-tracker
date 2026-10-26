@@ -27,6 +27,8 @@ alter table clubs add column if not exists voetbal_error text;
 alter table clubs add column if not exists coach_name text;
 alter table clubs add column if not exists coach_photo text;
 alter table clubs add column if not exists coach_photo_version int not null default 0;
+-- Optional second password that only lets the coach set line-ups.
+alter table clubs add column if not exists coach_password_hash text;
 
 create table if not exists players (
   id uuid primary key default gen_random_uuid(),

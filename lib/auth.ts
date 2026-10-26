@@ -27,17 +27,21 @@ function secret(): string {
   return s;
 }
 
-const cookieName = (clubId: string) => `club_${clubId.replace(/-/g, "")}`;
+/** Admins can change anything; the coach only sets line-ups. Each has its own password and cookie. */
+export type Role = "admin" | "coach";
+
+const cookieName = (clubId: string, role: Role) => `${role === "admin" ? "club" : "coach"}_${clubId.replace(/-/g, "")}`;
 
 /** The signature covers the password hash, so changing the password signs everyone out. */
-function sign(clubId: string, passwordHash: string, expires: number): string {
-  return createHmac("sha256", secret()).update(`${clubId}.${expires}.${passwordHash}`).digest("base64url");
+function sign(clubId: string, passwordHash: string, expires: number, role: Role): string {
+  const data = `${role === "admin" ? "" : `${role}.`}${clubId}.${expires}.${passwordHash}`;
+  return createHmac("sha256", secret()).update(data).digest("base64url");
 }
 
-export async function startSession(clubId: string, passwordHash: string): Promise<void> {
+export async function startSession(clubId: string, passwordHash: string, role: Role = "admin"): Promise<void> {
   const expires = Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000;
   const jar = await cookies();
-  jar.set(cookieName(clubId), `${expires}.${sign(clubId, passwordHash, expires)}`, {
+  jar.set(cookieName(clubId, role), `${expires}.${sign(clubId, passwordHash, expires, role)}`, {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
@@ -46,18 +50,18 @@ export async function startSession(clubId: string, passwordHash: string): Promis
   });
 }
 
-export async function endSession(clubId: string): Promise<void> {
-  (await cookies()).delete(cookieName(clubId));
+export async function endSession(clubId: string, role: Role = "admin"): Promise<void> {
+  (await cookies()).delete(cookieName(clubId, role));
 }
 
-export async function hasSession(clubId: string, passwordHash: string): Promise<boolean> {
-  const value = (await cookies()).get(cookieName(clubId))?.value;
+export async function hasSession(clubId: string, passwordHash: string, role: Role = "admin"): Promise<boolean> {
+  const value = (await cookies()).get(cookieName(clubId, role))?.value;
   if (!value) return false;
   const [exp, sig] = value.split(".");
   const expires = Number(exp);
   if (!sig || !Number.isFinite(expires) || expires < Date.now()) return false;
   const a = Buffer.from(sig);
-  const b = Buffer.from(sign(clubId, passwordHash, expires));
+  const b = Buffer.from(sign(clubId, passwordHash, expires, role));
   return a.length === b.length && timingSafeEqual(a, b);
 }
 

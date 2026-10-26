@@ -7,7 +7,7 @@ import { currentRun, formatDate, seasonLabel, summarise } from "@/lib/stats";
 const runWord = { W: "wins", D: "draws", L: "defeats" } as const;
 
 export default async function ClubHome({ params }: { params: Promise<{ club: string }> }) {
-  const { data, st, admin } = await loadClub((await params).club);
+  const { data, st, admin, coach } = await loadClub((await params).club);
   const { club } = data;
   const season = st.inSeason(st.currentSeason);
   const s = summarise(season);
@@ -66,6 +66,11 @@ export default async function ClubHome({ params }: { params: Promise<{ club: str
             </Link>
           ) : (
             <Empty>No fixtures scheduled.</Empty>
+          )}
+          {next && (admin || coach) && (
+            <Link href={`${st.base}/matches/${next.id}/lineup`} className="card-link" style={{ display: "inline-block", marginTop: 10, marginRight: 16 }}>
+              Set the line-up →
+            </Link>
           )}
           {admin && (
             <Link href={`${st.base}/matches/new`} className="card-link" style={{ display: "inline-block", marginTop: 10 }}>

@@ -12,8 +12,8 @@ export const metadata: Metadata = { title: "Line-up graphic" };
 
 export default async function LineupPage({ params }: { params: Promise<{ club: string; id: string }> }) {
   const { club: slug, id } = await params;
-  const { data, st, admin } = await loadClub(slug);
-  if (!admin) redirect(`${st.base}/login?next=${encodeURIComponent(`${st.base}/matches/${id}/lineup`)}`);
+  const { data, st, admin, coach } = await loadClub(slug);
+  if (!admin && !coach) redirect(`${st.base}/login?next=${encodeURIComponent(`${st.base}/matches/${id}/lineup`)}`);
   const match = st.getMatch(id);
   if (!match) notFound();
   const noPhotos = data.players.filter((p) => p.active && !p.photo).length;
@@ -27,7 +27,13 @@ export default async function LineupPage({ params }: { params: Promise<{ club: s
           {noPhotos > 0 && (
             <>
               {" "}{noPhotos} active {noPhotos === 1 ? "player has" : "players have"} no photo yet and {noPhotos === 1 ? "shows" : "show"} as a shirt;
-              add photos and short names under <Link href={`${st.base}/settings#squad`}>Settings → Squad</Link>.
+              {admin ? (
+                <>
+                  add photos and short names under <Link href={`${st.base}/settings#squad`}>Settings → Squad</Link>.
+                </>
+              ) : (
+                "a club admin can add photos and short names."
+              )}
             </>
           )}
         </p>

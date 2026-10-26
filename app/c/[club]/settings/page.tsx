@@ -2,10 +2,22 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Icon } from "@/components/Icon";
-import { AddLineupPlayer, AddPlayerForm, ClubForm, ConfirmSubmit, DeleteClubForm, EditPlayerRow, MomentForm, PasswordForm, VoetbalForm } from "@/components/forms";
+import { AddLineupPlayer, AddPlayerForm, ClubForm, CoachPasswordForm, ConfirmSubmit, DeleteClubForm, EditPlayerRow, MomentForm, PasswordForm, VoetbalForm } from "@/components/forms";
 import { Empty, PageHeader } from "@/components/ui";
-import { addLineupPlayer, changePassword, deleteClub, deleteMoment, deletePlayer, saveMoment, savePlayer, saveVoetbalLink, syncVoetbal, updateClub } from "@/lib/actions";
-import { loadClub } from "@/lib/club";
+import {
+  addLineupPlayer,
+  changePassword,
+  deleteClub,
+  deleteMoment,
+  deletePlayer,
+  saveMoment,
+  savePlayer,
+  saveVoetbalLink,
+  setCoachPassword,
+  syncVoetbal,
+  updateClub,
+} from "@/lib/actions";
+import { hasCoachLogin, loadClub } from "@/lib/club";
 import { formatDate } from "@/lib/stats";
 import { voetbalConfigured } from "@/lib/voetbal";
 import { sameName } from "@/lib/voetbal-parse";
@@ -48,7 +60,7 @@ export default async function SettingsPage({ params, searchParams }: Props) {
         <a href="#voetbal">voetbal.nl</a>
         <a href="#moments">Fame & Shame</a>
         <a href="#club">Club details</a>
-        <a href="#password">Password</a>
+        <a href="#password">Passwords</a>
       </nav>
 
       <section id="squad" className="card section">
@@ -141,6 +153,14 @@ export default async function SettingsPage({ params, searchParams }: Props) {
       <section id="password" className="card section">
         <h2>Admin password</h2>
         <PasswordForm action={changePassword.bind(null, slug)} />
+      </section>
+
+      <section id="coach-login" className="card section">
+        <h2>Coach login</h2>
+        <p className="small muted">
+          A separate password for the coach. It only lets them set line-ups for the graphics, not change the squad, results or settings.
+        </p>
+        <CoachPasswordForm action={setCoachPassword.bind(null, slug)} isSet={await hasCoachLogin(slug)} />
       </section>
 
       <section className="card section danger-zone">

@@ -19,7 +19,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function MatchPage({ params }: Props) {
   const { club: slug, id } = await params;
-  const { data, st, admin } = await loadClub(slug);
+  const { data, st, admin, coach } = await loadClub(slug);
   const fixture = st.getMatch(id);
   if (!fixture) notFound();
   const m = st.getPlayed(id);
@@ -66,7 +66,7 @@ export default async function MatchPage({ params }: Props) {
         </div>
       </div>
 
-      {admin && !fixture.status && <Graphics base={`${st.base}/matches/${id}`} played={Boolean(m)} />}
+      {(admin || coach) && !fixture.status && <Graphics base={`${st.base}/matches/${id}`} played={Boolean(m)} />}
 
       {!m ? (
         <p className="section muted">

@@ -20,7 +20,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ClubLayout({ children, params }: Props) {
   const { club: slug } = await params;
-  const { data, st, admin } = await loadClub(slug);
+  const { data, st, admin, coach } = await loadClub(slug);
   const { club } = data;
   const theme = { "--accent": club.accent, "--gold": club.gold, "--accent-ink": inkFor(club.accent) } as CSSProperties;
 
@@ -44,12 +44,12 @@ export default async function ClubLayout({ children, params }: Props) {
         </span>
         <span className="footer-links">
           <Link href="/">All clubs</Link>
-          {admin ? (
+          {admin || coach ? (
             <form action={logout.bind(null, slug)}>
-              <button className="btn-link">Sign out</button>
+              <button className="btn-link">{admin ? "Sign out" : "Sign out (coach)"}</button>
             </form>
           ) : (
-            <Link href={`${st.base}/login`}>Admin sign in</Link>
+            <Link href={`${st.base}/login`}>Sign in</Link>
           )}
         </span>
       </footer>

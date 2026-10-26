@@ -27,6 +27,7 @@ interface ClubRow {
   has_coach_photo: boolean;
   coach_photo_version: number;
   password_hash: string;
+  coach_password_hash: string | null;
 }
 
 const logoUrl = (slug: string, hasLogo: boolean, version: number) => (hasLogo ? `/c/${slug}/logo?v=${version}` : null);
@@ -97,7 +98,7 @@ const clubRow = cache(async (slug: string): Promise<ClubRow | undefined> => {
   const [row] = await sql<ClubRow[]>`
     select id, slug, name, short_name, tagline, accent, gold, founded, logo is not null as has_logo, logo_version,
       voetbal_team_id, voetbal_team_name, voetbal_league, voetbal_synced_at, voetbal_error,
-      coach_name, coach_photo is not null as has_coach_photo, coach_photo_version, password_hash
+      coach_name, coach_photo is not null as has_coach_photo, coach_photo_version, password_hash, coach_password_hash
     from clubs where slug = ${slug}`;
   return row;
 });
@@ -136,9 +137,9 @@ export async function getGraphicImages(slug: string): Promise<{ logo: string | n
   return { logo: club.logo, coach: club.coach_photo, players: new Map(rows.map((r) => [r.id, r.photo])) };
 }
 
-export async function getClubAuth(slug: string): Promise<{ club: Club; passwordHash: string } | undefined> {
+export async function getClubAuth(slug: string): Promise<{ club: Club; passwordHash: string; coachPasswordHash: string | null } | undefined> {
   const row = await clubRow(slug);
-  return row && { club: toClub(row), passwordHash: row.password_hash };
+  return row && { club: toClub(row), passwordHash: row.password_hash, coachPasswordHash: row.coach_password_hash };
 }
 
 /** Whether the current visitor is signed in as an admin of this club. */
@@ -146,6 +147,17 @@ export const isAdmin = cache(async (slug: string): Promise<boolean> => {
   const row = await clubRow(slug);
   return row ? hasSession(row.id, row.password_hash) : false;
 });
+
+/** Whether the current visitor is signed in with the coach password. Removing that password signs the coach out. */
+export const isCoach = cache(async (slug: string): Promise<boolean> => {
+  const row = await clubRow(slug);
+  return row?.coach_password_hash ? hasSession(row.id, row.coach_password_hash, "coach") : false;
+});
+
+/** Whether this club has a coach password set, for Settings. */
+export async function hasCoachLogin(slug: string): Promise<boolean> {
+  return Boolean((await clubRow(slug))?.coach_password_hash);
+}
 
 const isoDate = (d: Date | string) => (typeof d === "string" ? d.slice(0, 10) : d.toISOString().slice(0, 10));
 
@@ -266,8 +278,9 @@ export const loadClubData = cache(async (slug: string): Promise<ClubData | undef
 });
 
 /** Everything a club page needs. 404s when the club doesn't exist. */
-export const loadClub = cache(async (slug: string): Promise<{ data: ClubData; st: Stats; admin: boolean }> => {
+export const loadClub = cache(async (slug: string): Promise<{ data: ClubData; st: Stats; admin: boolean; coach: boolean }> => {
   const data = await loadClubData(slug);
   if (!data) notFound();
-  return { data, st: analyse(data), admin: await isAdmin(slug) };
+  const [admin, coach] = await Promise.all([isAdmin(slug), isCoach(slug)]);
+  return { data, st: analyse(data), admin, coach };
 });
