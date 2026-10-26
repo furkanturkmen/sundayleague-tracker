@@ -162,3 +162,12 @@ export function shortTeamName(name: string): string {
     .join(" ");
   return out || name;
 }
+
+/** "DWS afc 2" → "AFC DWS 2": voetbal.nl puts the club type after the name; clubs usually say it first. */
+export function tidyTeamName(name: string): string {
+  const words = name.replace(/\s+/g, " ").trim().split(" ");
+  const kind = words.findIndex((w, i) => i > 0 && /^(a\.?f\.?c\.?|a\.?v\.?v\.?|s\.?v\.?|v\.?v\.?|r\.?k\.?s\.?v\.?|f\.?c\.?|s\.?c\.?|asv|vvv)$/i.test(w));
+  if (kind < 0) return words.join(" ");
+  const [type] = words.splice(kind, 1);
+  return [type.replace(/\./g, "").toUpperCase(), ...words].join(" ");
+}

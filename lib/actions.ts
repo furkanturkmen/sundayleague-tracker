@@ -7,7 +7,7 @@ import { getClubAuth } from "@/lib/club";
 import { db } from "@/lib/db";
 import { FORMATIONS, formationSlots, MAX_BENCH } from "@/lib/lineup";
 import { POSITIONS, type Position } from "@/lib/types";
-import { linkLineup, syncClub, voetbalConfigured } from "@/lib/voetbal";
+import { linkLineup, previewTeam, syncClub, voetbalConfigured, type TeamPreview } from "@/lib/voetbal";
 import { parseTeamId, sameName } from "@/lib/voetbal-parse";
 
 export interface FormState {
@@ -15,7 +15,7 @@ export interface FormState {
   ok?: string;
 }
 
-const RESERVED = new Set(["new", "api", "admin", "settings", "login", "c"]);
+const RESERVED = new Set(["new", "api", "admin", "settings", "login", "c", "start", "logos"]);
 const HEX = /^#[0-9a-f]{6}$/i;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -94,23 +94,58 @@ export async function createClub(_: FormState, f: FormData): Promise<FormState> 
   if ("error" in logo) return logo;
   const slug = text(f, "slug", 40).toLowerCase();
   const password = String(f.get("password") ?? "");
-  if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(slug) || slug.length < 2) return { error: "The web address can only use lowercase letters, numbers and dashes." };
-  if (RESERVED.has(slug)) return { error: "That web address is taken. Try another." };
+  const slugError = checkSlug(slug);
+  if (slugError) return { error: slugError };
   if (password.length < 6) return { error: "The admin password needs at least 6 characters." };
   if (password !== f.get("confirm")) return { error: "The passwords don't match." };
+  const teamId = parseTeamId(text(f, "voetbalTeam", 40));
 
   const sql = await db();
   const hash = await hashPassword(password);
   const [row] = await sql<{ id: string }[]>`
-    insert into clubs (slug, name, short_name, tagline, accent, gold, founded, logo, password_hash)
-    values (${slug}, ${fields.name}, ${fields.shortName}, ${fields.tagline}, ${fields.accent}, ${fields.gold}, ${fields.founded}, ${logo.logo ?? null}, ${hash})
+    insert into clubs (slug, name, short_name, tagline, accent, gold, founded, logo, password_hash, voetbal_team_id)
+    values (${slug}, ${fields.name}, ${fields.shortName}, ${fields.tagline}, ${fields.accent}, ${fields.gold}, ${fields.founded}, ${logo.logo ?? null}, ${hash}, ${teamId})
     on conflict (slug) do nothing
     returning id`;
   if (!row) return { error: "That web address is taken. Try another." };
 
   await startSession(row.id, hash);
   revalidatePath("/");
-  redirect(`/c/${slug}/settings?welcome=1`);
+  redirect(`/start/${slug}`);
+}
+
+function checkSlug(slug: string): string | null {
+  if (slug.length < 2 || !/^[a-z0-9]+(-[a-z0-9]+)*$/.test(slug)) return "Use at least 2 characters: lowercase letters, numbers and dashes.";
+  if (RESERVED.has(slug)) return "That web address is taken. Try another.";
+  return null;
+}
+
+/** For the sign-up form, as you type: null when the address is free, otherwise why not. */
+export async function slugProblem(slug: string): Promise<string | null> {
+  const problem = checkSlug(slug);
+  if (problem) return problem;
+  const sql = await db();
+  const [taken] = await sql`select 1 from clubs where slug = ${slug}`;
+  return taken ? "That web address is taken. Try another." : null;
+}
+
+// Anyone can call this before they have a club, and each call reads voetbal.nl with the site's account,
+// so lookups are spaced out across the whole server.
+let lastLookup = 0;
+
+/** Sign-up step one: the team behind a voetbal.nl link, so the club can confirm it before anything is saved. */
+export async function findVoetbalTeam(link: string): Promise<{ error: string } | { team: TeamPreview }> {
+  const teamId = parseTeamId(link.slice(0, 300));
+  if (!teamId) return { error: "That isn't a voetbal.nl team link. It should contain something like T1628317720." };
+  if (!voetbalConfigured()) return { error: "This site can't read voetbal.nl right now. Skip this step and fill in the club yourself." };
+  const wait = lastLookup + 3000 - Date.now();
+  lastLookup = Math.max(Date.now(), lastLookup + 3000);
+  if (wait > 0) await new Promise((r) => setTimeout(r, wait));
+  try {
+    return { team: await previewTeam(teamId) };
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Couldn't reach voetbal.nl. Try again in a minute." };
+  }
 }
 
 export async function updateClub(slug: string, _: FormState, f: FormData): Promise<FormState> {
@@ -254,6 +289,24 @@ export async function addLineupPlayer(slug: string, _: FormState, f: FormData): 
   for (const m of played) if (m.lineup.some((n) => sameName(n, name))) await linkLineup(m.id, m.lineup, [player]);
   refresh(slug);
   return { ok: `${name} added to the squad. Set their number and position below.` };
+}
+
+/** The welcome screen's squad step: several players at once, each put into the synced matches they played. */
+export async function addPlayers(slug: string, names: string[]): Promise<FormState> {
+  const club = await requireAdmin(slug);
+  const sql = await db();
+  const existing = await sql<{ id: string; name: string }[]>`select id, name from players where club_id = ${club.id}`;
+  const fresh: string[] = [];
+  for (const raw of names.slice(0, 60)) {
+    const name = raw.replace(/\s+/g, " ").trim().slice(0, 60);
+    if (name.length >= 2 && ![...existing.map((p) => p.name), ...fresh].some((n) => sameName(n, name))) fresh.push(name);
+  }
+  if (!fresh.length) return { error: "Nobody new to add." };
+  const added = await sql<{ id: string; name: string }[]>`insert into players ${sql(fresh.map((name) => ({ club_id: club.id, name })))} returning id, name`;
+  const played = await sql<{ id: string; lineup: string[] }[]>`select id, lineup from matches where club_id = ${club.id} and lineup is not null`;
+  for (const m of played) await linkLineup(m.id, m.lineup, added);
+  refresh(slug);
+  return { ok: `${added.length} ${added.length === 1 ? "player" : "players"} added.` };
 }
 
 // ---------- players ----------

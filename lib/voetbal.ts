@@ -245,3 +245,65 @@ export async function linkLineup(matchId: string, lineup: string[], players: { i
   const sql = await db();
   await sql`insert into match_players ${sql(ids.map((player_id) => ({ match_id: matchId, player_id })))} on conflict do nothing`;
 }
+
+export interface TeamPreview {
+  teamId: string;
+  name: string;
+  league: string | null;
+  /** The team's row in the league table, when it has one yet. */
+  standing: { position: number; teams: number; played: number; points: number } | null;
+  clubCode: string | null;
+  /** The crest as a PNG data URL, ready to store as the club logo. */
+  logo: string | null;
+  next: { date: string; opponent: string; home: boolean; kickoff: string | null } | null;
+}
+
+/** What a team link points at, for the "is this you?" step when a club signs up. Reads two pages; writes nothing. */
+export async function previewTeam(teamId: string): Promise<TeamPreview> {
+  const base = `/team/${teamId}`;
+  const tableHtml = await page(`${base}/stand/competitie`);
+  const header = parseTeamHeader(tableHtml);
+  if (!header.name) throw new Error("voetbal.nl has no team at that link. Check that it opens your team's page.");
+  const table = parseStandings(tableHtml);
+  const ours = table.find((t) => sameName(t.team, header.name!));
+
+  let next: TeamPreview["next"] = null;
+  let code = ours?.clubCode ?? null;
+  let league = header.league;
+  try {
+    const today = new Date().toISOString().slice(0, 10);
+    const fixturesHtml = await page(`${base}/programma/competitie`);
+    // The fixtures page names the whole league ("Mannen Zondag - 3e klasse 2"); the table page only the first part.
+    league = parseTeamHeader(fixturesHtml).league ?? league;
+    const fixtures = parseSchedule(fixturesHtml);
+    for (const r of fixtures) {
+      const home = r.us ? r.us === "home" : sameName(r.home, header.name);
+      if (!r.us && !home && !sameName(r.away, header.name)) continue;
+      code ??= home ? r.homeCode : r.awayCode;
+      if (!next && r.date >= today && !r.score) next = { date: r.date, opponent: home ? r.away : r.home, home, kickoff: r.kickoff };
+    }
+  } catch {
+    // No fixtures out yet; the table is enough to recognise the team.
+  }
+
+  let logo: string | null = null;
+  if (code) {
+    try {
+      const res = await fetch(`https://logoapi.voetbal.nl/logo.php?clubcode=${code}`, { signal: AbortSignal.timeout(10_000) });
+      const type = res.headers.get("content-type") ?? "";
+      if (res.ok && /^image\/(png|jpeg)/.test(type)) logo = `data:${type.split(";")[0]};base64,${Buffer.from(await res.arrayBuffer()).toString("base64")}`;
+    } catch {
+      // The badge falls back to initials.
+    }
+  }
+
+  return {
+    teamId,
+    name: header.name,
+    league,
+    standing: ours ? { position: ours.position, teams: table.length, played: ours.played, points: ours.points } : null,
+    clubCode: code,
+    logo,
+    next,
+  };
+}

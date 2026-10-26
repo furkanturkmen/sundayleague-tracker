@@ -37,7 +37,7 @@ export function Notice({ state }: { state: FormState }) {
   return null;
 }
 
-function slugify(s: string) {
+export function slugify(s: string) {
   return s.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40);
 }
 
@@ -46,7 +46,7 @@ function slugify(s: string) {
  * Always PNG or JPEG: the social graphics are drawn by a renderer that can't read WebP. JPEGs stay JPEG
  * (smaller); anything that might have transparency, like a cut-out photo or a crest, becomes PNG.
  */
-async function shrinkImage(file: File, maxPx: number): Promise<string> {
+export async function shrinkImage(file: File, maxPx: number): Promise<string> {
   const url = URL.createObjectURL(file);
   try {
     const img = new Image();
@@ -151,8 +151,12 @@ function LogoField({ initial, onChange }: { initial: string | null; onChange: (p
 const PHOTO_PX = 480;
 const PHOTO_HINT = "For the line-up graphic. A cut-out on a transparent background (PNG) looks best; a normal photo works too.";
 
-function initials(name: string) {
-  const words = name.replace(/[^A-Za-z0-9 ]/g, " ").split(/\s+/).filter(Boolean);
+export function initials(name: string) {
+  const all = name.replace(/[^A-Za-z0-9 ]/g, " ").split(/\s+/).filter(Boolean);
+  // "AFC DWS 2" → "DWS": the club type and the team number say little on a badge.
+  const core = all.filter((w) => !/^(afc|avv|asv|sv|vv|vvv|rksv|rkav|fc|sc|\d+)$/i.test(w));
+  if (core.length === 1 && core[0].length <= 5) return core[0].toUpperCase();
+  const words = core.length ? core : all;
   return (words.length > 1 ? words.map((w) => (/^\d+$/.test(w) ? w : w[0])).join("") : (words[0] ?? "")).slice(0, 4).toUpperCase();
 }
 

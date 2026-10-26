@@ -24,11 +24,10 @@ import { sameName } from "@/lib/voetbal-parse";
 
 export const metadata: Metadata = { title: "Settings" };
 
-type Props = { params: Promise<{ club: string }>; searchParams: Promise<{ welcome?: string }> };
+type Props = { params: Promise<{ club: string }> };
 
-export default async function SettingsPage({ params, searchParams }: Props) {
+export default async function SettingsPage({ params }: Props) {
   const { club: slug } = await params;
-  const { welcome } = await searchParams;
   const { data, st, admin } = await loadClub(slug);
   if (!admin) redirect(`${st.base}/login?next=${encodeURIComponent(`${st.base}/settings`)}`);
 
@@ -45,15 +44,6 @@ export default async function SettingsPage({ params, searchParams }: Props) {
     <div className="narrow-wide">
       <PageHeader title="Settings" kicker={club.name} />
 
-      {welcome && (
-        <div className="card welcome">
-          <h2>Your club is live</h2>
-          <p>
-            Next: add the squad below, then <Link href={`${st.base}/matches/new`}>log your first match</Link>. Anyone with the link can view the club at{" "}
-            <Link href={st.base}>{st.base}</Link>. Only people with the admin password can edit it.
-          </p>
-        </div>
-      )}
 
       <nav className="tabs settings-nav" aria-label="Settings sections">
         <a href="#squad">Squad</a>

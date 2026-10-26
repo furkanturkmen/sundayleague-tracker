@@ -414,8 +414,6 @@ fieldset p { margin: 0; }
 .section-sub { margin: 24px 0 4px; }
 .squad-row-head .btn-link:last-child { margin-left: auto; }
 .squad-row-body { padding: 12px 0 4px; }
-.welcome { border-color: var(--accent); background: var(--accent-soft); }
-.welcome p { margin: 0; }
 .danger-zone { border-color: color-mix(in srgb, var(--shame) 40%, var(--line)); }
 .get-started { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
 .get-started p { margin: 0; }
@@ -438,3 +436,102 @@ fieldset p { margin: 0; }
 .graphics-grid figcaption { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; }
 .graphics-grid figcaption strong { margin-right: auto; white-space: nowrap; }
 @media (max-width: 400px) { .graphics-grid { grid-template-columns: 1fr 1fr; } }
+
+/* ---------- onboarding: sign-up and the welcome screens ---------- */
+/* One question per screen in a narrow column. On phones the main button sits at the bottom, in thumb reach. */
+.onb { min-height: 100dvh; }
+/* The steps set their own display, which would otherwise beat the hidden attribute. */
+.onb [hidden] { display: none !important; }
+.onb-shell { max-width: 520px; margin: 0 auto; padding: 16px 16px 40px; display: grid; gap: 22px; }
+.onb-top { display: flex; align-items: center; gap: 16px; min-height: 32px; }
+.onb-top > :first-child { flex: none; text-decoration: none; }
+.onb-club { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; font-size: 0.9rem; min-width: 0; }
+.onb-progress { flex: 1; display: grid; grid-auto-flow: column; gap: 6px; max-width: 220px; margin-left: auto; }
+.onb-progress span { height: 5px; border-radius: 99px; background: var(--line); transition: background-color 300ms ease; }
+.onb-progress span.is-done { background: var(--accent); }
+
+.onb-form { display: contents; }
+.onb-step > * { min-width: 0; }
+.onb-step { display: grid; gap: 20px; animation: onb-in 260ms cubic-bezier(0.2, 0.8, 0.2, 1); }
+@keyframes onb-in { from { opacity: 0; transform: translateY(8px); } }
+@media (prefers-reduced-motion: reduce) { .onb-step { animation: none; } .onb-progress span { transition: none; } }
+
+.onb-title { display: grid; gap: 8px; }
+.onb-title h1 { font-size: clamp(2.4rem, 9vw, 3.4rem); }
+.onb-title p { margin: 0; color: var(--ink-2); font-size: 1rem; max-width: 46ch; }
+
+.onb-actions { display: grid; gap: 12px; justify-items: center; }
+.onb-actions .btn { width: 100%; }
+@media (max-width: 640px) {
+  /* Pinned to the bottom of the screen, with a fade so content scrolls underneath. */
+  .onb-actions {
+    position: sticky; bottom: 0; z-index: 2; margin: 0 -16px; padding: 18px 16px calc(14px + env(safe-area-inset-bottom));
+    background: linear-gradient(transparent, var(--bg) 24px);
+  }
+}
+
+.onb-hint { margin: -6px 0 0; }
+.onb-more summary { cursor: pointer; font-weight: 600; font-size: 0.88rem; color: var(--accent-text); width: fit-content; }
+.onb-more[open] summary { margin-bottom: 10px; }
+.onb-how { margin: 0; padding-left: 20px; display: grid; gap: 6px; color: var(--ink-2); font-size: 0.9rem; }
+
+/* Is this your team? */
+.onb-team { display: grid; justify-items: center; text-align: center; gap: 6px; padding: 26px 18px 20px; background: var(--surface); border: 1px solid var(--line); border-radius: 18px; box-shadow: var(--shadow); }
+.onb-team img { width: 96px; height: 96px; object-fit: contain; margin-bottom: 6px; }
+.onb-team-blank { width: 88px; height: 88px; border-radius: 50%; display: grid; place-items: center; background: var(--surface-2); font-family: var(--font-display), sans-serif; font-size: 2rem; margin-bottom: 6px; }
+.onb-team-name { font-family: var(--font-display), sans-serif; font-size: 2.2rem; line-height: 1; }
+.onb-team-facts { display: grid; gap: 8px; margin: 12px 0 0; width: 100%; border-top: 1px solid var(--line); padding-top: 14px; }
+.onb-team-facts div { display: flex; justify-content: space-between; gap: 12px; font-size: 0.9rem; text-align: right; }
+.onb-team-facts dt { color: var(--muted); }
+.onb-team-facts dd { margin: 0; font-weight: 600; }
+
+/* Club look, with a live preview */
+.onb-preview { display: flex; align-items: center; gap: 16px; padding: 18px; border-radius: 18px; background: var(--accent); color: var(--accent-ink); border-bottom: 5px solid var(--gold); transition: background-color 200ms ease; }
+.onb-preview .muted { color: inherit; opacity: 0.75; }
+.onb-preview-name { font-family: var(--font-display), sans-serif; font-size: 2rem; line-height: 1; overflow-wrap: anywhere; }
+.onb-colours { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.form label.onb-colour { display: flex; align-items: center; gap: 10px; padding: 8px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); cursor: pointer; }
+.form label.onb-colour > input[type=color] { display: block; margin: 0; width: 40px; height: 40px; padding: 0; border: 0; border-radius: 10px; background: none; flex: none; cursor: pointer; }
+.onb-colour > span { display: grid; color: var(--ink); }
+.onb-crest { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+
+.onb-password { display: flex; gap: 10px; align-items: center; margin-top: 5px; }
+.onb-password input { flex: 1; }
+.onb-slug { margin: -8px 0 0; color: var(--muted); }
+.onb-slug.is-ok { color: var(--win); font-weight: 600; }
+.onb-slug.is-bad { color: var(--shame); font-weight: 600; }
+
+/* Sync */
+.onb-sync { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.onb-sync li { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 12px; background: var(--surface); border: 1px solid var(--line); color: var(--muted); font-weight: 600; transition: color 200ms ease; }
+.onb-sync li.is-busy, .onb-sync li.is-done { color: var(--ink); }
+.onb-sync-dot { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--line); flex: none; display: grid; place-items: center; }
+.onb-sync li.is-busy .onb-sync-dot { border-color: var(--accent); border-right-color: transparent; animation: onb-spin 800ms linear infinite; }
+.onb-sync li.is-done .onb-sync-dot { border-color: var(--accent); background: var(--accent); }
+.onb-sync li.is-done .onb-sync-dot::after { content: ""; width: 5px; height: 9px; border: solid var(--accent-ink); border-width: 0 2px 2px 0; transform: translateY(-1px) rotate(45deg); }
+@keyframes onb-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .onb-sync li.is-busy .onb-sync-dot { animation: none; border-right-color: var(--accent); } }
+
+/* Squad */
+.onb-synced { margin: 0; padding: 10px 14px; border-radius: 12px; background: var(--accent-soft); color: var(--accent-text); font-weight: 600; font-size: 0.9rem; }
+.onb-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.onb-chip { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 6px 14px; border-radius: 99px; border: 1px solid var(--line); background: var(--surface); color: var(--ink-2); font: inherit; font-weight: 600; cursor: pointer; transition: background-color 150ms ease, color 150ms ease, border-color 150ms ease, transform 100ms ease; }
+.onb-chip span { font-size: 0.75rem; opacity: 0.7; }
+.onb-chip.is-on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.onb-chip:active { transform: scale(0.97); }
+.onb-chip-tools { display: flex; gap: 16px; margin-top: -10px; }
+.onb-extra { gap: 6px; font-size: 0.85rem; font-weight: 600; color: var(--ink-2); }
+
+/* Done */
+.onb-live { display: grid; place-items: center; padding-top: 12px; }
+.onb-live .crest { filter: drop-shadow(0 8px 24px color-mix(in srgb, var(--accent) 45%, transparent)); }
+.onb-step:has(.onb-live) .onb-title { justify-items: center; text-align: center; }
+.onb-share { display: flex; gap: 8px; align-items: center; padding: 8px 8px 8px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+.onb-share code { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.9rem; }
+.onb-whatsapp { margin-top: -10px; }
+.onb-next-title { margin: 6px 0 -8px; }
+.onb-next { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.onb-next a { display: grid; gap: 2px; padding: 12px 40px 12px 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); text-decoration: none; position: relative; }
+.onb-next a::after { content: "›"; position: absolute; right: 16px; top: 50%; transform: translateY(-50%); font-size: 1.4rem; color: var(--muted); }
+.onb-next a:hover { border-color: var(--accent); color: inherit; }
+.onb-next span { color: var(--muted); font-size: 0.85rem; }
