@@ -597,13 +597,27 @@ main.container:has(> .ph:first-child) { max-width: none; padding: 0; overflow-x:
 .ph-role { display: flex; align-items: center; gap: 12px; color: rgb(255 255 255 / 0.78); font-size: 20px; letter-spacing: -0.01em; }
 .ph-pill { padding: 3px 10px; border-radius: 99px; background: var(--glass); border: 1px solid var(--glass-line); color: #fff; font-weight: 600; font-size: 14px; letter-spacing: 0.02em; -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
 
-/* the one loud tile */
-.ph-feature { grid-area: feature; align-self: end; width: 230px; display: grid; gap: 4px; }
-.ph-feature-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 9px 12px; border-radius: 14px; background: var(--ph-bright); color: #fff; }
-.ph-spark { display: block; width: 110px; height: 26px; }
-.ph-feature-body { padding: 16px 18px 18px; border-radius: 16px; border: 1.5px solid var(--ph-bright); background: rgb(4 6 10 / 0.5); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
-.ph-feature-value { font-size: 64px; font-weight: 500; line-height: 1; letter-spacing: -0.055em; font-variant-numeric: tabular-nums; }
-.ph-feature-label { margin-top: 10px; color: var(--ph-ink-2); font-size: 14px; line-height: 1.3; }
+/* the one highlighted stat: a glass card with a glow of club colour, the number, a bar and the recent form */
+.ph-feature {
+  grid-area: feature; align-self: end; width: 260px; display: grid; gap: 14px; padding: 18px 20px 20px; border-radius: 22px;
+  background:
+    radial-gradient(120% 90% at 0% 0%, color-mix(in srgb, var(--ph-bright) 32%, transparent), transparent 60%),
+    rgb(255 255 255 / 0.06);
+  border: 1px solid rgb(255 255 255 / 0.12); box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.08), 0 20px 50px rgb(0 0 0 / 0.35);
+  -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
+}
+.ph-feature-head { display: flex; justify-content: space-between; align-items: baseline; font-size: 14px; color: var(--ph-ink-2); }
+.ph-feature-head span:first-child { color: #fff; font-weight: 500; }
+.ph-feature-value { font-size: 64px; font-weight: 500; line-height: 0.9; letter-spacing: -0.06em; font-variant-numeric: tabular-nums; display: flex; align-items: flex-start; }
+.ph-feature-value small { font-size: 28px; font-weight: 400; letter-spacing: -0.02em; color: var(--ph-ink-2); margin: 6px 0 0 4px; }
+.ph-feature-bar { height: 6px; border-radius: 99px; background: rgb(255 255 255 / 0.1); overflow: hidden; }
+.ph-feature-bar span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, color-mix(in srgb, var(--ph-bright) 70%, #fff), var(--ph-bright)); }
+.ph-feature-form { display: flex; justify-content: space-between; align-items: center; font-size: 14px; color: var(--ph-ink-2); }
+.ph-feature-form ol { list-style: none; margin: 0; padding: 0; display: flex; gap: 6px; }
+.ph-feature-form li { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 8px; font-size: 12px; font-weight: 600; }
+.ph-form-W { background: rgb(94 224 143 / 0.16); color: #7ff0aa; }
+.ph-form-D { background: rgb(242 195 91 / 0.16); color: #f6d27f; }
+.ph-form-L { background: rgb(255 138 128 / 0.16); color: #ffa39b; }
 
 /* matches: alternating glass rows */
 .ph-matches { grid-area: matches; align-self: center; display: grid; gap: 12px; }

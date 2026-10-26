@@ -83,14 +83,34 @@ export default async function PlayerPage({ params }: Props) {
         </div>
 
         <div className="ph-feature">
-          <div className="ph-feature-top">
-            <Crest short={data.club.shortName} logo={data.club.logo} size={22} />
-            <Sparkline points={log.slice().reverse().map((m) => (m.result === "W" ? 3 : m.result === "D" ? 1 : 0))} />
+          <div className="ph-feature-head">
+            <span>Win rate</span>
+            <span>
+              {all.apps} {all.apps === 1 ? "game" : "games"}
+            </span>
           </div>
-          <div className="ph-feature-body">
-            <div className="ph-feature-value">{all.apps ? `${Math.round(all.winPct)}%` : "–"}</div>
-            <div className="ph-feature-label">Win rate with {first} on the pitch</div>
+          <div className="ph-feature-value">
+            {all.apps ? Math.round(all.winPct) : "–"}
+            {all.apps > 0 && <small>%</small>}
           </div>
+          <div className="ph-feature-bar" aria-hidden="true">
+            <span style={{ width: `${all.winPct}%` }} />
+          </div>
+          {log.length > 0 && (
+            <div className="ph-feature-form">
+              <span>Form</span>
+              <ol aria-label="Last results, oldest first">
+                {log
+                  .slice(0, 5)
+                  .reverse()
+                  .map((m) => (
+                    <li key={m.id} className={`ph-form-${m.result}`} title={`${m.result} ${m.gf}–${m.ga} vs ${m.opponent}`}>
+                      {m.result}
+                    </li>
+                  ))}
+              </ol>
+            </div>
+          )}
         </div>
 
         <aside className="ph-matches">
@@ -240,24 +260,4 @@ export default async function PlayerPage({ params }: Props) {
 function abbr(name: string): string {
   const word = name.replace(/^(afc|asv|avv|sv|vv|rksv|sc|fc)\s+/i, "").replace(/[^A-Za-z ]/g, "").trim().split(/\s+/)[0] ?? name;
   return word.slice(0, 3).toUpperCase();
-}
-
-/** Points per game across the player's matches, oldest first, as a thin line. */
-function Sparkline({ points }: { points: number[] }) {
-  if (points.length < 2) return null;
-  const w = 120;
-  const h = 28;
-  // A rolling average reads as form; raw 3/1/0 points zigzag too much.
-  const smooth = points.map((_, i) => {
-    const win = points.slice(Math.max(0, i - 2), i + 1);
-    return win.reduce((a, b) => a + b, 0) / win.length;
-  });
-  const xy = smooth.map((v, i) => [(i / (smooth.length - 1)) * w, h - 3 - (v / 3) * (h - 6)] as const);
-  const [lx, ly] = xy[xy.length - 1];
-  return (
-    <svg viewBox={`0 0 ${w} ${h}`} width={w} height={h} className="ph-spark" aria-hidden="true">
-      <polyline points={xy.map(([x, y]) => `${x},${y}`).join(" ")} fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
-      <circle cx={lx} cy={ly} r="3.5" fill="currentColor" />
-    </svg>
-  );
 }
