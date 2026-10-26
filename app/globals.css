@@ -535,3 +535,108 @@ fieldset p { margin: 0; }
 .onb-next a::after { content: "›"; position: absolute; right: 16px; top: 50%; transform: translateY(-50%); font-size: 1.4rem; color: var(--muted); }
 .onb-next a:hover { border-color: var(--accent); color: inherit; }
 .onb-next span { color: var(--muted); font-size: 0.85rem; }
+
+/* ---------- redesign: player page ---------- */
+/* A dark stage like a floodlit pitch at night, always dark whatever the theme. The shirt stands in for a photo;
+   name and stats sit on it in a big grotesk, with frosted glass panels for the matches. */
+.ph {
+  --glass: rgb(255 255 255 / 0.07);
+  --glass-line: rgb(255 255 255 / 0.11);
+  --ph-ink-2: rgb(255 255 255 / 0.62);
+  position: relative; isolation: isolate; overflow: hidden;
+  margin-top: 16px; border-radius: 28px; color: #fff; background: #06080d;
+  font-family: var(--font-grotesk), var(--font-body), sans-serif;
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr) 300px;
+  grid-template-areas: "top top top" "id kit matches" "feature kit matches";
+  grid-template-rows: auto 1fr auto;
+  gap: 24px; padding: 22px 28px 28px; min-height: 620px;
+}
+.ph-glow {
+  position: absolute; inset: 0; z-index: -2;
+  background:
+    radial-gradient(60% 70% at 52% 58%, color-mix(in srgb, var(--ph-bright) 46%, transparent), transparent 70%),
+    radial-gradient(40% 50% at 85% 0%, color-mix(in srgb, var(--ph-bright) 22%, transparent), transparent 70%),
+    repeating-linear-gradient(90deg, rgb(255 255 255 / 0.025) 0 1px, transparent 1px 96px),
+    linear-gradient(180deg, #0b1020, #05070b 75%);
+}
+/* the floodlit grass line under the shirt */
+.ph-glow::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 34%;
+  background: linear-gradient(180deg, transparent, rgb(0 0 0 / 0.7));
+}
+.ph-watermark {
+  position: absolute; z-index: -1; left: 50%; top: 50%; width: min(78%, 760px); transform: translate(-46%, -50%);
+  opacity: 0.07; filter: grayscale(1) blur(1px); pointer-events: none;
+}
+.ph-kit {
+  grid-area: kit; align-self: end; justify-self: center; width: min(100%, 470px); margin-bottom: -60px;
+  filter: drop-shadow(0 40px 60px rgb(0 0 0 / 0.6)) drop-shadow(0 0 80px color-mix(in srgb, var(--ph-bright) 35%, transparent));
+}
+
+.ph-top { grid-area: top; display: flex; justify-content: space-between; align-items: center; }
+.ph-nav { display: inline-flex; align-items: center; gap: 12px; color: #fff; text-decoration: none; font-weight: 500; font-size: 1.05rem; letter-spacing: -0.01em; }
+.ph-nav:hover { color: #fff; }
+.ph-nav:last-child { font-size: 0.85rem; color: var(--ph-ink-2); }
+.ph-round { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: var(--glass); border: 1px solid var(--glass-line); backdrop-filter: blur(10px); font-size: 1.2rem; line-height: 1; color: #fff; transition: background-color 150ms ease; }
+.ph-nav:hover .ph-round { background: rgb(255 255 255 / 0.16); }
+
+.ph-id { grid-area: id; align-self: center; display: grid; gap: 14px; position: relative; z-index: 1; }
+.ph-eyebrow { color: var(--ph-ink-2); font-size: 0.9rem; letter-spacing: -0.005em; }
+.ph-name { font-family: inherit; font-weight: 600; font-size: clamp(3.1rem, 6.4vw, 6rem); line-height: 0.93; letter-spacing: -0.05em; margin: 0; }
+.ph-name span { display: flex; align-items: center; gap: 14px; }
+.ph-name .crest { flex: none; height: 0.6em !important; width: auto; }
+.ph-role { display: flex; align-items: center; gap: 10px; color: var(--ph-ink-2); font-size: 0.95rem; }
+.ph-pill { padding: 3px 10px; border-radius: 99px; background: var(--glass); border: 1px solid var(--glass-line); color: #fff; font-weight: 600; font-size: 0.8rem; letter-spacing: 0.02em; }
+
+/* the one loud tile */
+.ph-feature { grid-area: feature; align-self: end; width: 220px; border-radius: 18px; overflow: hidden; border: 1.5px solid var(--ph-bright); background: rgb(6 8 13 / 0.55); backdrop-filter: blur(12px); position: relative; z-index: 1; }
+.ph-feature-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 12px; background: var(--ph-bright); color: #fff; }
+.ph-spark { display: block; width: 110px; height: 26px; }
+.ph-feature-body { padding: 14px 16px 16px; }
+.ph-feature-value { font-size: 3.6rem; font-weight: 600; line-height: 1; letter-spacing: -0.05em; font-variant-numeric: tabular-nums; }
+.ph-feature-label { margin-top: 8px; color: var(--ph-ink-2); font-size: 0.85rem; line-height: 1.3; }
+
+/* glass match column */
+.ph-matches { grid-area: matches; align-self: center; display: grid; gap: 10px; position: relative; z-index: 1; }
+.ph-matches-head { display: flex; justify-content: space-between; align-items: baseline; font-weight: 500; font-size: 0.95rem; }
+.ph-matches-sub { color: var(--ph-ink-2); font-size: 0.8rem; }
+.ph-matches ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.ph-match { display: grid; grid-template-columns: 52px 1fr 52px; align-items: center; padding: 12px 10px; border-radius: 16px; background: var(--glass); border: 1px solid var(--glass-line); backdrop-filter: blur(14px); color: #fff; text-decoration: none; transition: background-color 150ms ease, transform 150ms ease; }
+.ph-match:hover { color: #fff; background: rgb(255 255 255 / 0.12); }
+.ph-match:active { transform: scale(0.985); }
+.ph-match-team { display: grid; justify-items: center; gap: 4px; }
+.ph-match-team small { font-size: 0.68rem; letter-spacing: 0.04em; color: var(--ph-ink-2); font-weight: 600; }
+.ph-match-team .crest, .ph-match-team .team-logo { height: 26px !important; width: auto; max-width: 40px; }
+.ph-match-mid { display: grid; justify-items: center; gap: 4px; }
+.ph-match-pill { padding: 1px 9px; border-radius: 99px; font-size: 0.72rem; font-weight: 700; background: rgb(255 255 255 / 0.1); border: 1px solid var(--glass-line); }
+.ph-match-W .ph-match-pill { color: #5ee08f; }
+.ph-match-D .ph-match-pill { color: #f2c35b; }
+.ph-match-L .ph-match-pill { color: #ff8a80; }
+.ph-match-score { font-size: 1.9rem; font-weight: 500; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; line-height: 1; display: flex; gap: 10px; }
+.ph-match-score i { font-style: normal; color: var(--ph-ink-2); }
+.ph-empty { margin: 0; color: var(--ph-ink-2); }
+
+/* stat strip under the stage */
+.ph-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-top: 12px; font-family: var(--font-grotesk), sans-serif; }
+.ph-stat { display: grid; gap: 2px; padding: 16px 18px; border-radius: 18px; background: var(--surface); border: 1px solid var(--line); }
+.ph-stat-value { font-size: 2rem; font-weight: 600; letter-spacing: -0.04em; line-height: 1.05; font-variant-numeric: tabular-nums; }
+.ph-stat-label { color: var(--muted); font-size: 0.82rem; }
+.ph-bio { margin: 16px 0 0; color: var(--ink-2); max-width: 64ch; font-size: 1.02rem; }
+
+@media (max-width: 960px) {
+  .ph { grid-template-columns: minmax(0, 1fr) 280px; grid-template-areas: "top top" "id matches" "kit matches" "feature matches"; }
+  .ph-kit { width: min(100%, 340px); margin-bottom: 0; align-self: center; }
+}
+@media (max-width: 680px) {
+  /* Phone: name over the shirt, the loud tile, then the matches as a sideways strip. */
+  .ph { grid-template-columns: minmax(0, 1fr); grid-template-areas: "top" "id" "kit" "feature" "matches"; grid-template-rows: none; padding: 16px 16px 20px; gap: 18px; border-radius: 22px; margin-inline: -4px; min-height: 0; }
+  .ph-name { font-size: clamp(2.8rem, 15vw, 4rem); }
+  .ph-kit { width: 72%; margin: -10px auto -40px; }
+  .ph-feature { width: 100%; display: grid; grid-template-columns: 1fr; }
+  .ph-feature-value { font-size: 3rem; }
+  .ph-matches ol { grid-auto-flow: column; grid-auto-columns: 200px; overflow-x: auto; scroll-snap-type: x mandatory; margin: 0 -16px; padding: 0 16px 4px; scrollbar-width: none; }
+  .ph-matches ol::-webkit-scrollbar { display: none; }
+  .ph-matches li { scroll-snap-align: start; }
+  .ph-nav { font-size: 0.95rem; }
+}
+@media (prefers-reduced-motion: reduce) { .ph-match, .ph-round { transition: none; } }
