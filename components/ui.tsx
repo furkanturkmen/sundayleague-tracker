@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { formatDate, seasonLabel, type PlayedMatch, type Result, type Stats } from "@/lib/stats";
-import type { Standing } from "@/lib/types";
+import type { Match, Standing } from "@/lib/types";
 
 /** The club's uploaded logo, or a shield drawn in its colours when there isn't one. */
 export function Crest({ short, logo, size = 44 }: { short: string; logo?: string | null; size?: number }) {
@@ -113,16 +113,19 @@ export function SeasonTabs({ base, seasons, active, extra = "" }: { base: string
   );
 }
 
-export function MatchLine({ st, m }: { st: Stats; m: PlayedMatch }) {
+/** One line in a results list. Abandoned or called-off matches show why instead of a score. */
+export function MatchLine({ st, m }: { st: Stats; m: PlayedMatch | Match }) {
+  const played = "result" in m ? m : null;
   return (
-    <Link href={`${st.base}/matches/${m.id}`} className="match-line">
-      <ResultBadge result={m.result} />
+    <Link href={`${st.base}/matches/${m.id}`} className={`match-line${played ? "" : " voided"}`}>
+      {played ? <ResultBadge result={played.result} /> : <span className="chip">{m.status === "abandoned" ? "Abandoned" : "Called off"}</span>}
       <span className="match-line-title with-logo">
         <TeamLogo code={m.opponentCode} name={m.opponent} />
         <span>{st.fixtureTitle(m)}</span>
+        {m.competition !== "League" && <span className="chip">{m.competition}</span>}
       </span>
       {/* Same order as the title, home side first, so "Pancratius 4 vs DWS" reads 2–0, not 0–2. */}
-      <span className="match-line-score">{m.venue === "H" ? `${m.gf}–${m.ga}` : `${m.ga}–${m.gf}`}</span>
+      <span className="match-line-score">{played ? (m.venue === "H" ? `${played.gf}–${played.ga}` : `${played.ga}–${played.gf}`) : "–"}</span>
       <span className="muted small">{formatDate(m.date)}</span>
     </Link>
   );

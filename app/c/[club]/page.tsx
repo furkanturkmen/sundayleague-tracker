@@ -14,7 +14,8 @@ export default async function ClubHome({ params }: { params: Promise<{ club: str
   const stats = st.allStats(season);
   const scorers = stats.filter((p) => p.goals > 0).sort((a, b) => b.goals - a.goals || a.apps - b.apps).slice(0, 5);
   const assisters = stats.filter((p) => p.assists > 0).sort((a, b) => b.assists - a.assists || a.apps - b.apps).slice(0, 5);
-  const recent = [...st.played].reverse().slice(0, 5);
+  // Abandoned matches sit among the results by date, so the list matches what actually happened.
+  const recent = [...st.played, ...st.voided].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5);
   const next = st.upcoming[0];
   const run = currentRun(st.played);
   const fame = st.hallOfFame(st.played)[0];

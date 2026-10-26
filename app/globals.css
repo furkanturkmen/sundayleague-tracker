@@ -673,6 +673,12 @@ main.container:has(> .ph:first-child) { max-width: none; padding: 0; overflow-x:
 .ph-log-bits { color: var(--ink-2); font-size: 14px; display: flex; align-items: center; gap: 6px; }
 .ph-log-score { font-size: 24px; font-weight: 400; letter-spacing: -0.03em; text-align: right; font-variant-numeric: tabular-nums; }
 .ph-log-result { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; font-size: 12px; font-weight: 600; background: rgb(255 255 255 / 0.08); }
+.ph-comp { font-weight: 500; }
+.ph-comp-cup { color: #f6d27f; }
+.ph-match-mid .ph-comp { font-size: 12px; color: var(--ph-ink-2); letter-spacing: 0.02em; }
+.ph-match-mid .ph-comp-cup { color: #f6d27f; }
+.ph-log-void .ph-log-team, .ph-log-void img { opacity: 0.7; }
+.ph-log-void-label { grid-column: span 2; justify-self: end; padding: 3px 10px; border-radius: 99px; font-size: 12px; font-weight: 600; color: var(--ink-2); border: 1px dashed rgb(255 255 255 / 0.25); }
 .ph-match-W .ph-log-result { color: #5ee08f; background: rgb(94 224 143 / 0.12); }
 .ph-match-D .ph-log-result { color: #f2c35b; background: rgb(242 195 91 / 0.12); }
 .ph-match-L .ph-log-result { color: #ff8a80; background: rgb(255 138 128 / 0.12); }

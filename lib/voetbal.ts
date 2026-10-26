@@ -210,11 +210,13 @@ export async function syncClub(clubId: string): Promise<SyncSummary> {
         )}`;
     });
 
-    // Line-ups: one page per match, so only recent results and ones we haven't got yet.
+    // Line-ups: one page per match, so only recent results and ones we haven't got yet. Abandoned matches have
+    // a line-up too: who played still goes into each player's record, even though the match counts for nothing.
     const since = new Date(Date.now() - LINEUP_DAYS * 86_400_000).toISOString().slice(0, 10);
     const needLineup = await sql<{ id: string; external_id: string; venue: "H" | "A" }[]>`
       select id, external_id, venue from matches
-      where club_id = ${clubId} and external_id is not null and goals_against is not null and (lineup is null or date >= ${since})
+      where club_id = ${clubId} and external_id is not null and (goals_against is not null or status = 'abandoned')
+        and (lineup is null or date >= ${since})
       order by date desc limit ${MAX_LINEUPS}`;
     for (const m of needLineup) {
       const [home, away] = parseLineups(await page(`/wedstrijd/${m.external_id}/uitslag`));

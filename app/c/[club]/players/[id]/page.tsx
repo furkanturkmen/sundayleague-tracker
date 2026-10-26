@@ -31,6 +31,9 @@ export default async function PlayerPage({ params }: Props) {
     .map((s) => ({ season: s, stats: statsFor(player, st.inSeason(s)) }))
     .filter((r) => r.stats.apps > 0);
   const log = [...st.played].reverse().filter((m) => m.squad.includes(id));
+  // The full record also lists abandoned matches he played in; they count for nothing, so they carry no result.
+  const played = new Map(log.map((m) => [m.id, m]));
+  const history = [...log, ...st.voided.filter((m) => m.squad.includes(id))].sort((a, b) => b.date.localeCompare(a.date));
   const moments = data.moments.filter((m) => m.player === id);
 
   // Squad order (active players by shirt number), wrapping round, for "Next player".
@@ -115,7 +118,7 @@ export default async function PlayerPage({ params }: Props) {
 
         <aside className="ph-matches">
           <div className="ph-matches-head">
-            <span>{data.club.voetbal?.league?.replace(/^.*? - /, "") ?? "Recent matches"}</span>
+            <span>Recent matches</span>
             <span className="ph-matches-sub">Last {Math.min(5, log.length)}</span>
           </div>
           {log.length ? (
@@ -139,6 +142,7 @@ export default async function PlayerPage({ params }: Props) {
                           <i>:</i>
                           {home ? m.ga : m.gf}
                         </span>
+                        <span className={`ph-comp ph-comp-${m.competition === "League" ? "league" : "cup"}`}>{m.competition}</span>
                       </span>
                       <span className="ph-match-team">
                         {home ? them : us}
@@ -210,31 +214,34 @@ export default async function PlayerPage({ params }: Props) {
 
         <section className="ph-block">
           <h2>
-            Every match <span>{log.length}</span>
+            Every match <span>{history.length}</span>
           </h2>
-          {log.length ? (
+          {history.length ? (
             <ol className="ph-log">
-              {log.map((m) => {
-                const g = m.goals.filter((x) => x.scorer === id).length;
-                const a = m.goals.filter((x) => x.assist === id).length;
-                const cards = m.cards.filter((c) => c.player === id);
+              {history.map((fixture) => {
+                const m = played.get(fixture.id);
+                const g = fixture.goals.filter((x) => x.scorer === id).length;
+                const a = fixture.goals.filter((x) => x.assist === id).length;
+                const cards = fixture.cards.filter((c) => c.player === id);
                 const bits = [
                   g && `⚽ ${g > 1 ? `×${g}` : ""}`.trim(),
                   a && `${a} assist${a > 1 ? "s" : ""}`,
-                  m.motm === id && "MOTM",
-                  m.ownGoals.includes(id) && "own goal",
-                  m.penaltiesMissed.includes(id) && "missed pen",
+                  fixture.motm === id && "MOTM",
+                  fixture.ownGoals.includes(id) && "own goal",
+                  fixture.penaltiesMissed.includes(id) && "missed pen",
                 ].filter(Boolean);
                 return (
-                  <li key={m.id}>
-                    <Link href={`${st.base}/matches/${m.id}`} className={`ph-log-row ph-match-${m.result}`}>
-                      <span className="ph-log-date">{formatDate(m.date, { day: "numeric", month: "short" })}</span>
-                      <TeamLogo code={m.opponentCode} name={m.opponent} size={28} />
+                  <li key={fixture.id}>
+                    <Link href={`${st.base}/matches/${fixture.id}`} className={`ph-log-row ${m ? `ph-match-${m.result}` : "ph-log-void"}`}>
+                      <span className="ph-log-date">{formatDate(fixture.date, { day: "numeric", month: "short" })}</span>
+                      <TeamLogo code={fixture.opponentCode} name={fixture.opponent} size={28} />
                       <span className="ph-log-team">
-                        {m.opponent}
+                        {fixture.opponent}
                         <small>
-                          {m.venue === "H" ? "Home" : "Away"}
-                          <span className="ph-log-inline-date"> · {formatDate(m.date, { day: "numeric", month: "short" })}</span>
+                          {fixture.venue === "H" ? "Home" : "Away"}
+                          {" · "}
+                          <span className={`ph-comp ph-comp-${fixture.competition === "League" ? "league" : "cup"}`}>{fixture.competition}</span>
+                          <span className="ph-log-inline-date"> · {formatDate(fixture.date, { day: "numeric", month: "short" })}</span>
                         </small>
                       </span>
                       <span className="ph-log-bits">
@@ -243,10 +250,16 @@ export default async function PlayerPage({ params }: Props) {
                           <span key={i} className={c.type === "Y" ? "card-y" : "card-r"} title={c.type === "Y" ? "Yellow card" : "Red card"} />
                         ))}
                       </span>
-                      <span className="ph-log-score">
-                        {m.gf}–{m.ga}
-                      </span>
-                      <span className="ph-log-result">{m.result}</span>
+                      {m ? (
+                        <>
+                          <span className="ph-log-score">
+                            {m.gf}–{m.ga}
+                          </span>
+                          <span className="ph-log-result">{m.result}</span>
+                        </>
+                      ) : (
+                        <span className="ph-log-void-label">{fixture.status === "abandoned" ? "Abandoned" : "Called off"}</span>
+                      )}
                     </Link>
                   </li>
                 );
