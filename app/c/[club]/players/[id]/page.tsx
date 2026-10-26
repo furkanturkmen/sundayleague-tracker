@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import type { CSSProperties } from "react";
 import { notFound } from "next/navigation";
@@ -6,6 +7,7 @@ import { Kit } from "@/components/Kit";
 import { Crest, Empty, ResultBadge, TeamLogo } from "@/components/ui";
 import { loadClub } from "@/lib/club";
 import { brighten } from "@/lib/color";
+import stadium from "@/public/images/stadium-night.jpg";
 import { POSITION_NAMES, positionGroup } from "@/lib/types";
 import { formatDate, seasonLabel, statsFor } from "@/lib/stats";
 
@@ -43,9 +45,11 @@ export default async function PlayerPage({ params }: Props) {
   return (
     <>
       <section className="ph" aria-label={player.name} style={{ "--ph-bright": brighten(data.club.accent) } as CSSProperties}>
-        <div className="ph-glow" aria-hidden="true" />
-        {data.club.logo && <img src={data.club.logo} alt="" className="ph-watermark" aria-hidden="true" />}
-        <Kit main={data.club.accent} trim={data.club.gold} number={player.number} className="ph-kit" />
+        {/* A stadium at night, out of focus and darkened, with the club colour glowing behind the shirt. */}
+        <div className="ph-bg" aria-hidden="true">
+          <Image src={stadium} alt="" fill sizes="(max-width: 720px) 100vw, 1120px" placeholder="blur" priority className="ph-photo" />
+        </div>
+        <Kit main={data.club.accent} trim={data.club.gold} number={player.number} logo={data.club.logo} className="ph-kit" />
 
         <nav className="ph-top">
           <Link href={`${st.base}/players`} className="ph-nav">
@@ -132,6 +136,9 @@ export default async function PlayerPage({ params }: Props) {
             <p className="ph-empty">No appearances yet.</p>
           )}
         </aside>
+        <a className="ph-credit" href="https://commons.wikimedia.org/wiki/File:Mecz_pi%C5%82karski_Wis%C5%82a_Krak%C3%B3w_-_Zag%C5%82%C4%99bie_Sosnwoiec,_28_pa%C5%BAdziernika_2022,_Po%C5%BCegnanie_Stadionu_Ludowego,_KP.jpg" target="_blank" rel="noreferrer">
+          Photo: Krzysztof Popławski, CC BY 4.0
+        </a>
       </section>
 
       <div className="ph-stats">

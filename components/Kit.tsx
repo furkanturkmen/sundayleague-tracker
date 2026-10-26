@@ -4,7 +4,7 @@ import { useId } from "react";
  * A lit, striped club shirt with the number on it: the stand-in for a player photo. Stripes in the two club
  * colours, then a highlight down the chest and shade towards the sides and sleeves so it reads as fabric.
  */
-export function Kit({ main, trim, number, className }: { main: string; trim: string; number: number | null; className?: string }) {
+export function Kit({ main, trim, number, logo, className }: { main: string; trim: string; number: number | null; logo?: string | null; className?: string }) {
   const id = useId().replace(/:/g, "");
   const shirt = "M128 40 L168 22 Q200 44 232 22 L272 40 L352 86 L326 166 L284 150 L284 400 Q200 414 116 400 L116 150 L74 166 L48 86 Z";
   return (
@@ -41,20 +41,19 @@ export function Kit({ main, trim, number, className }: { main: string; trim: str
       {/* collar */}
       <path d="M168 22 Q200 44 232 22 Q226 54 200 58 Q174 54 168 22 Z" fill={trim} stroke="#fff" strokeOpacity="0.5" strokeWidth="3" />
       <path d={shirt} fill="none" stroke="#fff" strokeOpacity="0.16" strokeWidth="2" />
+      {/* crest on the left chest, like a real home shirt */}
+      {logo && <image href={logo} x="228" y="92" width="44" height="44" preserveAspectRatio="xMidYMid meet" />}
       {number != null && (
         <text
           x="200"
-          y="268"
+          y="246"
           textAnchor="middle"
           fontFamily="var(--font-grotesk), sans-serif"
-          fontWeight="800"
-          fontSize={String(number).length > 1 ? 132 : 150}
-          letterSpacing="-6"
+          fontWeight="600"
+          fontSize="86"
+          letterSpacing="-4"
           fill="#fff"
-          stroke="#000"
-          strokeOpacity="0.25"
-          strokeWidth="4"
-          paintOrder="stroke"
+          fillOpacity="0.94"
         >
           {number}
         </text>
