@@ -585,17 +585,17 @@ main.container:has(> .ph:first-child) { max-width: none; padding: 0; overflow-x:
 .ph-top { grid-area: top; display: flex; justify-content: space-between; align-items: center; }
 .ph-nav { display: inline-flex; align-items: center; gap: 14px; color: #fff; text-decoration: none; font-weight: 500; font-size: 24px; letter-spacing: -0.03em; }
 .ph-nav:hover { color: #fff; }
-.ph-nav:last-child { font-size: 14px; letter-spacing: 0; gap: 10px; }
+.ph-nav:last-child { font-size: 20px; letter-spacing: 0; gap: 10px; }
 .ph-round { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: var(--glass); border: 1px solid var(--glass-line); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); font-size: 16px; line-height: 1; color: #fff; transition: background-color 150ms ease; }
 .ph-nav:hover .ph-round { background: rgb(255 255 255 / 0.18); }
 
 .ph-id { grid-area: id; align-self: start; margin-top: 28px; display: grid; gap: 14px; }
-.ph-eyebrow { color: var(--ph-ink-2); font-size: 14px; }
+.ph-eyebrow { color: var(--ph-ink-2); font-size: 20px; letter-spacing: -0.01em; }
 .ph-name { font-family: inherit; font-weight: 500; font-size: clamp(56px, 6.6vw, 104px); line-height: 0.92; letter-spacing: -0.055em; margin: 0; text-shadow: 0 2px 30px rgb(0 0 0 / 0.45); }
 .ph-name span { display: flex; align-items: center; gap: 0.12em; }
 .ph-name .crest { flex: none; height: 0.55em !important; width: auto; max-width: none; filter: drop-shadow(0 4px 12px rgb(0 0 0 / 0.5)); }
-.ph-role { display: flex; align-items: center; gap: 10px; color: var(--ph-ink-2); font-size: 16px; }
-.ph-pill { padding: 3px 10px; border-radius: 99px; background: var(--glass); border: 1px solid var(--glass-line); color: #fff; font-weight: 600; font-size: 12px; letter-spacing: 0.02em; -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+.ph-role { display: flex; align-items: center; gap: 12px; color: rgb(255 255 255 / 0.78); font-size: 20px; letter-spacing: -0.01em; }
+.ph-pill { padding: 3px 10px; border-radius: 99px; background: var(--glass); border: 1px solid var(--glass-line); color: #fff; font-weight: 600; font-size: 14px; letter-spacing: 0.02em; -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
 
 /* the one loud tile */
 .ph-feature { grid-area: feature; align-self: end; width: 230px; display: grid; gap: 4px; }

@@ -72,10 +72,7 @@ export default async function PlayerPage({ params }: Props) {
           <h1 className="ph-name">
             <span>{first}</span>
             {rest && (
-              <span>
-                {rest}
-                <Crest short={data.club.shortName} logo={data.club.logo} size={40} />
-              </span>
+              <span>{rest}</span>
             )}
           </h1>
           <div className="ph-role">
