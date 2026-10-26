@@ -4,7 +4,7 @@ import Link from "next/link";
 import type { CSSProperties } from "react";
 import { notFound } from "next/navigation";
 import { Kit } from "@/components/Kit";
-import { Crest, Empty, ResultBadge, TeamLogo } from "@/components/ui";
+import { Crest, TeamLogo } from "@/components/ui";
 import { loadClub } from "@/lib/club";
 import { brighten } from "@/lib/color";
 import stadium from "@/public/images/stadium-night.jpg";
@@ -141,124 +141,99 @@ export default async function PlayerPage({ params }: Props) {
         </a>
       </section>
 
-      <div className="ph-stats">
-        {[
-          { label: "Apps", value: all.apps },
-          { label: "Goals", value: all.goals },
-          { label: "Assists", value: all.assists },
-          { label: "MOTM", value: all.motm },
-          { label: "W–D–L", value: `${all.wins}–${all.draws}–${all.losses}` },
-          ...(["GK", "DEF"].includes(positionGroup(player.position)) ? [{ label: "Clean sheets", value: all.cleanSheets }] : []),
-          { label: "Cards", value: all.yellows + all.reds ? `${all.yellows}Y ${all.reds}R` : "0" },
-        ].map((t) => (
-          <div key={t.label} className="ph-stat">
-            <span className="ph-stat-value">{t.value}</span>
-            <span className="ph-stat-label">{t.label}</span>
-          </div>
-        ))}
-      </div>
-
-      {player.bio && <p className="ph-bio">{player.bio}</p>}
-
-      {moments.length > 0 && (
-        <div className="grid grid-2 section ph-below">
-          {moments.map((m) => (
-            <div key={m.id} className={`hall hall-${m.kind}`} style={{ padding: 16 }}>
-              <div className="moment">
-                <div className="kicker" style={{ color: "inherit" }}>{m.kind === "fame" ? "Hall of Fame" : "Hall of Shame"}</div>
-                <h3>{m.title}</h3>
-                {m.story && <p>{m.story}</p>}
-              </div>
+      <div className="ph-more">
+        <div className="ph-stats">
+          {[
+            { label: "Apps", value: all.apps },
+            { label: "Goals", value: all.goals },
+            { label: "Assists", value: all.assists },
+            { label: "MOTM", value: all.motm },
+            { label: "W–D–L", value: `${all.wins}–${all.draws}–${all.losses}` },
+            ...(["GK", "DEF"].includes(positionGroup(player.position)) ? [{ label: "Clean sheets", value: all.cleanSheets }] : []),
+            { label: "Cards", value: all.yellows + all.reds ? `${all.yellows}Y ${all.reds}R` : "0" },
+          ].map((t) => (
+            <div key={t.label} className="ph-stat">
+              <span className="ph-stat-value">{t.value}</span>
+              <span className="ph-stat-label">{t.label}</span>
             </div>
           ))}
         </div>
-      )}
 
-      <div className="grid grid-2 section ph-below">
-        <div className="card">
-          <h2>By season</h2>
-          {bySeason.length ? (
-            <div className="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Season</th>
-                    <th className="num">Apps</th>
-                    <th className="num">G</th>
-                    <th className="num">A</th>
-                    <th className="num">MOTM</th>
-                    <th className="num">Win %</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {bySeason.map(({ season, stats }) => (
-                    <tr key={season}>
-                      <td>{seasonLabel(season)}</td>
-                      <td className="num">{stats.apps}</td>
-                      <td className="num">{stats.goals}</td>
-                      <td className="num">{stats.assists}</td>
-                      <td className="num">{stats.motm}</td>
-                      <td className="num">{Math.round(stats.winPct)}%</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <Empty>Yet to make a debut.</Empty>
-          )}
-        </div>
+        {player.bio && <p className="ph-bio">{player.bio}</p>}
 
-        <div className="card">
-          <h2>Match log</h2>
+        {moments.map((m) => (
+          <div key={m.id} className={`ph-moment ph-moment-${m.kind}`}>
+            <span className="ph-moment-kind">{m.kind === "fame" ? "Hall of Fame" : "Hall of Shame"}</span>
+            <strong>{m.title}</strong>
+            {m.story && <p>{m.story}</p>}
+          </div>
+        ))}
+
+        {bySeason.length > 1 && (
+          <section className="ph-block">
+            <h2>By season</h2>
+            <ul className="ph-seasons">
+              {bySeason.map(({ season, stats }) => (
+                <li key={season}>
+                  <span>{seasonLabel(season)}</span>
+                  <span>{stats.apps} apps</span>
+                  <span>{stats.goals} G</span>
+                  <span>{stats.assists} A</span>
+                  <span>{Math.round(stats.winPct)}% won</span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        <section className="ph-block">
+          <h2>
+            Every match <span>{log.length}</span>
+          </h2>
           {log.length ? (
-            <div className="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th></th>
-                    <th>Date</th>
-                    <th>Opponent</th>
-                    <th className="num">Score</th>
-                    <th>Contribution</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {log.map((m) => {
-                    const g = m.goals.filter((x) => x.scorer === id).length;
-                    const a = m.goals.filter((x) => x.assist === id).length;
-                    const cards = m.cards.filter((c) => c.player === id);
-                    const bits = [
-                      g && `${g} goal${g > 1 ? "s" : ""}`,
-                      a && `${a} assist${a > 1 ? "s" : ""}`,
-                      m.motm === id && "MOTM",
-                      m.ownGoals.includes(id) && "own goal",
-                      m.penaltiesMissed.includes(id) && "missed pen",
-                    ].filter(Boolean);
-                    return (
-                      <tr key={m.id}>
-                        <td><ResultBadge result={m.result} /></td>
-                        <td className="muted">{formatDate(m.date, { day: "numeric", month: "short", year: "2-digit" })}</td>
-                        <td>
-                          <Link href={`${st.base}/matches/${m.id}`}>{m.opponent}</Link> <span className="muted small">({m.venue})</span>
-                        </td>
-                        <td className="num strong">{m.gf}–{m.ga}</td>
-                        <td>
-                          {bits.join(", ")}{" "}
-                          {cards.map((c, i) => (
-                            <span key={i} className={c.type === "Y" ? "card-y" : "card-r"} title={c.type === "Y" ? "Yellow card" : "Red card"} />
-                          ))}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+            <ol className="ph-log">
+              {log.map((m) => {
+                const g = m.goals.filter((x) => x.scorer === id).length;
+                const a = m.goals.filter((x) => x.assist === id).length;
+                const cards = m.cards.filter((c) => c.player === id);
+                const bits = [
+                  g && `⚽ ${g > 1 ? `×${g}` : ""}`.trim(),
+                  a && `${a} assist${a > 1 ? "s" : ""}`,
+                  m.motm === id && "MOTM",
+                  m.ownGoals.includes(id) && "own goal",
+                  m.penaltiesMissed.includes(id) && "missed pen",
+                ].filter(Boolean);
+                return (
+                  <li key={m.id}>
+                    <Link href={`${st.base}/matches/${m.id}`} className={`ph-log-row ph-match-${m.result}`}>
+                      <span className="ph-log-date">{formatDate(m.date, { day: "numeric", month: "short" })}</span>
+                      <TeamLogo code={m.opponentCode} name={m.opponent} size={28} />
+                      <span className="ph-log-team">
+                        {m.opponent}
+                        <small>
+                          {m.venue === "H" ? "Home" : "Away"}
+                          <span className="ph-log-inline-date"> · {formatDate(m.date, { day: "numeric", month: "short" })}</span>
+                        </small>
+                      </span>
+                      <span className="ph-log-bits">
+                        {bits.join(" · ")}
+                        {cards.map((c, i) => (
+                          <span key={i} className={c.type === "Y" ? "card-y" : "card-r"} title={c.type === "Y" ? "Yellow card" : "Red card"} />
+                        ))}
+                      </span>
+                      <span className="ph-log-score">
+                        {m.gf}–{m.ga}
+                      </span>
+                      <span className="ph-log-result">{m.result}</span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ol>
           ) : (
-            <Empty>No appearances yet.</Empty>
+            <p className="ph-empty">Yet to make a debut.</p>
           )}
-        </div>
+        </section>
       </div>
     </>
   );
