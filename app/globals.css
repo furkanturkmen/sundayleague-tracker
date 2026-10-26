@@ -639,13 +639,8 @@ main.container:has(> .ph:first-child) { max-width: none; padding: 0; overflow-x:
 /* Below the stage the page stays dark, so it reads as one screen that scrolls on. */
 .club-theme:has(.ph) { font-family: var(--font-grotesk), var(--font-body), sans-serif; background: #05070c; color: #fff; --line: rgb(255 255 255 / 0.09); --muted: rgb(255 255 255 / 0.5); --ink-2: rgb(255 255 255 / 0.7); }
 .club-theme:has(.ph)::before, .club-theme:has(.ph)::after { content: none; }
-.ph-more {
-  /* The details are their own band: a deep navy tinted with the club colour, full width, set apart from the photo. */
-  --band: color-mix(in srgb, var(--accent) 16%, #0a0d14);
-  font-family: var(--font-grotesk), var(--font-body), sans-serif; display: grid; gap: 40px; padding-block: 40px 56px;
-  background: var(--band); box-shadow: 0 0 0 100vmax var(--band); clip-path: inset(0 -100vmax);
-}
-.ph-stats { display: flex; flex-wrap: wrap; border-bottom: 1px solid var(--line); }
+.ph-more { font-family: var(--font-grotesk), var(--font-body), sans-serif; display: grid; gap: 64px; padding-block: 72px 88px; }
+.ph-stats { display: flex; flex-wrap: wrap; }
 .ph-stat { display: grid; gap: 6px; padding: 26px 32px 26px 0; margin-right: 32px; border-right: 1px solid var(--line); }
 .ph-stat:last-child { border-right: 0; }
 .ph-stat-value { font-size: 40px; font-weight: 500; letter-spacing: -0.05em; line-height: 1; font-variant-numeric: tabular-nums; white-space: nowrap; }
@@ -658,7 +653,7 @@ main.container:has(> .ph:first-child) { max-width: none; padding: 0; overflow-x:
 .ph-moment strong { font-size: 20px; font-weight: 500; letter-spacing: -0.02em; }
 .ph-moment p { margin: 0; color: var(--ink-2); }
 
-.ph-block h2 { font-family: inherit; font-weight: 500; font-size: 32px; letter-spacing: -0.035em; line-height: 1.1; margin: 0 0 14px; display: flex; align-items: baseline; gap: 10px; }
+.ph-block h2 { font-family: inherit; font-weight: 500; font-size: 32px; letter-spacing: -0.035em; line-height: 1.1; margin: 0 0 20px; padding-bottom: 16px; border-bottom: 1px solid rgb(255 255 255 / 0.14); display: flex; align-items: baseline; gap: 10px; }
 .ph-block h2 span { font-family: inherit; font-size: 16px; color: var(--muted); letter-spacing: 0; }
 .ph-seasons { list-style: none; margin: 0; padding: 0; }
 .ph-seasons li { display: flex; gap: 24px; padding: 12px 0; border-bottom: 1px solid var(--line); color: var(--ink-2); font-variant-numeric: tabular-nums; }

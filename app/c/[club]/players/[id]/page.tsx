@@ -159,7 +159,11 @@ export default async function PlayerPage({ params }: Props) {
       </section>
 
       <div className="ph-more">
-        <div className="ph-stats">
+        <section className="ph-block">
+          <h2>
+            Stats <span>{!all.apps ? "No games yet" : st.seasons.length > 1 ? "All seasons" : seasonLabel(st.currentSeason)}</span>
+          </h2>
+          <div className="ph-stats">
           {[
             { label: "Apps", value: all.apps },
             { label: "Goals", value: all.goals },
@@ -174,7 +178,8 @@ export default async function PlayerPage({ params }: Props) {
               <span className="ph-stat-label">{t.label}</span>
             </div>
           ))}
-        </div>
+          </div>
+        </section>
 
         {player.bio && <p className="ph-bio">{player.bio}</p>}
 
