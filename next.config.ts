@@ -6,6 +6,10 @@ const nextConfig: NextConfig = {
   experimental: {
     serverActions: { bodySizeLimit: "3mb" },
   },
+  // The graphics read their fonts from disk at runtime; make sure serverless deploys ship them.
+  outputFileTracingIncludes: {
+    "/c/[club]/matches/[id]/graphics/*": ["./assets/fonts/*.ttf"],
+  },
   // Records and Analysis moved under Stats; keep old links working.
   async redirects() {
     return [
