@@ -1,7 +1,8 @@
 import { ImageResponse } from "next/og";
 import { getGraphicImages, loadClubData } from "@/lib/club";
 import { Backdrop, display, drawable, dutchDate, graphicFonts, NameTag, palette, pngHeaders, Portrait, POST } from "@/lib/graphics";
-import { formationSlots, graphicName, matchLineup, shortTeamName } from "@/lib/lineup";
+import { FORMATIONS, formationSlots, graphicName, MAX_BENCH, matchLineup, shortTeamName } from "@/lib/lineup";
+import type { Player } from "@/lib/types";
 
 // The "Opstelling" post: starting eleven on the formation, bench and head coach. 1080×1350 for Instagram.
 
@@ -13,6 +14,19 @@ const YS = 8.4;
 const CARD_W = 200;
 const PHOTO = 158;
 
+/** The editor's unsaved picks (?f=4-3-3&s=id,,id&b=id,id), so the preview redraws before saving. Unknown ids drop out. */
+function previewLineup(params: URLSearchParams, byId: Map<string, Player>) {
+  const formation = params.get("f");
+  if (!formation || !FORMATIONS[formation]) return null;
+  const known = (id: string) => byId.has(id);
+  const starters = formationSlots(formation).map((_, i) => {
+    const id = (params.get("s") ?? "").split(",")[i] ?? "";
+    return known(id) ? id : null;
+  });
+  const bench = (params.get("b") ?? "").split(",").filter((id) => known(id) && !starters.includes(id)).slice(0, MAX_BENCH);
+  return { formation, starters, bench };
+}
+
 export async function GET(req: Request, ctx: RouteContext<"/c/[club]/matches/[id]/graphics/lineup">) {
   const { club: slug, id } = await ctx.params;
   const data = await loadClubData(slug);
@@ -22,8 +36,9 @@ export async function GET(req: Request, ctx: RouteContext<"/c/[club]/matches/[id
   const images = await getGraphicImages(slug);
   const p = palette(club.accent, club.gold);
 
-  const { formation, ...picked } = matchLineup(match, players);
   const byId = new Map(players.map((pl) => [pl.id, pl]));
+  const params = new URL(req.url).searchParams;
+  const { formation, ...picked } = previewLineup(params, byId) ?? matchLineup(match, players);
   const slots = formationSlots(formation);
   const bench = picked.bench.map((b) => byId.get(b)).filter((b) => b !== undefined);
   const name = (pid: string) => graphicName(byId.get(pid)!, players);
@@ -31,7 +46,7 @@ export async function GET(req: Request, ctx: RouteContext<"/c/[club]/matches/[id
   const coachPhoto = drawable(images.coach);
   const opponent = shortTeamName(match.opponent).toUpperCase();
 
-  const download = new URL(req.url).searchParams.has("download")
+  const download = params.has("download")
     ? `opstelling-${match.date}-${opponent.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}.png`
     : null;
 
