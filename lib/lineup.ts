@@ -135,7 +135,12 @@ export function matchLineup(
   players: Player[],
 ): { formation: string; starters: (string | null)[]; bench: string[] } {
   const formation = match.formation && FORMATIONS[match.formation] ? match.formation : DEFAULT_FORMATION;
-  if (match.starters) return { formation, starters: match.starters, bench: match.bench ?? [] };
+  if (match.starters) {
+    // The id arrays have no foreign key, so a player deleted since saving leaves an id behind: show an empty spot.
+    const known = new Set(players.map((p) => p.id));
+    const starters = formationSlots(formation).map((_, i) => match.starters![i] ?? null).map((id) => (id && known.has(id) ? id : null));
+    return { formation, starters, bench: (match.bench ?? []).filter((id) => known.has(id)) };
+  }
   const pool = match.squad.length ? players.filter((p) => match.squad.includes(p.id)) : players.filter((p) => p.active);
   return { formation, ...suggestLineup(formation, pool) };
 }

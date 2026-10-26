@@ -59,7 +59,7 @@ export function LineupForm({
 
   function changeFormation(next: string) {
     // Re-fit the current eleven to the new shape, keeping them ahead of everyone else.
-    const current = starters.filter((id): id is string => Boolean(id)).map((id) => byId.get(id)!);
+    const current = starters.map((id) => (id ? byId.get(id) : undefined)).filter((p) => p !== undefined);
     const { starters: fitted } = suggestLineup(next, current);
     setFormation(next);
     setStarters(fitted);
