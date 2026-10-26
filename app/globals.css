@@ -486,7 +486,7 @@ fieldset p { margin: 0; }
 .onb-team-facts dd { margin: 0; font-weight: 600; }
 
 /* Club look, with a live preview */
-.onb-preview { display: flex; align-items: center; gap: 16px; padding: 18px; border-radius: 18px; background: var(--accent); color: var(--accent-ink); border-bottom: 5px solid var(--gold); transition: background-color 200ms ease; }
+.onb-preview { display: flex; align-items: center; gap: 16px; padding: 18px; border-radius: 18px; background: var(--accent); color: var(--accent-ink); box-shadow: inset 0 -5px 0 var(--gold); transition: background-color 200ms ease; }
 .onb-preview .muted { color: inherit; opacity: 0.75; }
 .onb-preview-name { font-family: var(--font-display), sans-serif; font-size: 2rem; line-height: 1; overflow-wrap: anywhere; }
 .onb-colours { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
