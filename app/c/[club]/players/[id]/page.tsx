@@ -161,7 +161,7 @@ export default async function PlayerPage({ params }: Props) {
       {player.bio && <p className="ph-bio">{player.bio}</p>}
 
       {moments.length > 0 && (
-        <div className="grid grid-2 section">
+        <div className="grid grid-2 section ph-below">
           {moments.map((m) => (
             <div key={m.id} className={`hall hall-${m.kind}`} style={{ padding: 16 }}>
               <div className="moment">
@@ -174,7 +174,7 @@ export default async function PlayerPage({ params }: Props) {
         </div>
       )}
 
-      <div className="grid grid-2 section">
+      <div className="grid grid-2 section ph-below">
         <div className="card">
           <h2>By season</h2>
           {bySeason.length ? (

@@ -546,12 +546,18 @@ fieldset p { margin: 0; }
   --glass-line: rgb(255 255 255 / 0.12);
   --ph-ink-2: rgb(255 255 255 / 0.62);
   position: relative; isolation: isolate; overflow: hidden; color: #fff; background: #04060a;
-  margin-top: 16px; border-radius: 28px;
   font-family: var(--font-grotesk), var(--font-body), sans-serif;
   display: grid; grid-template-columns: minmax(0, 1fr) 300px; grid-template-rows: auto 1fr auto;
   grid-template-areas: "top top" "id matches" "feature matches";
-  gap: 22px; padding: 22px 26px 26px 30px; min-height: 640px;
+  gap: 22px; min-height: 100dvh; padding: 84px max(16px, calc((100% - 1120px) / 2 + 16px)) 34px;
 }
+/* The stage fills the screen: the page container steps aside and the header floats over the photo. */
+main.container:has(> .ph:first-child) { max-width: none; padding: 0; overflow-x: clip; }
+.club-theme:has(.ph) .site-header { position: absolute; left: 0; right: 0; background: linear-gradient(rgb(3 5 9 / 0.7), transparent); border-bottom: 0; -webkit-backdrop-filter: none; backdrop-filter: none; color: #fff; }
+.club-theme:has(.ph) .site-header .nav a { color: rgb(255 255 255 / 0.72); }
+.club-theme:has(.ph) .site-header .nav a:hover { background: rgb(255 255 255 / 0.1); color: #fff; }
+.club-theme:has(.ph) .site-header .nav a.active { background: rgb(255 255 255 / 0.14); color: #fff; }
+.ph ~ * { max-width: 1120px; margin-inline: auto; padding-inline: 16px; }
 
 .ph-bg { position: absolute; inset: 0; z-index: -2; overflow: hidden; }
 .ph-photo { object-fit: cover; object-position: center 40%; }
@@ -617,12 +623,16 @@ fieldset p { margin: 0; }
 .ph-credit { position: absolute; right: 14px; bottom: 8px; font-size: 0.62rem; color: rgb(255 255 255 / 0.38); text-decoration: none; font-family: var(--font-body), sans-serif; }
 .ph-credit:hover { color: rgb(255 255 255 / 0.7); }
 
-/* below the card */
-.ph-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-top: 12px; font-family: var(--font-grotesk), sans-serif; }
-.ph-stat { display: grid; gap: 2px; padding: 16px 18px; border-radius: 18px; background: var(--surface); border: 1px solid var(--line); }
-.ph-stat-value { font-size: 2rem; font-weight: 500; letter-spacing: -0.045em; line-height: 1.05; font-variant-numeric: tabular-nums; }
-.ph-stat-label { color: var(--muted); font-size: 0.82rem; }
-.ph-bio { margin: 16px 0 0; color: var(--ink-2); max-width: 64ch; font-size: 1.02rem; }
+/* below the stage: open, no boxes. Big numbers in a row with hairlines between them. */
+.ph-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); margin-top: 36px; font-family: var(--font-grotesk), sans-serif; border-block: 1px solid var(--line); }
+.ph-stat { display: grid; gap: 4px; padding: 22px 20px; border-left: 1px solid var(--line); }
+.ph-stat:first-child { border-left: 0; padding-left: 0; }
+.ph-stat-value { font-size: 2.6rem; font-weight: 500; letter-spacing: -0.05em; line-height: 1; font-variant-numeric: tabular-nums; }
+.ph-stat-label { color: var(--muted); font-size: 0.85rem; }
+.ph-bio { margin-top: 20px; color: var(--ink-2); max-width: 64ch; font-size: 1.05rem; }
+.ph-below { gap: 48px; }
+.ph-below .card { background: none; border: 0; box-shadow: none; padding: 0; }
+.ph-below h2 { font-family: var(--font-grotesk), sans-serif; font-weight: 500; font-size: 1.5rem; letter-spacing: -0.03em; text-transform: none; line-height: 1.2; }
 
 @media (max-width: 1000px) {
   .ph { grid-template-columns: minmax(0, 1fr) 260px; }
@@ -630,19 +640,22 @@ fieldset p { margin: 0; }
 }
 @media (max-width: 720px) {
   /* Phone: the shirt behind the name, the loud tile, then the matches as a sideways strip. */
-  .ph { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; grid-template-areas: "top" "id" "feature" "matches"; padding: 16px 16px 26px; gap: 20px; min-height: 0; border-radius: 22px; }
+  .ph { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; grid-template-areas: "top" "id" "feature" "matches"; padding: 112px 16px 26px; gap: 20px; min-height: 100dvh; }
   .ph-nav { font-size: 1.1rem; }
   .ph-id { margin-top: 4px; min-height: 330px; align-content: start; }
   .ph-name { font-size: clamp(2.8rem, 15vw, 4.2rem); }
-  .ph-kit { left: auto; right: -22%; top: 96px; bottom: auto; height: 420px; transform: none; }
+  .ph-kit { left: auto; right: -30%; top: 190px; bottom: auto; height: 380px; transform: none; opacity: 0.9; }
+  .ph-nav:last-child { font-size: 0; gap: 0; }
   .ph-bg::after { background: radial-gradient(60% 40% at 70% 30%, color-mix(in srgb, var(--ph-bright) 34%, transparent), transparent 75%), linear-gradient(180deg, rgb(3 5 9 / 0.55), rgb(3 5 9 / 0.75) 60%, rgb(3 5 9 / 0.92)); }
   .ph-feature { width: 100%; }
   .ph-matches ol { grid-auto-flow: column; grid-auto-columns: 196px; overflow-x: auto; scroll-snap-type: x mandatory; margin: 0 -16px; padding: 0 16px 4px; scrollbar-width: none; }
   .ph-matches ol::-webkit-scrollbar { display: none; }
   .ph-matches li { scroll-snap-align: start; }
   .ph-matches li:nth-child(n) .ph-match { background: var(--glass); border-color: var(--glass-line); }
-  .ph-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
-  .ph-stat { padding: 12px 14px; }
-  .ph-stat-value { font-size: 1.5rem; white-space: nowrap; }
+  .ph-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .ph-stat { padding: 16px 12px; }
+  .ph-stat:nth-child(3n + 1) { border-left: 0; padding-left: 0; }
+  .ph-stat:nth-child(n + 4) { border-top: 1px solid var(--line); }
+  .ph-stat-value { font-size: 1.8rem; white-space: nowrap; }
 }
 @media (prefers-reduced-motion: reduce) { .ph-match, .ph-round { transition: none; } }
