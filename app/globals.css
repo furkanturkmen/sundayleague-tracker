@@ -555,7 +555,7 @@ fieldset p { margin: 0; }
 main.container:has(> .ph:first-child) { max-width: none; padding: 0; overflow-x: clip; }
 /* Over the photo the nav is dark frosted glass, fixed so it stays while you scroll; the footer gets a matching band. */
 .club-theme:has(.ph) .site-header { position: fixed; left: 0; right: 0; background: rgb(5 7 12 / 0.8); border-bottom: 1px solid rgb(255 255 255 / 0.08); -webkit-backdrop-filter: blur(18px) saturate(1.4); backdrop-filter: blur(18px) saturate(1.4); color: #fff; }
-.club-theme:has(.ph) .site-footer { margin-top: 56px; background: rgb(5 7 12 / 0.94); box-shadow: 0 0 0 100vmax rgb(5 7 12 / 0.94); clip-path: inset(0 -100vmax); border-top: 1px solid rgb(255 255 255 / 0.08); color: rgb(255 255 255 / 0.7); padding-block: 22px; }
+.club-theme:has(.ph) .site-footer { margin-top: 0; background: rgb(5 7 12 / 0.94); box-shadow: 0 0 0 100vmax rgb(5 7 12 / 0.94); clip-path: inset(0 -100vmax); border-top: 1px solid rgb(255 255 255 / 0.08); color: rgb(255 255 255 / 0.7); padding-block: 22px; }
 .club-theme:has(.ph) .site-footer a, .club-theme:has(.ph) .site-footer .btn-link { color: rgb(255 255 255 / 0.85); }
 .club-theme:has(.ph) .site-header .nav a { color: rgb(255 255 255 / 0.72); font-size: 14px; font-weight: 500; }
 .club-theme:has(.ph) .brand { font-size: 16px; font-weight: 600; letter-spacing: -0.01em; }
@@ -570,7 +570,7 @@ main.container:has(> .ph:first-child) { max-width: none; padding: 0; overflow-x:
 .ph-bg::after {
   content: ""; position: absolute; inset: 0;
   background:
-    linear-gradient(rgb(0 0 0 / 0.2), rgb(0 0 0 / 0.2)),
+    linear-gradient(rgb(0 0 0 / 0.42), rgb(0 0 0 / 0.42)),
     radial-gradient(40% 50% at 52% 70%, color-mix(in srgb, var(--ph-bright) 30%, transparent), transparent 75%),
     linear-gradient(90deg, rgb(3 5 9 / 0.82) 0%, rgb(3 5 9 / 0.35) 42%, rgb(3 5 9 / 0.3) 62%, rgb(3 5 9 / 0.72) 100%),
     linear-gradient(180deg, rgb(3 5 9 / 0.25), transparent 35%, rgb(3 5 9 / 0.8) 100%);
@@ -632,7 +632,12 @@ main.container:has(> .ph:first-child) { max-width: none; padding: 0; overflow-x:
 /* Below the stage the page stays dark, so it reads as one screen that scrolls on. */
 .club-theme:has(.ph) { font-family: var(--font-grotesk), var(--font-body), sans-serif; background: #05070c; color: #fff; --line: rgb(255 255 255 / 0.09); --muted: rgb(255 255 255 / 0.5); --ink-2: rgb(255 255 255 / 0.7); }
 .club-theme:has(.ph)::before, .club-theme:has(.ph)::after { content: none; }
-.ph-more { font-family: var(--font-grotesk), var(--font-body), sans-serif; padding-top: 8px; display: grid; gap: 40px; }
+.ph-more {
+  /* The details are their own band: a deep navy tinted with the club colour, full width, set apart from the photo. */
+  --band: color-mix(in srgb, var(--accent) 16%, #0a0d14);
+  font-family: var(--font-grotesk), var(--font-body), sans-serif; display: grid; gap: 40px; padding-block: 40px 56px;
+  background: var(--band); box-shadow: 0 0 0 100vmax var(--band); clip-path: inset(0 -100vmax);
+}
 .ph-stats { display: flex; flex-wrap: wrap; border-bottom: 1px solid var(--line); }
 .ph-stat { display: grid; gap: 6px; padding: 26px 32px 26px 0; margin-right: 32px; border-right: 1px solid var(--line); }
 .ph-stat:last-child { border-right: 0; }
@@ -682,7 +687,7 @@ main.container:has(> .ph:first-child) { max-width: none; padding: 0; overflow-x:
   .ph-name { font-size: clamp(48px, 15vw, 68px); }
   .ph-kit { left: auto; right: -30%; top: 190px; bottom: auto; height: 380px; transform: none; opacity: 0.9; }
   .ph-nav-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-  .ph-bg::after { background: linear-gradient(rgb(0 0 0 / 0.2), rgb(0 0 0 / 0.2)), radial-gradient(60% 40% at 70% 30%, color-mix(in srgb, var(--ph-bright) 34%, transparent), transparent 75%), linear-gradient(180deg, rgb(3 5 9 / 0.55), rgb(3 5 9 / 0.75) 60%, rgb(3 5 9 / 0.92)); }
+  .ph-bg::after { background: linear-gradient(rgb(0 0 0 / 0.42), rgb(0 0 0 / 0.42)), radial-gradient(60% 40% at 70% 30%, color-mix(in srgb, var(--ph-bright) 34%, transparent), transparent 75%), linear-gradient(180deg, rgb(3 5 9 / 0.55), rgb(3 5 9 / 0.75) 60%, rgb(3 5 9 / 0.92)); }
   .ph-feature { width: 100%; }
   .ph-matches ol { grid-auto-flow: column; grid-auto-columns: 196px; overflow-x: auto; scroll-snap-type: x mandatory; margin: 0 -16px; padding: 0 16px 4px; scrollbar-width: none; }
   .ph-matches ol::-webkit-scrollbar { display: none; }
