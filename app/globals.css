@@ -801,8 +801,12 @@ h2 > .ranking-accent { font-family: inherit; letter-spacing: inherit; line-heigh
   linear-gradient(180deg, rgb(4 6 11 / 0.55) 0%, rgb(4 6 11 / 0.15) 30%, rgb(4 6 11 / 0.55) 62%, var(--hx-ground) 100%),
   linear-gradient(90deg, rgb(4 6 11 / 0.8) 0%, rgb(4 6 11 / 0.2) 55%, rgb(4 6 11 / 0.45) 100%); }
 .hx-glow { position: absolute; z-index: -1; width: 46vmax; height: 46vmax; translate: -50% -50%; border-radius: 50%; pointer-events: none;
-  background: radial-gradient(closest-side, color-mix(in srgb, var(--hx-bright) 42%, transparent), transparent); filter: blur(40px); mix-blend-mode: screen; opacity: 0.75; }
-.hx-glow-still { left: 12%; top: 92%; width: 60vmax; height: 34vmax; opacity: 0.45; }
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--hx-bright) 30%, transparent), transparent); filter: blur(48px); mix-blend-mode: screen; opacity: 0.45; }
+.hx-glow-still { left: 12%; top: 80%; width: 60vmax; height: 34vmax; opacity: 0.3; }
+/* the last layer: the bottom third always melts into the page ground, over the photo and both glows, so the
+   hero never ends on an edge whatever the parallax has moved */
+.hx-hero::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 38%; z-index: -1; pointer-events: none;
+  background: linear-gradient(180deg, transparent, rgb(4 6 11 / 0.7) 55%, var(--hx-ground)); }
 
 .hx-hero-inner { width: 100%; max-width: 1152px; margin-inline: auto; padding: 140px 32px 72px; display: grid; grid-template-columns: minmax(0, 1fr) 420px; gap: 56px; align-items: end; }
 .hx-hero-copy h1 { font-family: inherit; margin: 0; font-size: clamp(56px, 8.4vw, 128px); font-weight: 600; line-height: 0.9; letter-spacing: -0.055em; text-wrap: balance; }
