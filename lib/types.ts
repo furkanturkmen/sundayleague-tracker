@@ -158,11 +158,22 @@ export interface Moment {
   matchId?: string;
 }
 
+export interface Ranking {
+  id: string;
+  title: string;
+  /** The end of the title, shown in the club colour: "Snelste" + "van het team". */
+  accentText: string;
+  /** Player ids, best first. */
+  players: string[];
+  updatedAt: string;
+}
+
 export interface ClubData {
   club: Club;
   players: Player[];
   matches: Match[];
   moments: Moment[];
+  rankings: Ranking[];
   standings: Standing[];
 }
 

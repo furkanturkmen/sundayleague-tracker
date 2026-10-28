@@ -83,10 +83,11 @@ export function PageHeader({ title, kicker, children, actions }: { title: string
 }
 
 /** Overview | Records under the Stats tab. */
-export function StatsTabs({ base, active }: { base: string; active: "overview" | "records" }) {
+export function StatsTabs({ base, active }: { base: string; active: "overview" | "records" | "rankings" }) {
   const tabs = [
     { key: "overview", href: `${base}/stats`, label: "Overview" },
     { key: "records", href: `${base}/stats/records`, label: "Records" },
+    { key: "rankings", href: `${base}/stats/rankings`, label: "Rankings" },
   ] as const;
   return (
     <nav className="subnav" aria-label="Stats">

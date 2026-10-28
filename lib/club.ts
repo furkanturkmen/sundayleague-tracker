@@ -5,7 +5,7 @@ import { cache } from "react";
 import { hasSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { analyse, type Stats } from "@/lib/stats";
-import type { Card, Club, ClubData, Goal, Match, MatchStatus, Moment, Player, Position, Standing, Venue } from "@/lib/types";
+import type { Card, Club, ClubData, Goal, Match, MatchStatus, Moment, Player, Position, Ranking, Standing, Venue } from "@/lib/types";
 
 interface ClubRow {
   id: string;
@@ -167,7 +167,7 @@ export const loadClubData = cache(async (slug: string): Promise<ClubData | undef
   const sql = await db();
   const id = row.id;
 
-  const [playerRows, matchRows, squadRows, goalRows, eventRows, momentRows, standingRows] = await Promise.all([
+  const [playerRows, matchRows, squadRows, goalRows, eventRows, momentRows, standingRows, rankingRows] = await Promise.all([
     sql<{ id: string; name: string; number: number | null; position: Position; nickname: string | null; bio: string | null; active: boolean; display_name: string | null; has_photo: boolean; photo_version: number }[]>`
       select id, name, number, position, nickname, bio, active, display_name, photo is not null as has_photo, photo_version
       from players where club_id = ${id} order by number nulls last, name`,
@@ -204,6 +204,8 @@ export const loadClubData = cache(async (slug: string): Promise<ClubData | undef
       select id, kind, title, story, player_id, match_id from moments where club_id = ${id} order by created_at`,
     sql<{ competition: "league" | "cup"; position: number; team: string; club_code: string | null; played: number; won: number; drawn: number; lost: number; points: number; goals_for: number; goals_against: number; penalty_points: number; is_us: boolean }[]>`
       select * from standings where club_id = ${id} order by competition, position`,
+    sql<{ id: string; title: string; accent_text: string; players: string[]; updated_at: Date }[]>`
+      select id, title, accent_text, players, updated_at from rankings where club_id = ${id} order by updated_at desc`,
   ]);
 
   const byMatch = <T extends { match_id: string }>(rows: T[]) => {
@@ -274,7 +276,17 @@ export const loadClubData = cache(async (slug: string): Promise<ClubData | undef
     isUs: r.is_us,
   }));
 
-  return { club: toClub(row), players, matches, moments, standings };
+  // Players deleted since drop out of the lists.
+  const known = new Set(players.map((p) => p.id));
+  const rankings: Ranking[] = rankingRows.map((r) => ({
+    id: r.id,
+    title: r.title,
+    accentText: r.accent_text,
+    players: r.players.filter((p) => known.has(p)),
+    updatedAt: r.updated_at.toISOString(),
+  }));
+
+  return { club: toClub(row), players, matches, moments, standings, rankings };
 });
 
 /** Everything a club page needs. 404s when the club doesn't exist. */

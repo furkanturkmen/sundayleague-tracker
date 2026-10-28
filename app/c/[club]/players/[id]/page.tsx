@@ -7,6 +7,7 @@ import { Kit } from "@/components/Kit";
 import { Crest, TeamLogo } from "@/components/ui";
 import { loadClub } from "@/lib/club";
 import { brighten } from "@/lib/color";
+import { placesFor } from "@/lib/rankings";
 import stadium from "@/public/images/stadium-night.jpg";
 import { POSITION_NAMES, positionGroup } from "@/lib/types";
 import { formatDate, seasonLabel, statsFor } from "@/lib/stats";
@@ -35,6 +36,7 @@ export default async function PlayerPage({ params }: Props) {
   const played = new Map(log.map((m) => [m.id, m]));
   const history = [...log, ...st.voided.filter((m) => m.squad.includes(id))].sort((a, b) => b.date.localeCompare(a.date));
   const moments = data.moments.filter((m) => m.player === id);
+  const places = placesFor(data, id);
 
   // Squad order (active players by shirt number), wrapping round, for "Next player".
   const squad = data.players
@@ -184,6 +186,24 @@ export default async function PlayerPage({ params }: Props) {
           ))}
           </div>
         </section>
+
+        {places.length > 0 && (
+          <section className="ph-block">
+            <h2>
+              Rankings <span>{places.length}</span>
+            </h2>
+            <ul className="ph-ranks">
+              {places.map((r) => (
+                <li key={r.id}>
+                  <Link href={`${st.base}/stats/rankings/${r.id}`} className={r.place <= 3 ? "ph-rank ph-rank-top" : "ph-rank"}>
+                    <span className="ph-rank-place">#{r.place}</span>
+                    {r.title}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
 
         {player.bio && <p className="ph-bio">{player.bio}</p>}
 

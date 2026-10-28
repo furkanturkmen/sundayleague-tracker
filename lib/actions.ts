@@ -526,3 +526,53 @@ export async function deleteMoment(slug: string, f: FormData): Promise<void> {
   }
   refresh(slug);
 }
+
+// ---------- rankings ----------
+
+function rankingFields(f: FormData): { error: string } | { title: string; accentText: string } {
+  const title = text(f, "title", 40);
+  const accentText = text(f, "accentText", 40);
+  if (!title) return { error: "Give the ranking a title, like “Snelste”." };
+  return { title, accentText };
+}
+
+export async function createRanking(slug: string, _: FormState, f: FormData): Promise<FormState> {
+  const club = await requireLineupAccess(slug);
+  const fields = rankingFields(f);
+  if ("error" in fields) return fields;
+  const sql = await db();
+  const [row] = await sql<{ id: string }[]>`
+    insert into rankings (club_id, title, accent_text) values (${club.id}, ${fields.title}, ${fields.accentText}) returning id`;
+  refresh(slug);
+  redirect(`/c/${slug}/stats/rankings/${row.id}`);
+}
+
+export async function saveRanking(slug: string, id: string, _: FormState, f: FormData): Promise<FormState> {
+  const club = await requireLineupAccess(slug);
+  const fields = rankingFields(f);
+  if ("error" in fields) return fields;
+  const picked = [...new Set(text(f, "players", 4000).split(",").filter((p) => UUID.test(p)))];
+  const sql = await db();
+  // Only this club's players; the order is the order they were sent in.
+  const own = new Set(
+    (await sql<{ id: string }[]>`select id from players where club_id = ${club.id} and id = any(${picked}::uuid[])`).map((r) => r.id),
+  );
+  const players = picked.filter((p) => own.has(p));
+  const [row] = await sql`
+    update rankings set title = ${fields.title}, accent_text = ${fields.accentText}, players = ${players}::uuid[], updated_at = now()
+    where id = ${UUID.test(id) ? id : null} and club_id = ${club.id} returning id`;
+  if (!row) return { error: "Ranking not found." };
+  refresh(slug);
+  return { ok: "Ranking saved." };
+}
+
+export async function deleteRanking(slug: string, f: FormData): Promise<void> {
+  const club = await requireLineupAccess(slug);
+  const id = text(f, "id", 36);
+  if (UUID.test(id)) {
+    const sql = await db();
+    await sql`delete from rankings where id = ${id} and club_id = ${club.id}`;
+  }
+  refresh(slug);
+  redirect(`/c/${slug}/stats/rankings`);
+}

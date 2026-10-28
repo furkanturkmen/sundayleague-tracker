@@ -123,6 +123,19 @@ create table if not exists moments (
 );
 create index if not exists moments_club_idx on moments(club_id);
 
+-- The coach's own lists ("Snelste van het team"): players best first. accent_text is the end of the title that the
+-- graphic prints in the club colour.
+create table if not exists rankings (
+  id uuid primary key default gen_random_uuid(),
+  club_id uuid not null references clubs(id) on delete cascade,
+  title text not null,
+  accent_text text not null default '',
+  players uuid[] not null default '{}',
+  updated_at timestamptz not null default now(),
+  created_at timestamptz not null default now()
+);
+create index if not exists rankings_club_idx on rankings(club_id);
+
 -- League table from voetbal.nl, replaced whole on every sync.
 create table if not exists standings (
   club_id uuid not null references clubs(id) on delete cascade,
