@@ -882,29 +882,30 @@ h2 > .ranking-accent { font-family: inherit; letter-spacing: inherit; line-heigh
 .hx-bands { position: relative; display: grid; grid-template-columns: minmax(0, 1fr); }
 .hx-wrap { position: relative; z-index: 1; width: 100%; max-width: 1152px; margin-inline: auto; padding-inline: 32px; }
 .hx-start { padding-block: 32px; }
-.hx-band { position: relative; isolation: isolate; overflow: hidden; padding-block: 128px 144px; margin-top: -40px; border-radius: 40px 40px 0 0; transform-origin: 50% 0;
-  box-shadow: 0 -30px 60px rgb(0 0 0 / 0.55); background: var(--hx-ground); }
-.hx-band:first-child { margin-top: -72px; }
+/* each band fades in from nothing over its first 160px, laid over the foot of the one before, so the grounds
+   melt into each other instead of meeting on an edge */
+.hx-band { position: relative; isolation: isolate; overflow: hidden; padding-block: 200px 144px; margin-top: -160px; background: var(--hx-ground);
+  -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 160px); mask-image: linear-gradient(180deg, transparent 0, #000 160px); }
+.hx-band:first-child { margin-top: -120px; }
 .hx-band:last-child { padding-bottom: 120px; }
 .hx-band-bg { position: absolute; inset: 0; z-index: -1; pointer-events: none; }
 .hx-band-dim { position: absolute; inset: 0; z-index: 2; background: #000; pointer-events: none; }
 
 /* standings: a deep navy pitch with its lines drawn faintly */
 .hx-band-pitch { background: radial-gradient(120% 90% at 50% 0%, #0d1f3d, #060d1c 60%, #050a15); }
-.hx-pitch { position: absolute; inset: 6% 2%; width: 96%; height: 88%; color: rgb(160 190 255 / 0.06); }
+.hx-pitch { position: absolute; inset: 6% 2%; width: 96%; height: 88%; color: rgb(160 190 255 / 0.07);
+  -webkit-mask-image: radial-gradient(60% 60% at 50% 50%, #000 40%, transparent); mask-image: radial-gradient(60% 60% at 50% 50%, #000 40%, transparent); }
 .hx-band-pitch .hx-table tbody tr:not(.is-us) td { background: none; }
 
 /* results: true black, the latest score ghosted huge behind the scoreboard */
 .hx-band-board { background: #000; }
 .hx-ghost { position: absolute; right: -2vw; bottom: -6vw; font-size: clamp(240px, 34vw, 520px); font-weight: 700; letter-spacing: -0.08em; line-height: 0.8; color: rgb(255 255 255 / 0.035); font-variant-numeric: tabular-nums; white-space: nowrap; }
 
-/* numbers: the one loud band, solid club blue */
-.hx-band-blue { background: var(--accent); --hx-ink-2: rgb(255 255 255 / 0.82); --hx-ink-3: rgb(255 255 255 / 0.72); --hx-line: rgb(255 255 255 / 0.22); }
-.hx-band-blue::before { content: ""; position: absolute; inset: 0; z-index: -1; background: radial-gradient(90% 120% at 85% 0%, rgb(255 255 255 / 0.14), transparent 60%), radial-gradient(70% 90% at 0% 100%, rgb(0 0 0 / 0.3), transparent 70%); }
-.hx-band-blue em, .hx-band-blue .hx-numbers > div:last-child .hx-number, .hx-band-blue .hx-leader-top b, .hx-band-blue .hx-leader li:first-child .hx-val { color: #fff; }
-.hx-band-blue em { opacity: 0.85; }
-.hx-band-blue .hx-leader-top:hover span { color: #fff; opacity: 0.85; }
-.hx-band-blue .hx-head p a { border-color: rgb(255 255 255 / 0.5); }
+/* numbers: deep navy with the club's shirt stripes behind the figures, faint and fading out to the edges */
+.hx-band-stripes { background: radial-gradient(110% 90% at 50% 100%, #0c1d3a, #060d1c 65%, #050a15); }
+.hx-band-stripes::before { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background: repeating-linear-gradient(90deg, color-mix(in srgb, var(--hx-bright) 13%, transparent) 0 56px, transparent 56px 112px);
+  -webkit-mask-image: radial-gradient(70% 65% at 50% 55%, #000, transparent); mask-image: radial-gradient(70% 65% at 50% 55%, #000, transparent); }
 
 /* squad: back in the stadium, a dark blurred crop of the pitch behind the shirts */
 .hx-band-photo { background: #04060b; }
@@ -916,8 +917,8 @@ h2 > .ranking-accent { font-family: inherit; letter-spacing: inherit; line-heigh
 
 @media (max-width: 640px) {
   .hx-wrap { padding-inline: 16px; }
-  .hx-band { padding-block: 88px 104px; margin-top: -28px; border-radius: 28px 28px 0 0; }
-  .hx-band:first-child { margin-top: -40px; }
+  .hx-band { padding-block: 136px 104px; margin-top: -96px; -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 96px); mask-image: linear-gradient(180deg, transparent 0, #000 96px); }
+  .hx-band:first-child { margin-top: -72px; }
 }
 
 /* rails */
@@ -1018,7 +1019,7 @@ h2 > .ranking-accent { font-family: inherit; letter-spacing: inherit; line-heigh
   .hx-numbers > div:nth-child(4) { padding-left: 0; border-left: 0; }
 }
 @media (max-width: 640px) {
-  .hx-hero-inner { padding: 112px 16px 80px; }
+  .hx-hero-inner { padding: 112px 16px 112px; }
   .hx-hero-copy p { font-size: 16px; margin-top: 20px; }
   .hx-faceoff { grid-template-columns: 1fr auto 1fr; width: 100%; }
   .hx-fixture { justify-items: stretch; text-align: center; }
