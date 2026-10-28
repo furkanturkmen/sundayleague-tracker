@@ -20,11 +20,10 @@ export interface HeroFixture {
 }
 
 /**
- * The floodlit stadium, full screen, telling one thing: when we play next. The club small, "Matchday in 3 days."
- * large, the fixture as one line under it, and the actions with a quiet live countdown at the foot. The photo
+ * The floodlit stadium, full screen, telling one thing: when we play next. "Matchday in 3 days." large, the fixture as one line under it, and the actions with a quiet live countdown at the foot. The photo
  * drifts slower than the page and a faint blue glow follows the pointer.
  */
-export function HomeHero({ photo, club, crest, fixture, actions }: { photo: ReactNode; club: string; crest: ReactNode; fixture: HeroFixture | null; actions: ReactNode }) {
+export function HomeHero({ photo, club, fixture, actions }: { photo: ReactNode; club: string; fixture: HeroFixture | null; actions: ReactNode }) {
   const ref = useRef<HTMLElement>(null);
   const reduce = useReducedMotion();
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
@@ -68,10 +67,8 @@ export function HomeHero({ photo, club, crest, fixture, actions }: { photo: Reac
 
       <motion.div className="hx-hero-inner" style={{ y: contentY, opacity: fade }}>
         <motion.h1 id="hx-title" {...rise(0)}>
-          <span className="hx-club">
-            {crest}
-            {club}
-          </span>
+          {/* The header already shows the club; the title keeps its name for screen readers and search only. */}
+          <span className="sr-only">{club}: </span>
           <span className="hx-headline">
             {until ? until.lead : "Season"} <em>{until ? until.accent : "on."}</em>
           </span>

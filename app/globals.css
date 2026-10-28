@@ -812,8 +812,6 @@ h2 > .ranking-accent { font-family: inherit; letter-spacing: inherit; line-heigh
 
 .hx-hero-inner { width: 100%; max-width: 1152px; margin-inline: auto; padding: 160px 32px 200px; display: grid; gap: 40px; }
 .hx-hero h1 { font-family: inherit; margin: 0; display: grid; gap: 28px; }
-.hx-club { display: inline-flex; align-items: center; gap: 12px; font-size: 18px; font-weight: 500; letter-spacing: -0.01em; color: var(--hx-ink-2); }
-.hx-club .crest { height: 30px !important; width: auto; }
 .hx-headline { font-size: clamp(64px, 10vw, 160px); font-weight: 600; line-height: 0.88; letter-spacing: -0.06em; text-wrap: balance; }
 .hx-headline em { letter-spacing: -0.03em; }
 .hx-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 32px; margin-top: 36px; }

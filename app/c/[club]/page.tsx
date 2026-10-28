@@ -57,7 +57,6 @@ export default async function ClubHome({ params }: { params: Promise<{ club: str
       <HomeHero
         photo={<Image src={stadium} alt="" fill sizes="100vw" placeholder="blur" priority className="hx-photo" />}
         club={club.name}
-        crest={crest(30)}
         fixture={fixture}
         actions={
           <>
