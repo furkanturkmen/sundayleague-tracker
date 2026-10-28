@@ -96,8 +96,27 @@ export default async function ClubHome({ params }: { params: Promise<{ club: str
                 <Link href={`${st.base}/table`}>Full table</Link>
               </p>
             </Reveal>
+            {/* The last five as a scoreboard: one huge letter each, oldest on the left. */}
+            {form.length > 0 && (
+              <Reveal className="hx-form">
+                <span className="hx-label">Form, last {form.length}</span>
+                <ol>
+                  {form.map((m, i) => (
+                    <li key={m.id}>
+                      <Link href={`${st.base}/matches/${m.id}`} className={`hx-${m.result}`}>
+                        <b>{m.result}</b>
+                        <span>
+                          {m.gf}–{m.ga} {m.opponent}
+                          {i === form.length - 1 && <em>latest</em>}
+                        </span>
+                      </Link>
+                    </li>
+                  ))}
+                </ol>
+              </Reveal>
+            )}
             <div className="hx-stand-grid">
-              <Reveal className="hx-glass hx-table">
+              <Reveal className="hx-table">
                 <WhatIfTable
                   opponent={nextInLeague?.opponent ?? null}
                   rows={league.map((r) => ({
@@ -112,21 +131,6 @@ export default async function ClubHome({ params }: { params: Promise<{ club: str
                     isNext: Boolean(nextInLeague && r.clubCode && r.clubCode === nextInLeague.opponentCode),
                   }))}
                 />
-              </Reveal>
-              <Reveal className="hx-form" delay={0.1}>
-                <span className="hx-label">Last {form.length}</span>
-                <ol>
-                  {[...form].reverse().map((m) => (
-                    <li key={m.id}>
-                      <Link href={`${st.base}/matches/${m.id}`} className={`hx-form-chip hx-${m.result}`}>
-                        <b>{m.result}</b>
-                        <span>
-                          {m.gf}–{m.ga} <small>vs {m.opponent}</small>
-                        </span>
-                      </Link>
-                    </li>
-                  ))}
-                </ol>
               </Reveal>
             </div>
           </section>
@@ -147,7 +151,7 @@ export default async function ClubHome({ params }: { params: Promise<{ club: str
                 const played = "result" in m ? m : null;
                 const home = m.venue === "H";
                 return (
-                  <Link key={m.id} href={`${st.base}/matches/${m.id}`} className={`hx-card hx-result ${played ? `hx-${played.result}` : "hx-void"}`} draggable={false}>
+                  <Link key={m.id} href={`${st.base}/matches/${m.id}`} className={`hx-result ${played ? `hx-${played.result}` : "hx-void"}`} draggable={false}>
                     <span className="hx-result-top">
                       <span>{formatDate(m.date, { day: "numeric", month: "short" })}</span>
                       <span className={m.competition === "League" ? undefined : "hx-cup"}>{m.competition}</span>
@@ -207,18 +211,27 @@ export default async function ClubHome({ params }: { params: Promise<{ club: str
               { title: "Goals", rows: top("goals"), empty: "Nobody has scored yet." },
               { title: "Assists", rows: top("assists"), empty: "No assists logged yet." },
             ].map((l, i) => (
-              <Reveal key={l.title} className="hx-glass hx-leader" delay={i * 0.08}>
+              <Reveal key={l.title} className="hx-leader" delay={i * 0.08}>
                 <h3>{l.title}</h3>
                 {l.rows.length ? (
-                  <ol>
-                    {l.rows.map((r, j) => (
-                      <li key={r.player.id}>
-                        <span className="hx-rank">{j + 1}</span>
-                        <Link href={`${st.base}/players/${r.player.id}`}>{r.player.name}</Link>
-                        <span className="hx-val">{r.value}</span>
-                      </li>
-                    ))}
-                  </ol>
+                  <>
+                    {/* The leader set large, the chasing pack as a quiet list. */}
+                    <Link href={`${st.base}/players/${l.rows[0].player.id}`} className="hx-leader-top">
+                      <span>{l.rows[0].player.name}</span>
+                      <b>{l.rows[0].value}</b>
+                    </Link>
+                    {l.rows.length > 1 && (
+                      <ol start={2}>
+                        {l.rows.slice(1).map((r, j) => (
+                          <li key={r.player.id}>
+                            <span className="hx-rank">{j + 2}</span>
+                            <Link href={`${st.base}/players/${r.player.id}`}>{r.player.name}</Link>
+                            <span className="hx-val">{r.value}</span>
+                          </li>
+                        ))}
+                      </ol>
+                    )}
+                  </>
                 ) : (
                   <p className="hx-empty">{l.empty}</p>
                 )}
@@ -242,7 +255,7 @@ export default async function ClubHome({ params }: { params: Promise<{ club: str
             </Reveal>
             <Rail label="Squad">
               {squad.map((p) => (
-                <Link key={p.id} href={`${st.base}/players/${p.id}`} className="hx-card hx-player" draggable={false}>
+                <Link key={p.id} href={`${st.base}/players/${p.id}`} className="hx-player" draggable={false}>
                   <Kit main={club.accent} trim={club.gold} number={p.number} logo={club.logo} className="hx-player-kit" />
                   <span className="hx-player-name">{p.name}</span>
                   <span className="hx-player-pos">{p.position}</span>

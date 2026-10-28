@@ -30,10 +30,10 @@ export function Rail({ children, label, className }: { children: ReactNode; labe
     <div className={`hx-rail ${className ?? ""}`}>
       <div className="hx-rail-arrows">
         <button type="button" onClick={() => page(-1)} disabled={edges.start} aria-label={`Scroll ${label} back`}>
-          ‹
+          ←
         </button>
         <button type="button" onClick={() => page(1)} disabled={edges.end} aria-label={`Scroll ${label} on`}>
-          ›
+          →
         </button>
       </div>
       <div

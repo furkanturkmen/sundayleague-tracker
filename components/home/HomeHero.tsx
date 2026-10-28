@@ -100,7 +100,7 @@ export function HomeHero({
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.9, ease: EASE, delay: 0.2 }}
           >
-            <span className="hx-fixture-label">Next match</span>
+            <span className="hx-label">Next match</span>
             <Link href={fixture.href} className="hx-faceoff">
               <motion.span className="hx-team" initial={reduce ? false : { x: -48, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ duration: 1, ease: EASE, delay: 0.35 }}>
                 {fixture.home.crest}
@@ -116,17 +116,25 @@ export function HomeHero({
               <strong>{fixture.when}</strong>
               <span>{fixture.meta}</span>
             </div>
-            {until?.clock && (
-              <ol className="hx-clock" aria-label={`Kick-off in ${until.clock.map((c) => `${c.value} ${c.label}`).join(", ")}`}>
-                {until.clock.map((c) => (
-                  <li key={c.label}>
-                    <span className="hx-clock-n">{String(c.value).padStart(2, "0")}</span>
-                    <span className="hx-clock-l">{c.label}</span>
-                  </li>
-                ))}
-              </ol>
-            )}
           </motion.div>
+        )}
+
+        {/* One line of big thin figures across the foot of the stadium; the date above says it in words. */}
+        {until?.clock && (
+          <motion.ol
+            className="hx-clock"
+            aria-hidden="true"
+            initial={reduce ? false : { opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1, ease: EASE, delay: 0.5 }}
+          >
+            {until.clock.map((c) => (
+              <li key={c.label}>
+                <span className="hx-clock-n">{String(c.value).padStart(2, "0")}</span>
+                <span className="hx-clock-l">{c.label}</span>
+              </li>
+            ))}
+          </motion.ol>
         )}
       </motion.div>
     </section>
