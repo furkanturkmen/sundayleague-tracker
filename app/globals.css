@@ -911,18 +911,13 @@ h2 > .ranking-accent { font-family: inherit; letter-spacing: inherit; line-heigh
 .hx-band-photo-img { object-fit: cover; object-position: center 85%; filter: blur(6px) saturate(0.8); transform: scale(1.08); }
 .hx-band-photo .hx-band-bg::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgb(4 6 11 / 0.82), rgb(4 6 11 / 0.6) 50%, rgb(4 6 11 / 0.9)); }
 
-/* halls: split down the middle, warm gold on the left and red on the right, both kept very dark */
-.hx-band-halls { background: linear-gradient(90deg, #110d05 0%, #110d05 50%, #13070b 50%, #13070b 100%); }
-.hx-band-halls .hx-halls { gap: 0; }
-.hx-band-halls .hx-hall:last-child { padding-left: 64px; }
+/* halls: the plain night ground; each hall carries its own soft light */
+.hx-band-halls { background: var(--hx-ground); }
 
 @media (max-width: 640px) {
   .hx-wrap { padding-inline: 16px; }
   .hx-band { padding-block: 88px 104px; margin-top: -28px; border-radius: 28px 28px 0 0; }
   .hx-band:first-child { margin-top: -40px; }
-  .hx-band-halls { background: linear-gradient(180deg, #110d05 0%, #110d05 50%, #13070b 50%, #13070b 100%); }
-  .hx-band-halls .hx-halls { gap: 88px; }
-  .hx-band-halls .hx-hall:last-child { padding-left: 0; }
 }
 
 /* rails */
