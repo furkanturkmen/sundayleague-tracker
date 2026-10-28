@@ -4,7 +4,6 @@ import type { CSSProperties } from "react";
 import { HomeHero, type HeroFixture } from "@/components/home/HomeHero";
 import { CountUp, Reveal, ScrollFlag } from "@/components/home/Motion";
 import { Rail } from "@/components/home/Rail";
-import { WhatIfTable } from "@/components/home/WhatIfTable";
 import { Icon } from "@/components/Icon";
 import { Kit } from "@/components/Kit";
 import { Crest, GetStarted, TeamLogo } from "@/components/ui";
@@ -30,15 +29,12 @@ export default async function ClubHome({ params }: { params: Promise<{ club: str
   // Abandoned matches sit among the results by date, so the rail matches what actually happened.
   const recent: (PlayedMatch | Match)[] = [...st.played, ...st.voided].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 10);
   const next = st.upcoming[0];
-  const form = st.played.slice(-5);
   const fame = st.hallOfFame(st.played)[0];
   const shame = st.hallOfShame(st.played)[0];
   const league = data.standings.filter((r) => r.competition === "league");
-  const us = league.find((r) => r.isUs);
   const squad = data.players.filter((p) => p.active).sort((a, b) => (a.number ?? 999) - (b.number ?? 999) || a.name.localeCompare(b.name));
   const crest = (size: number) => <Crest short={club.shortName} logo={club.logo} size={size} />;
   const theirs = (m: { opponentCode?: string; opponent: string }, size: number) => <TeamLogo code={m.opponentCode} name={m.opponent} size={size} />;
-  const nextInLeague = next?.competition === "League" && us ? next : null;
 
   const fixture: HeroFixture | null = next
     ? {
@@ -89,50 +85,39 @@ export default async function ClubHome({ params }: { params: Promise<{ club: str
               <h2 id="hx-stand-title">
                 Where we <em>stand.</em>
               </h2>
-              <p>
-                {us
-                  ? `${ordinal(us.position)} of ${league.length} with ${us.points} ${us.points === 1 ? "point" : "points"} from ${us.played} ${us.played === 1 ? "game" : "games"}${us.penaltyPoints ? `, after ${us.penaltyPoints} deducted` : ""}.`
-                  : club.voetbal?.league}{" "}
-                <Link href={`${st.base}/table`}>Full table</Link>
-              </p>
             </Reveal>
-            {/* The last five as a scoreboard: one huge letter each, oldest on the left. */}
-            {form.length > 0 && (
-              <Reveal className="hx-form">
-                <span className="hx-label">Form, last {form.length}</span>
-                <ol>
-                  {form.map((m, i) => (
-                    <li key={m.id}>
-                      <Link href={`${st.base}/matches/${m.id}`} className={`hx-${m.result}`}>
-                        <b>{m.result}</b>
-                        <span>
-                          {m.gf}–{m.ga} {m.opponent}
-                          {i === form.length - 1 && <em>latest</em>}
+            <Reveal className="hx-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th className="num">#</th>
+                    <th>Team</th>
+                    <th className="num">P</th>
+                    <th className="num">GD</th>
+                    <th className="num">Pts</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {league.map((r) => (
+                    <tr key={r.team} className={r.isUs ? "is-us" : undefined}>
+                      <td className="num">{r.position}</td>
+                      <td>
+                        <span className="hx-team-cell">
+                          <TeamLogo code={r.clubCode} name={r.team} size={22} />
+                          <span>{r.team}</span>
                         </span>
-                      </Link>
-                    </li>
+                      </td>
+                      <td className="num">{r.played}</td>
+                      <td className="num">{signed(r.goalsFor - r.goalsAgainst)}</td>
+                      <td className="num">
+                        {r.points}
+                        {r.penaltyPoints > 0 && <small title={`${r.penaltyPoints} points deducted`}> −{r.penaltyPoints}</small>}
+                      </td>
+                    </tr>
                   ))}
-                </ol>
-              </Reveal>
-            )}
-            <div className="hx-stand-grid">
-              <Reveal className="hx-table">
-                <WhatIfTable
-                  opponent={nextInLeague?.opponent ?? null}
-                  rows={league.map((r) => ({
-                    team: r.team,
-                    logo: <TeamLogo code={r.clubCode} name={r.team} size={22} />,
-                    played: r.played,
-                    goalsFor: r.goalsFor,
-                    goalsAgainst: r.goalsAgainst,
-                    points: r.points,
-                    penaltyPoints: r.penaltyPoints,
-                    isUs: r.isUs,
-                    isNext: Boolean(nextInLeague && r.clubCode && r.clubCode === nextInLeague.opponentCode),
-                  }))}
-                />
-              </Reveal>
-            </div>
+                </tbody>
+              </table>
+            </Reveal>
           </section>
         )}
 
@@ -305,7 +290,4 @@ export default async function ClubHome({ params }: { params: Promise<{ club: str
   );
 }
 
-function ordinal(n: number) {
-  const suffix = n % 100 >= 11 && n % 100 <= 13 ? "th" : ["th", "st", "nd", "rd"][n % 10] ?? "th";
-  return `${n}${suffix}`;
-}
+const signed = (n: number) => (n > 0 ? `+${n}` : n < 0 ? `−${-n}` : "0");

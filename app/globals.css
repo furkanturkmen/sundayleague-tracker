@@ -858,53 +858,23 @@ h2 > .ranking-accent { font-family: inherit; letter-spacing: inherit; line-heigh
 .hx-label { font-size: 14px; color: var(--hx-ink-3); }
 .hx-empty { margin: 0; font-size: 16px; color: var(--hx-ink-2); }
 
-/* form: five huge letters, a scoreboard rather than a list */
-.hx-form { display: grid; gap: 16px; margin-bottom: 72px; }
-.hx-form ol { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); }
-.hx-form li + li { border-left: 1px solid var(--hx-line); }
-.hx-form a { display: grid; gap: 12px; padding: 0 20px; text-decoration: none; color: #fff; }
-.hx-form li:first-child a { padding-left: 0; }
-.hx-form b { font-size: clamp(72px, 11vw, 168px); font-weight: 600; letter-spacing: -0.06em; line-height: 0.8; color: var(--hx-c); transition: transform 400ms var(--hx-ease), text-shadow 400ms ease; }
-.hx-form a:hover { color: #fff; }
-.hx-form a:hover b { transform: translateY(-6px); text-shadow: 0 0 40px color-mix(in srgb, var(--hx-c) 55%, transparent); }
-.hx-form a > span { font-size: 14px; color: var(--hx-ink-2); font-variant-numeric: tabular-nums; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.hx-form a > span em { margin-left: 8px; font-size: 16px; }
-.hx-W { --hx-c: var(--hx-W); }
-.hx-D { --hx-c: var(--hx-D); }
-.hx-L { --hx-c: var(--hx-L); }
-
-/* the table straight on the dark; our row is a floodlight beam across the whole window */
-.hx-whatif-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; margin-bottom: 24px; }
-.hx-whatif-bar p { margin: 0; font-size: 16px; color: var(--hx-ink-2); }
-.hx-whatif-bar strong { color: #fff; font-weight: 500; }
-.hx-seg { display: inline-flex; gap: 2px; padding: 3px; border-radius: 6px; background: rgb(255 255 255 / 0.06); }
-.hx-seg-btn { border: 0; background: none; color: var(--hx-ink-2); font: inherit; font-size: 14px; font-weight: 500; height: 34px; padding: 0 14px; border-radius: 4px; cursor: pointer;
-  transition: color 200ms ease, background-color 300ms var(--hx-ease), transform 200ms ease, box-shadow 300ms ease; }
-.hx-seg-btn:hover { color: #fff; }
-.hx-seg-btn:active { transform: scale(0.95); }
-.hx-seg-btn.on { color: #04060b; background: #fff; }
-.hx-seg-btn.on.hx-seg-W { background: var(--hx-W); }
-.hx-seg-btn.on.hx-seg-D { background: var(--hx-D); }
-.hx-seg-btn.on.hx-seg-L { background: var(--hx-L); }
-.hx-whatif-result { margin-left: auto !important; font-size: 24px !important; font-weight: 500; color: #fff !important; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+/* the table straight on the dark; our row lit by a beam of the club blue */
 .hx-table table { width: 100%; border-collapse: collapse; font-size: 18px; }
 .hx-table th { text-transform: none; letter-spacing: 0; font-size: 14px; font-weight: 400; color: var(--hx-ink-3); text-align: left; padding: 0 12px 12px; border: 0; background: none; }
 .hx-table td { padding: 0 12px; height: 56px; border: 0; background: none; }
 .hx-table .num { text-align: right; font-variant-numeric: tabular-nums; }
-.hx-table th:first-child, .hx-table td:first-child { padding-left: 0; width: 40px; color: var(--hx-ink-3); }
-.hx-table th:last-child, .hx-table td:last-child { padding-right: 0; }
+.hx-table th:first-child, .hx-table td:first-child { padding-left: 14px; width: 54px; color: var(--hx-ink-3); }
+.hx-table th:last-child, .hx-table td:last-child { padding-right: 14px; width: 80px; }
 .hx-table td:last-child { font-weight: 600; }
 .hx-table td small { font-size: 12px; font-weight: 500; color: var(--hx-L); }
 .hx-table tbody tr { transition: opacity 300ms ease; }
 .hx-table tbody tr:hover { background: none; }
 .hx-table tbody tr:not(.is-us):hover td { color: #fff; }
 .hx-table tbody:hover tr:not(:hover):not(.is-us) { opacity: 0.6; }
-.hx-table tr.is-us td { color: #fff; font-weight: 600; }
-/* one layer behind the whole row, running past both window edges (the page clips it) */
-.hx-table tr.is-us td:first-child { position: relative; }
-.hx-table tr.is-us td:first-child::before { content: ""; position: absolute; top: 0; bottom: 0; left: -100vw; right: -100vw; z-index: -1; pointer-events: none;
-  background: linear-gradient(90deg, transparent, var(--hx-beam) 30%, var(--hx-beam) 70%, transparent); box-shadow: 0 0 40px var(--hx-beam); }
-.hx-table tr.is-next td:nth-child(2) > span > span { text-decoration: underline dotted rgb(255 255 255 / 0.45); text-underline-offset: 5px; }
+.hx-table tr.is-us td { color: #fff; font-weight: 600; background: var(--hx-beam); }
+/* the beam fades in over the first cell and out over the last, the same at both ends */
+.hx-table tr.is-us td:first-child { background: linear-gradient(90deg, transparent, var(--hx-beam)); }
+.hx-table tr.is-us td:last-child { background: linear-gradient(90deg, var(--hx-beam), transparent); }
 .hx-team-cell { display: flex; align-items: center; gap: 14px; min-width: 0; }
 .hx-team-cell .team-logo { flex: none; }
 .hx-team-cell > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -918,8 +888,7 @@ h2 > .ranking-accent { font-family: inherit; letter-spacing: inherit; line-heigh
 .hx-rail-arrows button:active:not(:disabled) { transform: scale(0.92); }
 .hx-rail-arrows button:disabled { opacity: 0.3; cursor: default; }
 .hx-rail-track { display: grid; grid-auto-flow: column; grid-auto-columns: 280px; gap: 0; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none;
-  /* bleeds to the window edges while the first item lines up with the page */
-  --edge: max(32px, calc((100vw - 1152px) / 2 + 32px)); margin-inline: calc(var(--edge) * -1); padding: 16px var(--edge) 24px; scroll-padding-inline: var(--edge); cursor: grab; outline-offset: -2px; }
+  padding: 16px 0 24px; cursor: grab; outline-offset: 4px; }
 .hx-rail-track::-webkit-scrollbar { display: none; }
 .hx-rail-track[data-dragging] { cursor: grabbing; scroll-snap-type: none; user-select: none; }
 .hx-rail-track[data-dragging] > * { pointer-events: none; }
@@ -1021,20 +990,14 @@ h2 > .ranking-accent { font-family: inherit; letter-spacing: inherit; line-heigh
   .hx-clock-l { font-size: 14px; }
   .hx-body { padding: 16px 16px 88px; gap: 112px; }
   .hx-head { margin-bottom: 32px; }
-  .hx-form { margin-bottom: 48px; }
-  .hx-form a { padding: 0 8px; }
-  .hx-form b { font-size: 52px; text-align: center; }
-  .hx-form li:first-child a { padding-left: 8px; }
-  .hx-form a > span { display: none; }
   .hx-rail-arrows { display: none; }
-  .hx-rail-track { --edge: 16px; grid-auto-columns: 78%; }
+  .hx-rail-track { grid-auto-columns: 78%; }
   .hx-rail-track:has(.hx-player) { grid-auto-columns: 46%; }
   .hx-result { padding-inline: 20px; }
   .hx-table table { font-size: 16px; }
   .hx-table td { height: 48px; padding: 0 8px; }
   .hx-table th { padding: 0 8px 10px; }
   .hx-table th:nth-child(3), .hx-table td:nth-child(3) { display: none; }
-  .hx-whatif-result { margin-left: 0 !important; }
   .hx-numbers { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .hx-numbers > div:nth-child(odd) { padding-left: 0; border-left: 0; }
   .hx-numbers > div:nth-child(4) { padding-left: 24px; border-left: 1px solid var(--hx-line); }
@@ -1047,3 +1010,7 @@ h2 > .ranking-accent { font-family: inherit; letter-spacing: inherit; line-heigh
   .club-theme:has(.hx) .site-header { animation: none; }
   .hx *, .hx *::before, .club-theme:has(.hx) .site-header, .club-theme:has(.hx) .site-header .header-inner { transition: none !important; }
 }
+
+.hx-W { --hx-c: var(--hx-W); }
+.hx-D { --hx-c: var(--hx-D); }
+.hx-L { --hx-c: var(--hx-L); }
