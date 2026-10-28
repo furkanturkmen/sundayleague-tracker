@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Lets a phone on the home network open the dev server by this PC's address. Dev only; ignored in production.
+  allowedDevOrigins: ["192.168.68.65"],
   // Photos and the logo are sent as data URLs in the form (up to ~0.9 MB each; the club form can carry a logo
   // and the coach photo together), over the 1 MB default.
   experimental: {
