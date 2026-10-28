@@ -171,7 +171,7 @@ export default async function ClubHome({ params }: { params: Promise<{ club: str
           </Band>
         )}
 
-        <Band className="hx-band-stripes" labelledBy="hx-numbers-title">
+        <Band className="hx-band-numbers" labelledBy="hx-numbers-title">
           <Reveal className="hx-head">
             <h2 id="hx-numbers-title">
               {seasonLabel(st.currentSeason)} in <em>numbers.</em>

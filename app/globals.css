@@ -901,11 +901,8 @@ h2 > .ranking-accent { font-family: inherit; letter-spacing: inherit; line-heigh
 .hx-band-board { background: #000; }
 .hx-ghost { position: absolute; right: -2vw; bottom: -6vw; font-size: clamp(240px, 34vw, 520px); font-weight: 700; letter-spacing: -0.08em; line-height: 0.8; color: rgb(255 255 255 / 0.035); font-variant-numeric: tabular-nums; white-space: nowrap; }
 
-/* numbers: deep navy with the club's shirt stripes behind the figures, faint and fading out to the edges */
-.hx-band-stripes { background: radial-gradient(110% 90% at 50% 100%, #0c1d3a, #060d1c 65%, #050a15); }
-.hx-band-stripes::before { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
-  background: repeating-linear-gradient(90deg, color-mix(in srgb, var(--hx-bright) 13%, transparent) 0 56px, transparent 56px 112px);
-  -webkit-mask-image: radial-gradient(70% 65% at 50% 55%, #000, transparent); mask-image: radial-gradient(70% 65% at 50% 55%, #000, transparent); }
+/* numbers: the plain night ground, like the halls */
+.hx-band-numbers { background: var(--hx-ground); }
 
 /* squad: back in the stadium, a dark blurred crop of the pitch behind the shirts */
 .hx-band-photo { background: #04060b; }
