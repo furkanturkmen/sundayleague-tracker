@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { CSSProperties } from "react";
 import { HomeHero, type HeroFixture } from "@/components/home/HomeHero";
 import { CountUp, Reveal, ScrollFlag } from "@/components/home/Motion";
+import { Band } from "@/components/home/Band";
 import { Rail } from "@/components/home/Rail";
 import { Icon } from "@/components/Icon";
 import { Kit } from "@/components/Kit";
@@ -29,6 +30,8 @@ export default async function ClubHome({ params }: { params: Promise<{ club: str
   // Abandoned matches sit among the results by date, so the rail matches what actually happened.
   const recent: (PlayedMatch | Match)[] = [...st.played, ...st.voided].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 10);
   const next = st.upcoming[0];
+  const last = st.played.at(-1);
+  const ghost = last ? (last.venue === "H" ? `${last.gf}–${last.ga}` : `${last.ga}–${last.gf}`) : null;
   const fame = st.hallOfFame(st.played)[0];
   const shame = st.hallOfShame(st.played)[0];
   const league = data.standings.filter((r) => r.competition === "league");
@@ -75,12 +78,15 @@ export default async function ClubHome({ params }: { params: Promise<{ club: str
         }
       />
 
-      <div className="hx-body">
-        {data.players.length === 0 && <GetStarted st={st} admin={admin} what="players" />}
-        {data.players.length > 0 && st.played.length === 0 && <GetStarted st={st} admin={admin} what="matches" />}
+      <div className="hx-bands">
+        {(data.players.length === 0 || st.played.length === 0) && (
+          <div className="hx-wrap hx-start">
+            {data.players.length === 0 ? <GetStarted st={st} admin={admin} what="players" /> : <GetStarted st={st} admin={admin} what="matches" />}
+          </div>
+        )}
 
         {league.length > 0 && (
-          <section className="hx-section hx-stand" aria-labelledby="hx-stand-title">
+          <Band className="hx-band-pitch" labelledBy="hx-stand-title" bg={<Pitch />}>
             <Reveal className="hx-head">
               <h2 id="hx-stand-title">
                 Where we <em>stand.</em>
@@ -118,11 +124,11 @@ export default async function ClubHome({ params }: { params: Promise<{ club: str
                 </tbody>
               </table>
             </Reveal>
-          </section>
+          </Band>
         )}
 
         {recent.length > 0 && (
-          <section className="hx-section" aria-labelledby="hx-results-title">
+          <Band className="hx-band-board" labelledBy="hx-results-title" bg={ghost && <span className="hx-ghost">{ghost}</span>}>
             <Reveal className="hx-head">
               <h2 id="hx-results-title">
                 The <em>results.</em>
@@ -162,10 +168,10 @@ export default async function ClubHome({ params }: { params: Promise<{ club: str
                 );
               })}
             </Rail>
-          </section>
+          </Band>
         )}
 
-        <section className="hx-section" aria-labelledby="hx-numbers-title">
+        <Band className="hx-band-blue" labelledBy="hx-numbers-title">
           <Reveal className="hx-head">
             <h2 id="hx-numbers-title">
               {seasonLabel(st.currentSeason)} in <em>numbers.</em>
@@ -226,10 +232,10 @@ export default async function ClubHome({ params }: { params: Promise<{ club: str
               </Reveal>
             ))}
           </div>
-        </section>
+        </Band>
 
         {squad.length > 0 && (
-          <section className="hx-section" aria-labelledby="hx-squad-title">
+          <Band className="hx-band-photo" labelledBy="hx-squad-title" bg={<Image src={stadium} alt="" fill sizes="100vw" className="hx-band-photo-img" />}>
             <Reveal className="hx-head">
               <h2 id="hx-squad-title">
                 The <em>squad.</em>
@@ -247,10 +253,10 @@ export default async function ClubHome({ params }: { params: Promise<{ club: str
                 </Link>
               ))}
             </Rail>
-          </section>
+          </Band>
         )}
 
-        <section className="hx-section" aria-labelledby="hx-halls-title">
+        <Band className="hx-band-halls" labelledBy="hx-halls-title">
           <Reveal className="hx-head">
             <h2 id="hx-halls-title">
               Fame &amp; <em>shame.</em>
@@ -284,9 +290,23 @@ export default async function ClubHome({ params }: { params: Promise<{ club: str
               </Reveal>
             ))}
           </div>
-        </section>
+        </Band>
       </div>
     </div>
+  );
+}
+
+/** Faint pitch markings: the touchlines, halfway line and centre circle, drawn to cover the band. */
+function Pitch() {
+  return (
+    <svg className="hx-pitch" viewBox="0 0 1050 680" preserveAspectRatio="xMidYMid slice">
+      <g fill="none" stroke="currentColor" strokeWidth="2">
+        <rect x="20" y="20" width="1010" height="640" />
+        <line x1="525" y1="20" x2="525" y2="660" />
+        <circle cx="525" cy="340" r="140" />
+        <circle cx="525" cy="340" r="3" fill="currentColor" />
+      </g>
+    </svg>
   );
 }
 
