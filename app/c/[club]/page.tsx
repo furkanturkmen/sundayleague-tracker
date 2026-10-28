@@ -46,8 +46,8 @@ export default async function ClubHome({ params }: { params: Promise<{ club: str
         day: amsterdam(next.date),
         when: `${formatDate(next.date, { weekday: "long", day: "numeric", month: "long" })}${next.kickoff ? `, ${next.kickoff}` : ""}`,
         meta: `${next.venue === "H" ? "Home" : "Away"} · ${next.competition}`,
-        home: next.venue === "H" ? { name: club.shortName, crest: crest(84) } : { name: next.opponent, crest: theirs(next, 84) },
-        away: next.venue === "H" ? { name: next.opponent, crest: theirs(next, 84) } : { name: club.shortName, crest: crest(84) },
+        home: next.venue === "H" ? { name: club.shortName, crest: crest(40) } : { name: next.opponent, crest: theirs(next, 40) },
+        away: next.venue === "H" ? { name: next.opponent, crest: theirs(next, 40) } : { name: club.shortName, crest: crest(40) },
       }
     : null;
 
@@ -56,8 +56,8 @@ export default async function ClubHome({ params }: { params: Promise<{ club: str
       <ScrollFlag />
       <HomeHero
         photo={<Image src={stadium} alt="" fill sizes="100vw" placeholder="blur" priority className="hx-photo" />}
-        title={club.name}
-        tagline={club.tagline}
+        club={club.name}
+        crest={crest(30)}
         fixture={fixture}
         actions={
           <>

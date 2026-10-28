@@ -20,27 +20,16 @@ export interface HeroFixture {
 }
 
 /**
- * The floodlit stadium, full screen. The photo drifts slower than the page, a blue floodlight glow follows the
- * pointer, the two crests slide in to meet at the halfway line, and the clock counts down to kick-off.
+ * The floodlit stadium, full screen, telling one thing: when we play next. The club small, "Matchday in 3 days."
+ * large, the fixture as one line under it, and the actions with a quiet live countdown at the foot. The photo
+ * drifts slower than the page and a faint blue glow follows the pointer.
  */
-export function HomeHero({
-  photo,
-  title,
-  tagline,
-  fixture,
-  actions,
-}: {
-  photo: ReactNode;
-  title: string;
-  tagline?: string | null;
-  fixture: HeroFixture | null;
-  actions: ReactNode;
-}) {
+export function HomeHero({ photo, club, crest, fixture, actions }: { photo: ReactNode; club: string; crest: ReactNode; fixture: HeroFixture | null; actions: ReactNode }) {
   const ref = useRef<HTMLElement>(null);
   const reduce = useReducedMotion();
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
   const photoY = useTransform(scrollYProgress, [0, 1], ["0%", reduce ? "0%" : "18%"]);
-  const contentY = useTransform(scrollYProgress, [0, 1], ["0%", reduce ? "0%" : "-12%"]);
+  const contentY = useTransform(scrollYProgress, [0, 1], ["0%", reduce ? "0%" : "-10%"]);
   const fade = useTransform(scrollYProgress, [0, 0.8], [1, reduce ? 1 : 0.2]);
 
   // The glow trails the pointer on a spring; it rests top right, where the floodlights are.
@@ -53,6 +42,11 @@ export function HomeHero({
 
   const now = useNow();
   const until = fixture ? countdown(fixture, now) : null;
+  const rise = (delay: number) => ({
+    initial: reduce ? false : { opacity: 0, y: 28 },
+    animate: { opacity: 1, y: 0 },
+    transition: { duration: 0.9, ease: EASE, delay },
+  });
 
   return (
     <section
@@ -73,69 +67,49 @@ export function HomeHero({
       <div className="hx-glow hx-glow-still" aria-hidden="true" />
 
       <motion.div className="hx-hero-inner" style={{ y: contentY, opacity: fade }}>
-        <div className="hx-hero-copy">
-          <motion.h1
-            id="hx-title"
-            initial={reduce ? false : { opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.9, ease: EASE }}
-          >
-            {title}
-            <em>{until ? until.headline : "Season on."}</em>
-          </motion.h1>
-          {tagline && (
-            <motion.p initial={reduce ? false : { opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease: EASE, delay: 0.15 }}>
-              {tagline}
-            </motion.p>
-          )}
-          <motion.div className="hx-actions" initial={reduce ? false : { opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease: EASE, delay: 0.25 }}>
-            {actions}
-          </motion.div>
-        </div>
+        <motion.h1 id="hx-title" {...rise(0)}>
+          <span className="hx-club">
+            {crest}
+            {club}
+          </span>
+          <span className="hx-headline">
+            {until ? until.lead : "Season"} <em>{until ? until.accent : "on."}</em>
+          </span>
+        </motion.h1>
 
         {fixture && (
-          <motion.div
-            className="hx-fixture"
-            initial={reduce ? false : { opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.9, ease: EASE, delay: 0.2 }}
-          >
-            <span className="hx-label">Next match</span>
+          <motion.div className="hx-fixture" {...rise(0.12)}>
             <Link href={fixture.href} className="hx-faceoff">
-              <motion.span className="hx-team" initial={reduce ? false : { x: -48, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ duration: 1, ease: EASE, delay: 0.35 }}>
+              <span className="hx-team">
                 {fixture.home.crest}
-                <span>{fixture.home.name}</span>
-              </motion.span>
+                {fixture.home.name}
+              </span>
               <span className="hx-vs">vs</span>
-              <motion.span className="hx-team" initial={reduce ? false : { x: 48, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ duration: 1, ease: EASE, delay: 0.35 }}>
+              <span className="hx-team">
                 {fixture.away.crest}
-                <span>{fixture.away.name}</span>
-              </motion.span>
+                {fixture.away.name}
+              </span>
             </Link>
-            <div className="hx-when">
-              <strong>{fixture.when}</strong>
-              <span>{fixture.meta}</span>
-            </div>
+            <p className="hx-when">
+              {fixture.when} · {fixture.meta}
+            </p>
           </motion.div>
         )}
 
-        {/* One line of big thin figures across the foot of the stadium; the date above says it in words. */}
-        {until?.clock && (
-          <motion.ol
-            className="hx-clock"
-            aria-hidden="true"
-            initial={reduce ? false : { opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, ease: EASE, delay: 0.5 }}
-          >
-            {until.clock.map((c) => (
-              <li key={c.label}>
-                <span className="hx-clock-n">{String(c.value).padStart(2, "0")}</span>
-                <span className="hx-clock-l">{c.label}</span>
-              </li>
-            ))}
-          </motion.ol>
-        )}
+        <motion.div className="hx-foot" {...rise(0.24)}>
+          <div className="hx-actions">{actions}</div>
+          {until?.clock && (
+            <div className="hx-clock" aria-hidden="true">
+              <span className="hx-clock-lead">Kick-off in</span>
+              {until.clock.map((c) => (
+                <span key={c.label} className="hx-clock-part">
+                  <b>{String(c.value).padStart(2, "0")}</b>
+                  {c.label}
+                </span>
+              ))}
+            </div>
+          )}
+        </motion.div>
       </motion.div>
     </section>
   );
@@ -152,22 +126,23 @@ function useNow(): number | null {
   return now;
 }
 
+/** The headline in two parts ("Matchday in" + "3 days.") and the clock to kick-off, when there is a time. */
 function countdown(f: HeroFixture, now: number | null) {
-  if (now === null) return { headline: "Matchday soon.", clock: null };
+  if (now === null) return { lead: "Matchday", accent: "soon.", clock: null };
   const target = f.at ?? f.day;
   const ms = target - now;
   const days = Math.floor((f.day - startOfToday(now)) / 86_400_000);
-  if (f.at !== null && ms <= 0 && ms > -2 * 3_600_000) return { headline: "We're playing.", clock: null };
-  const headline = days <= 0 ? "Matchday today." : days === 1 ? "Matchday tomorrow." : `Matchday in ${days} days.`;
-  if (f.at === null || ms <= 0) return { headline, clock: null };
+  if (f.at !== null && ms <= 0 && ms > -2 * 3_600_000) return { lead: "We're", accent: "playing.", clock: null };
+  const head = days <= 0 ? { lead: "Matchday", accent: "today." } : days === 1 ? { lead: "Matchday", accent: "tomorrow." } : { lead: "Matchday in", accent: `${days} days.` };
+  if (f.at === null || ms <= 0) return { ...head, clock: null };
   const s = Math.floor(ms / 1000);
   return {
-    headline,
+    ...head,
     clock: [
-      { value: Math.floor(s / 86400), label: "days" },
-      { value: Math.floor((s % 86400) / 3600), label: "hours" },
-      { value: Math.floor((s % 3600) / 60), label: "min" },
-      { value: s % 60, label: "sec" },
+      { value: Math.floor(s / 86400), label: "d" },
+      { value: Math.floor((s % 86400) / 3600), label: "h" },
+      { value: Math.floor((s % 3600) / 60), label: "m" },
+      { value: s % 60, label: "s" },
     ],
   };
 }

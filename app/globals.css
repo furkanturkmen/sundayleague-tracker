@@ -810,10 +810,12 @@ h2 > .ranking-accent { font-family: inherit; letter-spacing: inherit; line-heigh
 .hx-hero::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 38%; z-index: -1; pointer-events: none;
   background: linear-gradient(180deg, transparent, rgb(4 6 11 / 0.7) 55%, var(--hx-ground)); }
 
-.hx-hero-inner { width: 100%; max-width: 1152px; margin-inline: auto; padding: 140px 32px 136px; display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 56px; row-gap: 48px; align-items: end; }
-.hx-hero-copy h1 { font-family: inherit; margin: 0; font-size: clamp(56px, 8.4vw, 128px); font-weight: 600; line-height: 0.9; letter-spacing: -0.055em; text-wrap: balance; }
-.hx-hero-copy h1 em { display: block; margin-top: 0.08em; font-size: 0.62em; line-height: 1; letter-spacing: -0.02em; }
-.hx-hero-copy p { margin: 28px 0 0; max-width: 34ch; font-size: 18px; line-height: 1.5; color: var(--hx-ink-2); }
+.hx-hero-inner { width: 100%; max-width: 1152px; margin-inline: auto; padding: 160px 32px 200px; display: grid; gap: 40px; }
+.hx-hero h1 { font-family: inherit; margin: 0; display: grid; gap: 28px; }
+.hx-club { display: inline-flex; align-items: center; gap: 12px; font-size: 18px; font-weight: 500; letter-spacing: -0.01em; color: var(--hx-ink-2); }
+.hx-club .crest { height: 30px !important; width: auto; }
+.hx-headline { font-size: clamp(64px, 10vw, 160px); font-weight: 600; line-height: 0.88; letter-spacing: -0.06em; text-wrap: balance; }
+.hx-headline em { letter-spacing: -0.03em; }
 .hx-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 32px; margin-top: 36px; }
 .hx-btn { position: relative; display: inline-flex; align-items: center; gap: 14px; height: 52px; padding: 0 22px 0 24px; border-radius: 4px; font-size: 16px; font-weight: 500; letter-spacing: -0.01em; text-decoration: none; color: #04060b; background: #fff;
   transition: background-color 300ms ease, transform 200ms ease; }
@@ -828,25 +830,24 @@ h2 > .ranking-accent { font-family: inherit; letter-spacing: inherit; line-heigh
 .hx-btn:not(.hx-btn-primary):hover { color: #fff; background: none; }
 .hx-btn:not(.hx-btn-primary):hover::before { transform: scaleX(1); opacity: 1; }
 
-/* the fixture stands on the photo itself: two big crests and the date under them */
-.hx-fixture { display: grid; gap: 20px; justify-items: center; text-align: center; padding-bottom: 8px; }
-.hx-faceoff { display: grid; grid-template-columns: 160px auto 160px; align-items: start; gap: 8px; text-decoration: none; color: #fff; }
+/* the fixture as one line under the headline */
+.hx-fixture { display: grid; gap: 10px; }
+.hx-faceoff { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; justify-self: start; text-decoration: none; color: #fff; font-size: clamp(22px, 2.4vw, 32px); font-weight: 500; letter-spacing: -0.03em; }
 .hx-faceoff:hover { color: #fff; }
-.hx-team { display: grid; justify-items: center; gap: 14px; font-size: 18px; font-weight: 600; line-height: 1.25; min-width: 0; letter-spacing: -0.01em; }
-.hx-team .crest, .hx-team .team-logo { height: 120px !important; width: 150px !important; object-fit: contain; filter: drop-shadow(0 18px 30px rgb(0 0 0 / 0.6)); transition: transform 500ms var(--hx-ease); }
-.hx-faceoff:hover .hx-team .crest, .hx-faceoff:hover .hx-team .team-logo { transform: translateY(-4px) scale(1.05); }
-.hx-vs { margin-top: 42px; font-family: var(--font-serif), Georgia, serif; font-style: italic; font-size: 32px; color: var(--hx-ink-3); }
-.hx-when { display: grid; gap: 4px; }
-.hx-when strong { font-size: 24px; font-weight: 500; letter-spacing: -0.02em; }
-.hx-when span { font-size: 16px; color: var(--hx-ink-2); }
+.hx-team { display: inline-flex; align-items: center; gap: 14px; }
+/* every crest on the same small white tile, so square club logos look deliberate */
+.hx-team .crest, .hx-team .team-logo { flex: none; width: 52px !important; height: 52px !important; padding: 6px; border-radius: 14px; background: #fff; object-fit: contain; transition: transform 400ms var(--hx-ease); }
+.hx-faceoff:hover .crest, .hx-faceoff:hover .team-logo { transform: translateY(-3px); }
+.hx-vs { font-family: var(--font-serif), Georgia, serif; font-style: italic; font-weight: 400; color: var(--hx-ink-3); }
+.hx-when { margin: 0; font-size: 18px; color: var(--hx-ink-2); }
 
-/* the countdown: one line of big thin figures across the foot of the stadium */
-.hx-clock { grid-column: 1 / -1; list-style: none; margin: 0; padding: 28px 0 0; display: flex; justify-content: space-between; border-top: 1px solid var(--hx-line); }
-.hx-clock li { display: flex; align-items: baseline; gap: 14px; }
-.hx-clock li + li::before { content: ":"; margin-right: clamp(8px, 2vw, 32px); font-size: clamp(48px, 7vw, 112px); font-weight: 200; line-height: 0.8; color: var(--hx-ink-3); }
-.hx-clock-n { font-size: clamp(56px, 9vw, 144px); font-weight: 200; letter-spacing: -0.06em; line-height: 0.8; font-variant-numeric: tabular-nums; }
-.hx-clock li:last-child .hx-clock-n { color: color-mix(in srgb, var(--hx-bright) 55%, #fff); }
-.hx-clock-l { font-size: 16px; color: var(--hx-ink-3); }
+/* the foot: actions on the left, a quiet live countdown on the right */
+.hx-foot { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 24px 48px; margin-top: 16px; }
+.hx-foot .hx-actions { margin-top: 0; }
+.hx-clock { display: flex; align-items: baseline; gap: 18px; font-size: 14px; color: var(--hx-ink-3); font-variant-numeric: tabular-nums; }
+.hx-clock-lead { margin-right: 4px; }
+.hx-clock-part b { margin-right: 3px; font-size: 32px; font-weight: 300; letter-spacing: -0.04em; color: #fff; }
+.hx-clock-part:last-child b { color: color-mix(in srgb, var(--hx-bright) 55%, #fff); }
 
 /* ---- sections ---- */
 .hx-head { display: flex; justify-content: space-between; align-items: end; gap: 24px 48px; flex-wrap: wrap; margin-bottom: 48px; }
@@ -1010,23 +1011,17 @@ h2 > .ranking-accent { font-family: inherit; letter-spacing: inherit; line-heigh
 .hx-hall-who span { color: var(--hx-hall-ink); font-weight: 600; }
 
 @media (max-width: 960px) {
-  .hx-hero-inner { grid-template-columns: minmax(0, 1fr); gap: 40px; padding-top: 120px; }
-  .hx-fixture { justify-items: start; text-align: left; }
   .hx-numbers { grid-template-columns: repeat(3, minmax(0, 1fr)); row-gap: 32px; }
   .hx-numbers > div:nth-child(4) { padding-left: 0; border-left: 0; }
 }
 @media (max-width: 640px) {
-  .hx-hero-inner { padding: 112px 16px 112px; }
-  .hx-hero-copy p { font-size: 16px; margin-top: 20px; }
-  .hx-faceoff { grid-template-columns: 1fr auto 1fr; width: 100%; }
-  .hx-fixture { justify-items: stretch; text-align: center; }
-  .hx-team .crest, .hx-team .team-logo { height: 84px !important; width: 110px !important; }
-  .hx-vs { margin-top: 28px; }
-  .hx-clock { padding-top: 20px; }
-  .hx-clock li { flex-direction: column; align-items: center; gap: 6px; }
-  .hx-clock li + li::before { display: none; }
-  .hx-clock-n { font-size: 56px; }
-  .hx-clock-l { font-size: 14px; }
+  .hx-hero-inner { padding: 120px 16px 136px; gap: 32px; }
+  .hx-hero h1 { gap: 20px; }
+  .hx-headline { font-size: clamp(52px, 15vw, 72px); }
+  .hx-team .crest, .hx-team .team-logo { width: 40px !important; height: 40px !important; padding: 4px; border-radius: 10px; }
+  .hx-when { font-size: 16px; }
+  .hx-foot { flex-direction: column; align-items: flex-start; }
+  .hx-clock-part b { font-size: 26px; }
   .hx-head { margin-bottom: 32px; }
   .hx-rail-arrows { display: none; }
   .hx-rail-track { grid-auto-columns: 78%; }
