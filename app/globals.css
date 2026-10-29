@@ -1102,3 +1102,105 @@ h2 > .ranking-accent { font-family: inherit; letter-spacing: inherit; line-heigh
 .hx-W { --hx-c: var(--hx-W); }
 .hx-D { --hx-c: var(--hx-D); }
 .hx-L { --hx-c: var(--hx-L); }
+
+/* ---------- redesign: players ---------- */
+/* The squad on the home screen's cold night: a short stadium hero, then every player as a free-standing shirt by
+   line, or the numbers in one sortable table. */
+.hx-hero-short { min-height: 64svh; }
+.hx-hero-short .hx-hero-inner { padding: 150px 32px 64px; gap: 28px; }
+.hx-hero-short .hx-headline { display: block; margin: 0; font-family: inherit; }
+.sq-meta { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 16px 40px; }
+.sq-meta p { margin: 0; font-size: 20px; color: var(--hx-ink-2); letter-spacing: -0.01em; }
+.sq-seasons { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 24px; font-size: 16px; }
+.sq-seasons a { position: relative; padding: 4px 0; color: var(--hx-ink-3); text-decoration: none; transition: color 200ms ease; }
+.sq-seasons a:hover { color: #fff; }
+.sq-seasons a.on { color: #fff; }
+.sq-seasons a.on::after { content: ""; position: absolute; left: 0; right: 0; bottom: -2px; height: 1px; background: currentColor; }
+.sq-seasons .sq-manage { margin-left: 16px; color: var(--hx-ink-2); }
+
+.sq-body { padding-block: 24px 140px; }
+.sq-controls { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px 32px; margin-bottom: 64px; padding-bottom: 20px; border-bottom: 1px solid var(--hx-line); }
+.sq-tabs { display: flex; gap: 28px; }
+.sq-tabs button { position: relative; padding: 4px 0; border: 0; background: none; color: var(--hx-ink-3); font: inherit; font-size: 28px; font-weight: 600; letter-spacing: -0.04em; cursor: pointer; transition: color 200ms ease; }
+.sq-tabs button:hover, .sq-tabs button.on { color: #fff; }
+.sq-tabs button.on::after { content: ""; position: absolute; left: 0; right: 0; bottom: -4px; height: 2px; background: var(--hx-bright); }
+.sq-filter { display: flex; flex-wrap: wrap; gap: 6px; }
+.sq-filter button { display: inline-flex; align-items: baseline; gap: 6px; height: 36px; padding: 0 14px; border: 0; border-radius: 999px; background: rgb(255 255 255 / 0.06); color: var(--hx-ink-2); font: inherit; font-size: 14px; font-weight: 500; line-height: 36px; cursor: pointer; transition: background-color 200ms ease, color 200ms ease, transform 150ms ease; }
+.sq-filter button span { font-size: 12px; color: var(--hx-ink-3); font-variant-numeric: tabular-nums; }
+.sq-filter button:hover:not(:disabled) { color: #fff; background: rgb(255 255 255 / 0.1); }
+.sq-filter button:active:not(:disabled) { transform: scale(0.96); }
+.sq-filter button.on, .sq-filter button.on:hover:not(:disabled) { background: #fff; color: #04060b; }
+.sq-filter button.on span { color: rgb(4 6 11 / 0.55); }
+.sq-filter button:disabled { opacity: 0.35; cursor: default; }
+
+/* squad view: a row of shirts per line */
+.sq-line + .sq-line { margin-top: 88px; }
+.sq-line h2 { display: flex; align-items: baseline; gap: 14px; margin: 0 0 28px; font-family: inherit; font-size: clamp(32px, 3.6vw, 48px); font-weight: 600; letter-spacing: -0.045em; line-height: 1; }
+.sq-line h2 span { font-size: 16px; font-weight: 400; letter-spacing: 0; color: var(--hx-ink-3); }
+.sq-line ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(176px, 1fr)); gap: 40px 16px; }
+.sq-player { position: relative; isolation: isolate; display: grid; justify-items: center; gap: 4px; text-align: center; color: #fff; text-decoration: none; transition: opacity 300ms ease; }
+.sq-player:hover { color: #fff; }
+.sq-player::before { content: ""; position: absolute; z-index: -1; left: 10%; right: 10%; top: 140px; height: 48px; border-radius: 50%;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--hx-bright) 40%, transparent), transparent); filter: blur(6px); transition: transform 500ms var(--hx-ease), opacity 300ms ease; }
+.sq-kit { width: 100%; max-width: 168px; height: 180px; filter: drop-shadow(0 20px 24px rgb(0 0 0 / 0.6)); transition: transform 500ms var(--hx-ease); }
+.sq-player:hover .sq-kit, .sq-player:focus-visible .sq-kit { transform: translateY(-10px) rotate(-3deg) scale(1.04); }
+.sq-player:hover::before { transform: scale(1.2); }
+.sq-line ul:has(.sq-player:hover) .sq-player:not(:hover) { opacity: 0.45; }
+.sq-name { margin-top: 10px; font-size: 17px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.25; }
+.sq-pos { font-size: 14px; color: var(--hx-ink-3); }
+.sq-mini { display: flex; justify-content: center; gap: 12px; margin-top: 8px; font-size: 12px; color: var(--hx-ink-3); }
+.sq-mini b { font-size: 14px; font-weight: 600; color: #fff; font-variant-numeric: tabular-nums; }
+.sq-unused .sq-kit { filter: grayscale(0.7) brightness(0.65) drop-shadow(0 20px 24px rgb(0 0 0 / 0.6)); }
+.sq-unused::before { opacity: 0.3; }
+
+/* stats view */
+.sq-stats table { width: 100%; border-collapse: collapse; font-size: 16px; }
+.sq-stats th { padding: 0 10px 14px; border: 0; background: none; text-transform: none; letter-spacing: 0; text-align: left; font-size: 14px; font-weight: 400; color: var(--hx-ink-3); }
+.sq-stats th.num { text-align: right; }
+.sq-stats th button { padding: 0; border: 0; background: none; color: inherit; font: inherit; cursor: pointer; transition: color 200ms ease; }
+.sq-stats th button:hover, .sq-stats th button.on { color: #fff; }
+.sq-stats th button.on::after { content: " ↓"; color: var(--hx-bright); }
+.sq-stats td { height: 60px; padding: 0 10px; border: 0; border-top: 1px solid var(--hx-line); background: none; }
+.sq-stats td.num { text-align: right; font-variant-numeric: tabular-nums; color: var(--hx-ink-2); }
+.sq-stats td.num.on { color: #fff; font-size: 20px; font-weight: 600; }
+.sq-stats tbody tr { transition: opacity 300ms ease; }
+.sq-stats tbody tr:hover { background: none; }
+.sq-stats tbody:hover tr:not(:hover) { opacity: 0.55; }
+.sq-stats tr.sq-unused { opacity: 0.45; }
+.sq-who { display: flex; align-items: center; gap: 16px; color: #fff; text-decoration: none; }
+.sq-who:hover { color: #fff; }
+.sq-who > span:last-child { display: grid; font-size: 17px; font-weight: 600; letter-spacing: -0.02em; }
+.sq-who small { font-size: 13px; font-weight: 400; letter-spacing: 0; color: var(--hx-ink-3); }
+.sq-num { width: 28px; text-align: right; font-size: 14px; color: var(--hx-ink-3); font-variant-numeric: tabular-nums; }
+.sq-sort-phone, .sq-list { display: none; }
+
+@media (max-width: 760px) {
+  .hx-hero-short { min-height: 52svh; }
+  .hx-hero-short .hx-hero-inner { padding: 120px 16px 40px; gap: 20px; }
+  .sq-meta p { font-size: 17px; }
+  .sq-body { padding-bottom: 96px; }
+  .sq-controls { margin-bottom: 40px; }
+  .sq-tabs button { font-size: 24px; }
+  .sq-filter { width: 100%; }
+  .sq-filter button { flex: 1; justify-content: center; padding: 0 8px; }
+  .sq-line + .sq-line { margin-top: 64px; }
+  .sq-line ul { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px 12px; }
+  .sq-kit { height: 150px; }
+  .sq-player::before { top: 116px; }
+  .sq-mini { gap: 8px; }
+  /* the table gives way to a list with the sorted stat on the right */
+  .sq-stats table { display: none; }
+  .sq-sort-phone { display: block; margin-bottom: 12px; }
+  .sq-sort-phone label { display: flex; align-items: center; gap: 12px; font-size: 14px; color: var(--hx-ink-3); }
+  .sq-sort-phone select { flex: 1; height: 44px; padding: 0 12px; border: 0; border-radius: 12px; background: rgb(255 255 255 / 0.08); color: #fff; font: inherit; font-size: 16px; }
+  .sq-list { display: block; list-style: none; margin: 0; padding: 0; }
+  .sq-list a { display: flex; align-items: center; gap: 14px; min-height: 64px; border-top: 1px solid var(--hx-line); color: #fff; text-decoration: none; }
+  .sq-rank { width: 22px; font-size: 14px; color: var(--hx-ink-3); font-variant-numeric: tabular-nums; }
+  .sq-list-who { flex: 1; display: grid; min-width: 0; font-size: 17px; font-weight: 600; letter-spacing: -0.02em; }
+  .sq-list-who small { font-size: 13px; font-weight: 400; letter-spacing: 0; color: var(--hx-ink-3); }
+  .sq-list b { font-size: 24px; font-weight: 600; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+  .sq-list .sq-unused { opacity: 0.45; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sq-player, .sq-kit, .sq-player::before { transition: none; }
+}
