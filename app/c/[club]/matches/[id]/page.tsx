@@ -1,12 +1,17 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import type { ReactNode } from "react";
 import { Icon } from "@/components/Icon";
 import { ConfirmSubmit } from "@/components/forms";
-import { Crest, Empty, PlayerLink, ResultBadge, TeamLogo } from "@/components/ui";
+import { Reveal } from "@/components/home/Motion";
+import { Page, Section } from "@/components/home/Page";
+import { Crest, TeamLogo } from "@/components/ui";
 import { deleteMatch } from "@/lib/actions";
 import { loadClub } from "@/lib/club";
 import { formatDate, seasonLabel, seasonOf } from "@/lib/stats";
+import stadium from "@/public/images/stadium-floodlights.jpg";
 
 type Props = { params: Promise<{ club: string; id: string }> };
 
@@ -17,6 +22,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return { title: m ? `${st.fixtureTitle(m)} (${formatDate(m.date)})` : "Match" };
 }
 
+// One match. The scoreboard is the hero: both crests and the score as big as the stadium allows. Under it the
+// goals by minute, the awards, the squad, the posts for Instagram and the way to the matches either side.
+
+const WORD = { W: "Won", D: "Drawn", L: "Lost" } as const;
+
 export default async function MatchPage({ params }: Props) {
   const { club: slug, id } = await params;
   const { data, st, admin, coach } = await loadClub(slug);
@@ -26,142 +36,208 @@ export default async function MatchPage({ params }: Props) {
   const { prev, next } = st.neighbours(id);
   const { club } = data;
 
-  const home = fixture.venue === "H" ? club.name : fixture.opponent;
-  const away = fixture.venue === "H" ? fixture.opponent : club.name;
-  const homeScore = m && (fixture.venue === "H" ? m.gf : m.ga);
-  const awayScore = m && (fixture.venue === "H" ? m.ga : m.gf);
+  const us = { name: club.name, crest: <Crest short={club.shortName} logo={club.logo} size={96} /> };
+  const them = { name: fixture.opponent, crest: <TeamLogo code={fixture.opponentCode} name={fixture.opponent} size={96} /> };
+  const [home, away] = fixture.venue === "H" ? [us, them] : [them, us];
+  const [hs, as] = m ? (fixture.venue === "H" ? [m.gf, m.ga] : [m.ga, m.gf]) : [null, null];
+  const status = fixture.status === "abandoned" ? "Abandoned" : fixture.status === "called-off" ? "Called off" : null;
+  const verdict = m ? WORD[m.result] : (status ?? "To play");
 
   return (
-    <>
-      <div className="page-title-row">
-        <Link href={`${st.base}/matches`} className="small muted">← All matches</Link>
-        {admin && (
-          <div className="form-actions">
-            <Link href={`${st.base}/matches/${id}/edit`} className="btn btn-secondary">Edit</Link>
-            <form action={deleteMatch.bind(null, slug)}>
-              <input type="hidden" name="id" value={id} />
-              <ConfirmSubmit message="Delete this match and everything recorded in it?">Delete</ConfirmSubmit>
-            </form>
+    <Page accent={club.accent}>
+      <section className={`hx-hero hx-hero-short md-hero ${m ? `hx-${m.result}` : "hx-void"}`} aria-labelledby="page-title">
+        <div className="hx-hero-photo" aria-hidden="true">
+          <Image src={stadium} alt="" fill sizes="100vw" placeholder="blur" priority className="hx-photo" />
+        </div>
+        <div className="hx-hero-inner">
+          <Reveal className="md-top">
+            <Link href={`${st.base}/matches`} className="hx-back">
+              <span aria-hidden="true">←</span> All matches
+            </Link>
+            {admin && (
+              <div className="md-admin">
+                <Link href={`${st.base}/matches/${id}/edit`} className="hx-btn">
+                  Edit
+                </Link>
+                <form action={deleteMatch.bind(null, slug)}>
+                  <input type="hidden" name="id" value={id} />
+                  <ConfirmSubmit className="md-delete" message="Delete this match and everything recorded in it?">
+                    Delete
+                  </ConfirmSubmit>
+                </form>
+              </div>
+            )}
+          </Reveal>
+          <h1 id="page-title" className="sr-only">
+            {home.name} {m ? `${hs}–${as}` : "vs"} {away.name}
+          </h1>
+          <Reveal className="md-board" delay={0.05}>
+            <span className="md-side">
+              {home.crest}
+              <span>{home.name}</span>
+            </span>
+            <span className="md-score" aria-hidden="true">
+              {m ? (
+                <>
+                  {hs}
+                  <i>–</i>
+                  {as}
+                </>
+              ) : (
+                <em>vs</em>
+              )}
+            </span>
+            <span className="md-side">
+              {away.crest}
+              <span>{away.name}</span>
+            </span>
+          </Reveal>
+          <Reveal className="md-meta" delay={0.12}>
+            <p className="md-verdict">
+              <em>{verdict}.</em>
+            </p>
+            <p>
+              {formatDate(fixture.date, { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
+              {fixture.kickoff && !m && `, ${fixture.kickoff}`}
+              <span> · </span>
+              <span className={fixture.competition === "League" ? undefined : "hx-cup"}>{fixture.competition}</span>
+              <span> · </span>
+              {fixture.venue === "H" ? "Home" : "Away"}
+              <span> · </span>
+              {seasonLabel(seasonOf(fixture.date))}
+            </p>
+          </Reveal>
+        </div>
+      </section>
+
+      <div className="hx-wrap hx-body">
+        {!m ? (
+          <p className="md-note">
+            {fixture.status === "abandoned"
+              ? "Abandoned. voetbal.nl has no result for this match, so it doesn't count in any stats."
+              : fixture.status === "called-off"
+                ? "Called off. It doesn't count in any stats."
+                : `Not played yet.${admin ? " Edit the match to add the result once it's done." : ""}`}
+          </p>
+        ) : (
+          <div className="md-grid">
+            <Section id="md-goals" lead="The" accent="goals." small>
+              {m.gf > 0 ? (
+                <ol className="md-events">
+                  {m.goals.map((g, i) => (
+                    <Event key={i} when={g.minute !== undefined ? `${g.minute}′` : "–"}>
+                      <PlayerName base={st.base} id={g.scorer} name={st.playerName(g.scorer)} />
+                      {g.penalty && <small>penalty</small>}
+                      {g.assist && <small>assist {st.playerName(g.assist)}</small>}
+                    </Event>
+                  ))}
+                  {/* The official score can come from voetbal.nl before anyone has said who scored. */}
+                  {m.gf > m.goals.length && (
+                    <Event when="–">
+                      <small>
+                        {m.gf - m.goals.length} {m.gf - m.goals.length === 1 ? "goal" : "goals"} without a scorer yet
+                      </small>
+                    </Event>
+                  )}
+                  {m.ownGoals.map((p, i) => (
+                    <Event key={`og${i}`} when="OG">
+                      <PlayerName base={st.base} id={p} name={st.playerName(p)} />
+                      <small>scored an own goal</small>
+                    </Event>
+                  ))}
+                  {m.penaltiesMissed.map((p, i) => (
+                    <Event key={`pm${i}`} when={<Icon name="miss" />}>
+                      <PlayerName base={st.base} id={p} name={st.playerName(p)} />
+                      <small>missed a penalty</small>
+                    </Event>
+                  ))}
+                </ol>
+              ) : (
+                <p className="hx-empty">Didn&apos;t trouble the scorers.</p>
+              )}
+            </Section>
+
+            <Section id="md-awards" lead="The" accent="verdict." small>
+              <div className="md-motm">
+                <span className="md-motm-star">
+                  <Icon name="star" />
+                </span>
+                <span className="hx-label">Man of the Match</span>
+                {m.motm ? <PlayerName base={st.base} id={m.motm} name={st.playerName(m.motm)} /> : <span className="hx-empty">Not given</span>}
+              </div>
+              {m.cards.length > 0 && (
+                <ol className="md-events">
+                  {m.cards.map((c, i) => (
+                    <Event key={i} when={<span className={c.type === "Y" ? "card-y" : "card-r"} title={c.type === "Y" ? "Yellow card" : "Red card"} />}>
+                      <PlayerName base={st.base} id={c.player} name={st.playerName(c.player)} />
+                      <small>{c.type === "Y" ? "booked" : "sent off"}</small>
+                    </Event>
+                  ))}
+                </ol>
+              )}
+              {m.notes && <blockquote className="md-notes">{m.notes}</blockquote>}
+            </Section>
+
+            <Section id="md-squad" lead="The" accent="squad." note={m.squad.length ? `${m.squad.length} players` : undefined} small>
+              {m.squad.length ? (
+                <ul className="md-squad">
+                  {m.squad.map((p) => (
+                    <li key={p}>
+                      <Link href={`${st.base}/players/${p}`}>{st.playerName(p)}</Link>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="hx-empty">Squad not recorded.</p>
+              )}
+            </Section>
           </div>
         )}
+
+        {(admin || coach) && !fixture.status && <Graphics base={`${st.base}/matches/${id}`} played={Boolean(m)} />}
+
+        <nav className="md-pager" aria-label="Other matches">
+          {prev ? (
+            <Link href={`${st.base}/matches/${prev.id}`}>
+              <span className="hx-label">Previous match</span>
+              <b>
+                <span aria-hidden="true">← </span>
+                {prev.opponent}
+              </b>
+            </Link>
+          ) : (
+            <span />
+          )}
+          {next && (
+            <Link href={`${st.base}/matches/${next.id}`} className="md-pager-next">
+              <span className="hx-label">Next match</span>
+              <b>
+                {next.opponent}
+                <span aria-hidden="true"> →</span>
+              </b>
+            </Link>
+          )}
+        </nav>
       </div>
-      <div className="card" style={{ marginTop: 12 }}>
-        <div className="scoreboard">
-          <div className="team">
-            {fixture.venue === "H" ? <Crest short={club.shortName} logo={club.logo} size={52} /> : <TeamLogo code={fixture.opponentCode} name={fixture.opponent} size={60} />}
-            <span>{home}</span>
-          </div>
-          <div className="big">{m ? `${homeScore}–${awayScore}` : "vs"}</div>
-          <div className="team">
-            {fixture.venue === "A" ? <Crest short={club.shortName} logo={club.logo} size={52} /> : <TeamLogo code={fixture.opponentCode} name={fixture.opponent} size={60} />}
-            <span>{away}</span>
-          </div>
-        </div>
-        <div className="meta-row">
-          {m && <ResultBadge result={m.result} />}
-          <span>{formatDate(fixture.date, { weekday: "long", day: "numeric", month: "long", year: "numeric" })}</span>
-          <span>{fixture.competition}</span>
-          <span>{seasonLabel(seasonOf(fixture.date))}</span>
-          <span>{fixture.venue === "H" ? "Home" : "Away"}</span>
-        </div>
-      </div>
+    </Page>
+  );
+}
 
-      {(admin || coach) && !fixture.status && <Graphics base={`${st.base}/matches/${id}`} played={Boolean(m)} />}
+function Event({ when, children }: { when: ReactNode; children: ReactNode }) {
+  return (
+    <li>
+      <span className="md-when">{when}</span>
+      <span className="md-what">{children}</span>
+    </li>
+  );
+}
 
-      {!m ? (
-        <p className="section muted">
-          {fixture.status === "abandoned"
-            ? "Abandoned. voetbal.nl has no result for this match, so it doesn't count in any stats."
-            : fixture.status === "called-off"
-              ? "Called off. It doesn't count in any stats."
-              : <>Not played yet.{admin && " Edit the match to add the result once it's done."}</>}
-        </p>
-      ) : (
-        <div className="grid grid-3 section">
-          <div className="card">
-            <h2>Goals</h2>
-            {m.gf > 0 ? (
-              <ul className="event-list">
-                {m.goals.map((g, i) => (
-                  <li key={i}>
-                    <span className="min">{g.minute !== undefined ? `${g.minute}′` : "–"}</span>
-                    <span>
-                      <strong><PlayerLink st={st} id={g.scorer} /></strong>
-                      {g.penalty && <span className="muted"> (pen)</span>}
-                      {g.assist && <span className="muted small"> · assist {st.playerName(g.assist)}</span>}
-                    </span>
-                  </li>
-                ))}
-                {/* The official score can come from voetbal.nl before anyone has said who scored. */}
-                {m.gf > m.goals.length && (
-                  <li>
-                    <span className="min">–</span>
-                    <span className="muted">
-                      {m.gf - m.goals.length} {m.gf - m.goals.length === 1 ? "goal" : "goals"} without a scorer yet
-                    </span>
-                  </li>
-                )}
-              </ul>
-            ) : (
-              <Empty>Didn&apos;t trouble the scorers.</Empty>
-            )}
-            {(m.ownGoals.length > 0 || m.penaltiesMissed.length > 0) && (
-              <ul className="event-list" style={{ marginTop: 14 }}>
-                {m.ownGoals.map((p, i) => (
-                  <li key={`og${i}`}><span className="min">OG</span><span><PlayerLink st={st} id={p} /> <span className="muted">scored an own goal</span></span></li>
-                ))}
-                {m.penaltiesMissed.map((p, i) => (
-                  <li key={`pm${i}`}><span className="min"><Icon name="miss" /></span><span><PlayerLink st={st} id={p} /> <span className="muted">missed a penalty</span></span></li>
-                ))}
-              </ul>
-            )}
-          </div>
-
-          <div className="card">
-            <h2>Awards & discipline</h2>
-            <ul className="event-list">
-              <li>
-                <span className="min"><Icon name="star" className="motm-star" /></span>
-                <span>
-                  {m.motm ? (
-                    <>
-                      <strong><PlayerLink st={st} id={m.motm} /></strong> <span className="muted">Man of the Match</span>
-                    </>
-                  ) : (
-                    <span className="muted">No Man of the Match given</span>
-                  )}
-                </span>
-              </li>
-              {m.cards.map((c, i) => (
-                <li key={i}>
-                  <span className="min"><span className={c.type === "Y" ? "card-y" : "card-r"} title={c.type === "Y" ? "Yellow card" : "Red card"} /></span>
-                  <span><PlayerLink st={st} id={c.player} /> <span className="muted">{c.type === "Y" ? "booked" : "sent off"}</span></span>
-                </li>
-              ))}
-            </ul>
-            {m.notes && <p style={{ marginBottom: 0, color: "var(--ink-2)" }}>{m.notes}</p>}
-          </div>
-
-          <div className="card">
-            <h2>Squad ({m.squad.length})</h2>
-            {m.squad.length ? (
-              <ul className="event-list">
-                {m.squad.map((p) => (
-                  <li key={p}><PlayerLink st={st} id={p} /></li>
-                ))}
-              </ul>
-            ) : (
-              <Empty>Squad not recorded.</Empty>
-            )}
-          </div>
-        </div>
-      )}
-
-      <div className="prev-next">
-        {prev ? <Link href={`${st.base}/matches/${prev.id}`}>← {prev.opponent}</Link> : <span />}
-        {next && <Link href={`${st.base}/matches/${next.id}`}>{next.opponent} →</Link>}
-      </div>
-    </>
+function PlayerName({ base, id, name }: { base: string; id: string; name: string }) {
+  if (id === "og") return <b>Own goal</b>;
+  return (
+    <Link href={`${base}/players/${id}`} className="md-player">
+      {name}
+    </Link>
   );
 }
 
@@ -172,9 +248,8 @@ function Graphics({ base, played }: { base: string; played: boolean }) {
     { key: "lineup", label: "Line-up", edit: `${base}/lineup` },
   ];
   return (
-    <section className="card section">
-      <h2>Graphics</h2>
-      <div className="graphics-grid">
+    <Section id="md-posts" lead="For" accent="Instagram." note="1080×1350 posts, made from this match." small>
+      <div className="md-posts">
         {posts.map((g) => (
           <figure key={g.key}>
             <a href={`${base}/graphics/${g.key}`} target="_blank" rel="noreferrer">
@@ -183,12 +258,14 @@ function Graphics({ base, played }: { base: string; played: boolean }) {
             </a>
             <figcaption>
               <strong>{g.label}</strong>
-              <a href={`${base}/graphics/${g.key}?download=1`} className="btn-link" download>Download</a>
-              {g.edit && <Link href={g.edit} className="btn-link">Edit</Link>}
+              <a href={`${base}/graphics/${g.key}?download=1`} download>
+                Download
+              </a>
+              {g.edit && <Link href={g.edit}>Edit</Link>}
             </figcaption>
           </figure>
         ))}
       </div>
-    </section>
+    </Section>
   );
 }

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { LineupForm } from "@/components/LineupForm";
-import { PageHeader } from "@/components/ui";
+import { Page, PageHero } from "@/components/home/Page";
 import { saveLineup } from "@/lib/actions";
 import { loadClub } from "@/lib/club";
 import { matchLineup } from "@/lib/lineup";
@@ -19,14 +19,20 @@ export default async function LineupPage({ params }: { params: Promise<{ club: s
   const noPhotos = data.players.filter((p) => p.active && !p.photo).length;
 
   return (
-    <>
-      <Link href={`${st.base}/matches/${id}`} className="small muted">← Back to the match</Link>
-      <PageHeader title="Line-up graphic" kicker={`${st.fixtureTitle(match)} · ${formatDate(match.date)}`}>
-        <p className="muted" style={{ margin: 0 }}>
+    <Page accent={data.club.accent}>
+      <PageHero
+        size="mini"
+        back={{ href: `${st.base}/matches/${id}`, label: "Back to the match" }}
+        lead="The"
+        accent="line-up."
+        meta={`${st.fixtureTitle(match)} · ${formatDate(match.date)}`}
+      >
+        <p className="hx-hero-note">
           The players start out guessed from the squad and their positions. Change anything, save, and download the PNG for Instagram.
           {noPhotos > 0 && (
             <>
-              {" "}{noPhotos} active {noPhotos === 1 ? "player has" : "players have"} no photo yet and {noPhotos === 1 ? "shows" : "show"} as a shirt;
+              {" "}
+              {noPhotos} active {noPhotos === 1 ? "player has" : "players have"} no photo yet and {noPhotos === 1 ? "shows" : "show"} as a shirt;{" "}
               {admin ? (
                 <>
                   add photos and short names under <Link href={`${st.base}/settings#squad`}>Settings → Squad</Link>.
@@ -37,13 +43,15 @@ export default async function LineupPage({ params }: { params: Promise<{ club: s
             </>
           )}
         </p>
-      </PageHeader>
-      <LineupForm
-        action={saveLineup.bind(null, slug, id)}
-        players={data.players}
-        initial={matchLineup(match, data.players)}
-        image={`${st.base}/matches/${id}/graphics/lineup`}
-      />
-    </>
+      </PageHero>
+      <div className="hx-wrap hx-body">
+        <LineupForm
+          action={saveLineup.bind(null, slug, id)}
+          players={data.players}
+          initial={matchLineup(match, data.players)}
+          image={`${st.base}/matches/${id}/graphics/lineup`}
+        />
+      </div>
+    </Page>
   );
 }

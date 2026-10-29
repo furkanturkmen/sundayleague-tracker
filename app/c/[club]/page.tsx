@@ -5,6 +5,7 @@ import { HomeHero, type HeroFixture } from "@/components/home/HomeHero";
 import { CountUp, Reveal, ScrollFlag } from "@/components/home/Motion";
 import { Band } from "@/components/home/Band";
 import { Rail } from "@/components/home/Rail";
+import { Pitch } from "@/components/home/Page";
 import { Icon } from "@/components/Icon";
 import { Kit } from "@/components/Kit";
 import { Crest, GetStarted, TeamLogo } from "@/components/ui";
@@ -91,7 +92,7 @@ export default async function ClubHome({ params }: { params: Promise<{ club: str
                 Where we <em>stand.</em>
               </h2>
             </Reveal>
-            <Reveal className="hx-table">
+            <Reveal className="hx-table hx-table-home">
               <table>
                 <thead>
                   <tr>
@@ -292,20 +293,6 @@ export default async function ClubHome({ params }: { params: Promise<{ club: str
         </Band>
       </div>
     </div>
-  );
-}
-
-/** Faint pitch markings: the touchlines, halfway line and centre circle, drawn to cover the band. */
-function Pitch() {
-  return (
-    <svg className="hx-pitch" viewBox="0 0 1050 680" preserveAspectRatio="xMidYMid slice">
-      <g fill="none" stroke="currentColor" strokeWidth="2">
-        <rect x="20" y="20" width="1010" height="640" />
-        <line x1="525" y1="20" x2="525" y2="660" />
-        <circle cx="525" cy="340" r="140" />
-        <circle cx="525" cy="340" r="3" fill="currentColor" />
-      </g>
-    </svg>
   );
 }
 

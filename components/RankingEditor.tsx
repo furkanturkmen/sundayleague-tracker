@@ -13,8 +13,7 @@ const label = (p: Player) => `${p.number != null ? `${p.number}. ` : ""}${p.name
 export function NewRankingForm({ action }: { action: Action }) {
   const [state, formAction] = useActionState(action, {});
   return (
-    <form action={formAction} className="card form ranking-new">
-      <h2>New ranking</h2>
+    <form action={formAction} className="form ranking-new" aria-label="New ranking">
       <div className="ranking-title-fields">
         <label>
           Title

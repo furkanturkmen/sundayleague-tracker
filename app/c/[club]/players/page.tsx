@@ -1,15 +1,11 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
-import type { CSSProperties } from "react";
-import { Reveal, ScrollFlag } from "@/components/home/Motion";
+import { Page, PageHero, SeasonLinks } from "@/components/home/Page";
 import { SquadBoard, type SquadRow } from "@/components/home/SquadBoard";
 import { GetStarted } from "@/components/ui";
 import { loadClub } from "@/lib/club";
-import { brighten } from "@/lib/color";
 import { seasonLabel } from "@/lib/stats";
 import { POSITION_LINES, POSITION_NAMES, POSITIONS, positionGroup } from "@/lib/types";
-import stadium from "@/public/images/stadium-floodlights.jpg";
 
 export const metadata: Metadata = { title: "Players" };
 
@@ -31,7 +27,8 @@ export default async function PlayersPage({ params, searchParams }: Props) {
     .filter((s) => s.player.active || s.apps > 0)
     .sort(
       (a, b) =>
-        POSITION_LINES.findIndex((l) => l.group === positionGroup(a.player.position)) - POSITION_LINES.findIndex((l) => l.group === positionGroup(b.player.position)) ||
+        POSITION_LINES.findIndex((l) => l.group === positionGroup(a.player.position)) -
+          POSITION_LINES.findIndex((l) => l.group === positionGroup(b.player.position)) ||
         POSITIONS.indexOf(a.player.position) - POSITIONS.indexOf(b.player.position) ||
         (a.player.number ?? 999) - (b.player.number ?? 999),
     )
@@ -53,49 +50,34 @@ export default async function PlayersPage({ params, searchParams }: Props) {
       yellows: s.yellows,
       reds: s.reds,
     }));
-  const seasons = ["all", ...[...st.seasons].reverse()];
 
   return (
-    <div className="hx" style={{ "--hx-bright": brighten(club.accent) } as CSSProperties}>
-      <ScrollFlag />
-      <section className="hx-hero hx-hero-short" aria-labelledby="sq-title">
-        <div className="hx-hero-photo" aria-hidden="true">
-          <Image src={stadium} alt="" fill sizes="100vw" placeholder="blur" priority className="hx-photo" />
-        </div>
-        <div className="hx-hero-inner">
-          <Reveal>
-            <h1 id="sq-title" className="hx-headline">
-              The <em>squad.</em>
-            </h1>
-          </Reveal>
-          <Reveal className="sq-meta" delay={0.1}>
-            <p>
-              {rows.length} {rows.length === 1 ? "player" : "players"} · {seasonLabel(season)}
-            </p>
-            <nav className="sq-seasons" aria-label="Season">
-              {seasons.length > 1 &&
-                seasons.map((s) => (
-                  <Link key={s} href={`${st.base}/players?season=${s}`} className={s === season ? "on" : undefined} aria-current={s === season ? "true" : undefined}>
-                    {seasonLabel(s)}
-                  </Link>
-                ))}
-              {admin && (
-                <Link href={`${st.base}/settings#squad`} className="sq-manage">
-                  Manage squad
-                </Link>
-              )}
-            </nav>
-          </Reveal>
-        </div>
-      </section>
+    <Page accent={club.accent}>
+      <PageHero
+        lead="The"
+        accent="squad."
+        meta={
+          <>
+            {rows.length} {rows.length === 1 ? "player" : "players"} · {seasonLabel(season)}
+          </>
+        }
+      >
+        <SeasonLinks href={(s) => `${st.base}/players?season=${s}`} seasons={st.seasons} active={season}>
+          {admin && (
+            <Link href={`${st.base}/settings#squad`} className="hx-manage">
+              Manage squad
+            </Link>
+          )}
+        </SeasonLinks>
+      </PageHero>
 
-      <div className="hx-wrap sq-body">
+      <div className="hx-wrap hx-body">
         {rows.length === 0 ? (
           <GetStarted st={st} admin={admin} what="players" />
         ) : (
           <SquadBoard rows={rows} kit={{ main: club.accent, trim: club.gold, logo: club.logo }} initialSort={sort} />
         )}
       </div>
-    </div>
+    </Page>
   );
 }

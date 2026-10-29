@@ -3,7 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { RankingEditor } from "@/components/RankingEditor";
 import { Submit } from "@/components/forms";
-import { PageHeader } from "@/components/ui";
+import { Reveal } from "@/components/home/Motion";
+import { Page, PageHero } from "@/components/home/Page";
 import { deleteRanking, saveRanking } from "@/lib/actions";
 import { loadClub } from "@/lib/club";
 import { getRanking } from "@/lib/rankings";
@@ -25,50 +26,63 @@ export default async function RankingPage({ params }: Props) {
   const editable = !ranking.auto && (admin || coach);
 
   return (
-    <>
-      <Link href={`${st.base}/stats/rankings`} className="small muted">← All rankings</Link>
-      <PageHeader title={[ranking.title, ranking.accentText].filter(Boolean).join(" ")} kicker={ranking.auto ? `From the stats · ${ranking.note}` : `Ranking · ${ranking.note}`} />
+    <Page accent={data.club.accent}>
+      <PageHero
+        size="mini"
+        back={{ href: `${st.base}/stats/rankings`, label: "All rankings" }}
+        lead={ranking.accentText ? ranking.title : undefined}
+        accent={ranking.accentText || ranking.title}
+        meta={ranking.auto ? `From the stats · ${ranking.note}` : ranking.note}
+      />
 
-      {editable ? (
-        <>
-          <RankingEditor
-            action={saveRanking.bind(null, slug, id)}
-            players={data.players}
-            initial={{ title: ranking.title, accentText: ranking.accentText, players: ranking.rows.map((r) => r.player.id) }}
-            image={image}
-          />
-          <form action={deleteRanking.bind(null, slug)} className="section">
-            <input type="hidden" name="id" value={id} />
-            <Submit className="btn-link danger" pending="Deleting…">Delete this ranking</Submit>
-          </form>
-        </>
-      ) : (
-        <div className="lineup-layout">
-          <div className="card">
-            {ranking.rows.length ? (
-              <ol className="ranking-podium ranking-full">
-                {ranking.rows.map((row, i) => (
-                  <li key={row.player.id}>
-                    <span className="ranking-place">{i + 1}</span>
-                    <Link href={`${st.base}/players/${row.player.id}`} className="ranking-name">{row.player.name}</Link>
-                    {row.value !== undefined && <span className="ranking-value">{row.value}</span>}
-                  </li>
-                ))}
-              </ol>
-            ) : (
-              <p className="muted" style={{ margin: 0 }}>Nobody on this list yet.</p>
-            )}
+      <div className="hx-wrap hx-body">
+        {editable ? (
+          <>
+            <RankingEditor
+              action={saveRanking.bind(null, slug, id)}
+              players={data.players}
+              initial={{ title: ranking.title, accentText: ranking.accentText, players: ranking.rows.map((r) => r.player.id) }}
+              image={image}
+            />
+            <form action={deleteRanking.bind(null, slug)} className="rk-delete">
+              <input type="hidden" name="id" value={id} />
+              <Submit className="btn-link danger" pending="Deleting…">
+                Delete this ranking
+              </Submit>
+            </form>
+          </>
+        ) : (
+          <div className="lineup-layout">
+            <Reveal>
+              {ranking.rows.length ? (
+                <ol className="rk-list">
+                  {ranking.rows.map((row, i) => (
+                    <li key={row.player.id}>
+                      <Link href={`${st.base}/players/${row.player.id}`}>
+                        <span className="rk-place">{i + 1}</span>
+                        <span className="rk-name">{row.player.name}</span>
+                        {row.value !== undefined && <b>{row.value}</b>}
+                      </Link>
+                    </li>
+                  ))}
+                </ol>
+              ) : (
+                <p className="hx-empty">Nobody on this list yet.</p>
+              )}
+            </Reveal>
+            <Reveal className="lineup-preview" delay={0.08}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={image} width={1080} height={1350} alt={`${ranking.title} graphic`} />
+              <div className="form-actions">
+                <a href={`${image}?download=1`} className="btn" download>
+                  Download PNG
+                </a>
+                <span className="small muted">1080×1350, for Instagram.</span>
+              </div>
+            </Reveal>
           </div>
-          <div className="card lineup-preview">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={image} width={1080} height={1350} alt={`${ranking.title} graphic`} />
-            <div className="form-actions">
-              <a href={`${image}?download=1`} className="btn" download>Download PNG</a>
-              <span className="small muted">1080×1350, for Instagram.</span>
-            </div>
-          </div>
-        </div>
-      )}
-    </>
+        )}
+      </div>
+    </Page>
   );
 }

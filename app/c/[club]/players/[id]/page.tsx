@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import type { CSSProperties } from "react";
 import { notFound } from "next/navigation";
+import { Page } from "@/components/home/Page";
 import { Kit } from "@/components/Kit";
 import { Crest, TeamLogo } from "@/components/ui";
 import { loadClub } from "@/lib/club";
@@ -48,7 +49,7 @@ export default async function PlayerPage({ params }: Props) {
   const rest = others.join(" ");
 
   return (
-    <>
+    <Page accent={data.club.accent}>
       <section className="ph" aria-label={player.name} style={{ "--ph-bright": brighten(data.club.accent) } as CSSProperties}>
         {/* A stadium at night, out of focus and darkened, with the club colour glowing behind the shirt. */}
         <div className="ph-bg" aria-hidden="true">
@@ -290,7 +291,7 @@ export default async function PlayerPage({ params }: Props) {
           )}
         </section>
       </div>
-    </>
+    </Page>
   );
 }
 

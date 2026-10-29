@@ -42,9 +42,9 @@ export function HomeHero({ photo, club, fixture, actions }: { photo: ReactNode; 
   const now = useNow();
   const until = fixture ? countdown(fixture, now) : null;
   const rise = (delay: number) => ({
-    initial: reduce ? false : { opacity: 0, y: 28 },
+    initial: { opacity: 0, y: 28 },
     animate: { opacity: 1, y: 0 },
-    transition: { duration: 0.9, ease: EASE, delay },
+    transition: reduce ? { duration: 0 } : { duration: 0.9, ease: EASE, delay },
   });
 
   return (

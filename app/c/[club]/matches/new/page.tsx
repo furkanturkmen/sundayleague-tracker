@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { MatchForm } from "@/components/MatchForm";
-import { PageHeader } from "@/components/ui";
+import { Page, PageHero } from "@/components/home/Page";
 import { saveMatch } from "@/lib/actions";
 import { loadClub } from "@/lib/club";
 
@@ -15,9 +15,17 @@ export default async function NewMatchPage({ params }: { params: Promise<{ club:
   const competitions = [...new Set(data.matches.map((m) => m.competition))];
 
   return (
-    <div className="narrow-wide">
-      <PageHeader title="Add match" kicker="Result or upcoming fixture" />
-      <MatchForm action={saveMatch.bind(null, slug)} players={data.players} opponents={opponents} competitions={competitions} />
-    </div>
+    <Page accent={data.club.accent}>
+      <PageHero
+        size="mini"
+        back={{ href: `${st.base}/matches`, label: "All matches" }}
+        lead="Add a"
+        accent="match."
+        meta="A result, or a fixture still to come."
+      />
+      <div className="hx-wrap hx-body hx-form-page">
+        <MatchForm action={saveMatch.bind(null, slug)} players={data.players} opponents={opponents} competitions={competitions} />
+      </div>
+    </Page>
   );
 }
