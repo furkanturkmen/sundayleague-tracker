@@ -1298,9 +1298,11 @@ h2 > .ranking-accent { font-family: inherit; letter-spacing: inherit; line-heigh
 :where(.hx) .get-started p:first-child { font-size: 20px; color: #fff; }
 
 /* the form pages: sections split by a rule instead of boxes */
-/* the page keeps the hero's width so the form lines up under the headline; the form itself stays readable */
 .hx-form-page > * { max-width: 816px; }
 .hx-narrow > * { max-width: 456px; }
+/* form pages sit in one centred column, hero included, so the headline lines up with the form under it */
+.hx:has(.hx-form-page) :is(.hx-hero-inner, .hx-wrap) { max-width: 880px; }
+.hx:has(.hx-narrow) :is(.hx-hero-inner, .hx-wrap) { max-width: 520px; }
 .hx-form-page > .card + .card { margin-top: 72px; padding-top: 48px; border-top: 1px solid rgb(255 255 255 / 0.12); }
 .hx-form-page .card > h2:first-child { font-size: clamp(28px, 3vw, 40px); letter-spacing: -0.045em; }
 .hx-form-page .card > h2 .small { font-size: 15px; font-weight: 400; }
