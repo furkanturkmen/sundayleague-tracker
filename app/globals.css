@@ -1253,7 +1253,8 @@ h2 > .ranking-accent { font-family: inherit; letter-spacing: inherit; line-heigh
 :where(.hx) :is(input, select, textarea):hover:not(:focus):not(:disabled) { border-color: rgb(255 255 255 / 0.28); }
 :where(.hx) :is(input, select, textarea):focus { outline: none; border-color: var(--hx-bright); background-color: rgb(255 255 255 / 0.06); box-shadow: 0 0 0 3px color-mix(in srgb, var(--hx-bright) 24%, transparent); }
 :where(.hx) ::placeholder { color: rgb(235 240 255 / 0.36); }
-:where(.hx) option { background: #0b0f19; color: #fff; }
+:where(.hx) :is(option, optgroup) { background: #0b0f19; color: #fff; }
+:where(.hx) optgroup { color: rgb(235 240 255 / 0.56); font-style: normal; font-weight: 600; }
 :where(.hx) input[type=color] { border-color: rgb(255 255 255 / 0.14); background: rgb(255 255 255 / 0.04); }
 :where(.hx) input[type=checkbox] { accent-color: var(--hx-bright); }
 :where(.hx) fieldset { border-color: var(--line); border-radius: 12px; padding: 20px; }
