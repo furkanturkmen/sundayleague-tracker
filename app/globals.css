@@ -811,8 +811,8 @@ h2 > .ranking-accent { font-family: inherit; letter-spacing: inherit; line-heigh
 /* the Menu button only exists on the redesigned pages, on a phone */
 .nav-toggle { display: none; }
 
-@media (max-width: 720px) {
-  .club-theme:has(.hx) .site-header .header-inner { min-height: 56px; margin: 8px 8px 0; padding-inline: 14px 6px; }
+@media (max-width: 760px) {
+  .club-theme:has(.hx) .site-header .header-inner { flex-wrap: nowrap; gap: 12px; min-height: 60px; margin: 8px 8px 0; padding: 8px 8px 8px 14px; }
   /* the drop-in moves to the logo and button here: a transform on the pill would trap the full-screen menu inside it */
   .club-theme:has(.hx) .site-header .header-inner { animation: none; }
   .club-theme:has(.hx) .brand, .club-theme:has(.hx) .nav-toggle { animation: hx-drop 900ms cubic-bezier(0.22, 1, 0.36, 1) both; }
