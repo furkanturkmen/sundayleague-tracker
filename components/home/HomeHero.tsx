@@ -20,7 +20,7 @@ export interface HeroFixture {
 }
 
 /**
- * The floodlit stadium, full screen, telling one thing: when we play next. "Matchday in 3 days." large, the fixture as one line under it, and the actions with a quiet live countdown at the foot. The photo
+ * The floodlit stadium, full screen, telling one thing: when we play next. "Matchday on Sunday." large, the fixture as one line under it, and the actions with a quiet live countdown at the foot. The photo
  * drifts slower than the page and a faint blue glow follows the pointer.
  */
 export function HomeHero({ photo, club, fixture, actions }: { photo: ReactNode; club: string; fixture: HeroFixture | null; actions: ReactNode }) {
@@ -123,14 +123,24 @@ function useNow(): number | null {
   return now;
 }
 
-/** The headline in two parts ("Matchday in" + "3 days.") and the clock to kick-off, when there is a time. */
+/** The headline in two parts ("Matchday on" + "Sunday.") and the clock to kick-off, when there is a time. */
 function countdown(f: HeroFixture, now: number | null) {
   if (now === null) return { lead: "Matchday", accent: "soon.", clock: null };
   const target = f.at ?? f.day;
   const ms = target - now;
   const days = Math.floor((f.day - startOfToday(now)) / 86_400_000);
   if (f.at !== null && ms <= 0 && ms > -2 * 3_600_000) return { lead: "We're", accent: "playing.", clock: null };
-  const head = days <= 0 ? { lead: "Matchday", accent: "today." } : days === 1 ? { lead: "Matchday", accent: "tomorrow." } : { lead: "Matchday in", accent: `${days} days.` };
+  // Within the week the day is named ("on Sunday."), so the headline never disagrees with the clock: Thursday
+  // afternoon is "3 days" by the calendar but 2d 22h to a 13:00 kick-off.
+  const weekday = new Date(f.day).toLocaleDateString("en-GB", { weekday: "long", timeZone: "Europe/Amsterdam" });
+  const head =
+    days <= 0
+      ? { lead: "Matchday", accent: "today." }
+      : days === 1
+        ? { lead: "Matchday", accent: "tomorrow." }
+        : days < 7
+          ? { lead: "Matchday on", accent: `${weekday}.` }
+          : { lead: "Matchday in", accent: `${days} days.` };
   if (f.at === null || ms <= 0) return { ...head, clock: null };
   const s = Math.floor(ms / 1000);
   return {
