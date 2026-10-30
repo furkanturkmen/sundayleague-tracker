@@ -46,6 +46,8 @@ create index if not exists players_club_idx on players(club_id);
 alter table players add column if not exists display_name text;
 alter table players add column if not exists photo text;
 alter table players add column if not exists photo_version int not null default 0;
+-- Up to two other positions a player can fill, for the line-up suggestion and the squad lists.
+alter table players add column if not exists extra_positions text[] not null default '{}';
 -- Specific positions (LB, CDM, ST, ...) on top of the original four lines.
 do $$ begin
   if not exists (select 1 from pg_constraint where conname = 'players_position_v2') then

@@ -113,10 +113,18 @@ function fit(player: Position, slot: Position): number {
   return slot === "GK" || player === "GK" ? -1 : 0;
 }
 
+/** How well a player fits a slot: their main position counts in full, an extra one a step lower. */
+function playerFit(p: Pick<Player, "position"> & { extraPositions?: Position[] }, slot: Position): number {
+  return Math.max(fit(p.position, slot), ...(p.extraPositions ?? []).map((x) => fit(x, slot) - 1));
+}
+
 /** A first guess at the line-up: best-fitting players in each slot, the rest on the bench. */
-export function suggestLineup(formation: string, players: Pick<Player, "id" | "position">[]): { starters: (string | null)[]; bench: string[] } {
+export function suggestLineup(
+  formation: string,
+  players: (Pick<Player, "id" | "position"> & { extraPositions?: Position[] })[],
+): { starters: (string | null)[]; bench: string[] } {
   const slots = formationSlots(formation);
-  const pairs = slots.flatMap((s, i) => players.map((p, order) => ({ slot: i, id: p.id, score: fit(p.position, s.pos), order })));
+  const pairs = slots.flatMap((s, i) => players.map((p, order) => ({ slot: i, id: p.id, score: playerFit(p, s.pos), order })));
   // Best fit first; between equals, whoever comes first in the list (the match squad's order).
   pairs.sort((a, b) => b.score - a.score || a.order - b.order || a.slot - b.slot);
   const starters: (string | null)[] = slots.map(() => null);

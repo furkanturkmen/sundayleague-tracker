@@ -168,8 +168,8 @@ export const loadClubData = cache(async (slug: string): Promise<ClubData | undef
   const id = row.id;
 
   const [playerRows, matchRows, squadRows, goalRows, eventRows, momentRows, standingRows, rankingRows] = await Promise.all([
-    sql<{ id: string; name: string; number: number | null; position: Position; nickname: string | null; bio: string | null; active: boolean; display_name: string | null; has_photo: boolean; photo_version: number }[]>`
-      select id, name, number, position, nickname, bio, active, display_name, photo is not null as has_photo, photo_version
+    sql<{ id: string; name: string; number: number | null; position: Position; nickname: string | null; bio: string | null; active: boolean; display_name: string | null; extra_positions: Position[]; has_photo: boolean; photo_version: number }[]>`
+      select id, name, number, position, nickname, bio, active, display_name, extra_positions, photo is not null as has_photo, photo_version
       from players where club_id = ${id} order by number nulls last, name`,
     sql<{
       id: string;
@@ -217,9 +217,10 @@ export const loadClubData = cache(async (slug: string): Promise<ClubData | undef
   const goals = byMatch(goalRows);
   const events = byMatch(eventRows);
 
-  const players: Player[] = playerRows.map(({ display_name, has_photo, photo_version, ...p }) => ({
+  const players: Player[] = playerRows.map(({ display_name, extra_positions, has_photo, photo_version, ...p }) => ({
     ...p,
     displayName: display_name,
+    extraPositions: extra_positions ?? [],
     photo: photoUrl(row.slug, p.id, has_photo, photo_version),
   }));
   const matches: Match[] = matchRows.map((m) => {

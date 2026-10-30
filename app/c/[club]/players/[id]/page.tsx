@@ -84,6 +84,7 @@ export default async function PlayerPage({ params }: Props) {
           <div className="ph-role">
             <span className="ph-pill">{player.position}</span>
             {POSITION_NAMES[player.position]}
+            {player.extraPositions.length > 0 && <> · also plays {player.extraPositions.map((x) => POSITION_NAMES[x].toLowerCase()).join(" and ")}</>}
             {!player.active && <> · no longer active</>}
           </div>
         </div>

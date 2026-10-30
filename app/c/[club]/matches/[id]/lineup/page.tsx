@@ -35,7 +35,7 @@ export default async function LineupPage({ params }: { params: Promise<{ club: s
               {noPhotos} active {noPhotos === 1 ? "player has" : "players have"} no photo yet and {noPhotos === 1 ? "shows" : "show"} as a shirt;{" "}
               {admin ? (
                 <>
-                  add photos and short names under <Link href={`${st.base}/settings#squad`}>Settings → Squad</Link>.
+                  add photos and short names under <Link href={`${st.base}/settings/squad`}>Settings → Squad</Link>.
                 </>
               ) : (
                 "a club admin can add photos and short names."

@@ -323,6 +323,8 @@ export async function savePlayer(slug: string, _: FormState, f: FormData): Promi
   const bio = text(f, "bio", 300) || null;
   const displayName = text(f, "displayName", 16).toUpperCase() || null;
   const active = id ? f.get("active") === "on" : true;
+  // Up to two others, never the main one again.
+  const extra = [...new Set(f.getAll("extra").map(String))].filter((p): p is Position => POSITIONS.includes(p as Position) && p !== position).slice(0, 2);
   const photo = photoField(f, "photo");
   if ("error" in photo) return photo;
 
@@ -331,14 +333,14 @@ export async function savePlayer(slug: string, _: FormState, f: FormData): Promi
     if (!UUID.test(id)) return { error: "Unknown player." };
     await sql`
       update players set name = ${name}, number = ${number}, position = ${position}, nickname = ${nickname}, bio = ${bio}, active = ${active},
-        display_name = ${displayName}
+        display_name = ${displayName}, extra_positions = ${extra}
       where id = ${id} and club_id = ${club.id}`;
     if (photo.photo !== undefined)
       await sql`update players set photo = ${photo.photo}, photo_version = photo_version + 1 where id = ${id} and club_id = ${club.id}`;
   } else {
     await sql`
-      insert into players (club_id, name, number, position, nickname, bio, display_name, photo)
-      values (${club.id}, ${name}, ${number}, ${position}, ${nickname}, ${bio}, ${displayName}, ${photo.photo ?? null})`;
+      insert into players (club_id, name, number, position, nickname, bio, display_name, extra_positions, photo)
+      values (${club.id}, ${name}, ${number}, ${position}, ${nickname}, ${bio}, ${displayName}, ${extra}, ${photo.photo ?? null})`;
   }
   refresh(slug);
   return { ok: id ? `${name} updated.` : `${name} added to the squad.` };

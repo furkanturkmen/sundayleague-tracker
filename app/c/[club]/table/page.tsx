@@ -117,7 +117,7 @@ export default async function TablePage({ params, searchParams }: Props) {
               No table yet.{" "}
               {admin ? (
                 <>
-                  Connect your team to voetbal.nl in <Link href={`${st.base}/settings#voetbal`}>Settings</Link> to pull it in.
+                  Connect your team to voetbal.nl in <Link href={`${st.base}/settings/voetbal`}>Settings</Link> to pull it in.
                 </>
               ) : (
                 "It shows up once the club admin connects the team to voetbal.nl."

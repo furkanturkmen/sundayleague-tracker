@@ -98,7 +98,7 @@ export default async function HallsPage({ params, searchParams }: Props) {
       <PageHero lead="Fame &" accent="shame." meta={seasonLabel(season)}>
         <SeasonLinks href={(s) => `${st.base}/halls?season=${s}`} seasons={st.seasons} active={season}>
           {admin && (
-            <Link href={`${st.base}/settings#moments`} className="hx-manage">
+            <Link href={`${st.base}/settings/moments`} className="hx-manage">
               Add a moment
             </Link>
           )}

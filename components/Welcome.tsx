@@ -227,13 +227,13 @@ function DoneStep({ slug, club, url, nextMatch }: Props) {
       <h2 className="onb-next-title">Next up</h2>
       <ul className="onb-next">
         <li>
-          <Link href={`${base}/settings#squad`}>
+          <Link href={`${base}/settings/squad`}>
             <strong>Shirt numbers, positions and photos</strong>
             <span>They make the line-up graphic look like the real thing.</span>
           </Link>
         </li>
         <li>
-          <Link href={`${base}/settings#coach-login`}>
+          <Link href={`${base}/settings/access#coach-login`}>
             <strong>Give the coach a login</strong>
             <span>A separate password that can only set line-ups.</span>
           </Link>

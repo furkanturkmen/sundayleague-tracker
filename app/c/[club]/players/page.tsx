@@ -64,7 +64,7 @@ export default async function PlayersPage({ params, searchParams }: Props) {
       >
         <SeasonLinks href={(s) => `${st.base}/players?season=${s}`} seasons={st.seasons} active={season}>
           {admin && (
-            <Link href={`${st.base}/settings#squad`} className="hx-manage">
+            <Link href={`${st.base}/settings/squad`} className="hx-manage">
               Manage squad
             </Link>
           )}

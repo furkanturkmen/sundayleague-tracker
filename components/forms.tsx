@@ -5,8 +5,7 @@ import { useFormStatus } from "react-dom";
 import { Crest } from "@/components/ui";
 import type { FormState } from "@/lib/actions";
 import { inkFor } from "@/lib/color";
-import { graphicName } from "@/lib/lineup";
-import { POSITION_LINES, POSITION_NAMES, type Club, type Player } from "@/lib/types";
+import type { Club, Player } from "@/lib/types";
 
 type Action = (state: FormState, f: FormData) => Promise<FormState>;
 
@@ -67,7 +66,7 @@ export async function shrinkImage(file: File, maxPx: number): Promise<string> {
 }
 
 /** File picker that sends a shrunk data URL in `name`, "remove" to clear the saved image, or nothing to keep it. */
-function ImageField({
+export function ImageField({
   name,
   label,
   hint,
@@ -148,8 +147,8 @@ function LogoField({ initial, onChange }: { initial: string | null; onChange: (p
 }
 
 // Big enough for a 160px card at 2x and the round bench photos.
-const PHOTO_PX = 480;
-const PHOTO_HINT = "For the line-up graphic. A cut-out on a transparent background (PNG) looks best; a normal photo works too.";
+export const PHOTO_PX = 480;
+export const PHOTO_HINT = "For the line-up graphic. A cut-out on a transparent background (PNG) looks best; a normal photo works too.";
 
 export function initials(name: string) {
   const all = name.replace(/[^A-Za-z0-9 ]/g, " ").split(/\s+/).filter(Boolean);
@@ -416,7 +415,6 @@ export function AddLineupPlayer({ action, name, matches }: { action: Action; nam
   );
 }
 
-// ---------- players ----------
 
 function useResetOnOk(state: FormState) {
   const ref = useRef<HTMLFormElement>(null);
@@ -424,117 +422,6 @@ function useResetOnOk(state: FormState) {
     if (state.ok) ref.current?.reset();
   }, [state]);
   return ref;
-}
-
-function PositionSelect({ defaultValue }: { defaultValue: string }) {
-  return (
-    <select name="position" defaultValue={defaultValue}>
-      {POSITION_LINES.map((line) => (
-        <optgroup key={line.group} label={line.label}>
-          {line.positions.map((p) => (
-            <option key={p} value={p}>
-              {p === line.group && p !== "GK" ? `${p} · any` : `${p} · ${POSITION_NAMES[p]}`}
-            </option>
-          ))}
-        </optgroup>
-      ))}
-    </select>
-  );
-}
-
-export function AddPlayerForm({ action }: { action: Action }) {
-  const [state, formAction] = useActionState(action, {});
-  const ref = useResetOnOk(state);
-  return (
-    <form action={formAction} className="form" ref={ref}>
-      <div className="form-row form-row-player">
-        <label>
-          Name
-          <input name="name" required maxLength={60} />
-        </label>
-        <label>
-          No.
-          <input name="number" type="number" min={0} max={999} />
-        </label>
-        <label>
-          Position
-          <PositionSelect defaultValue="MID" />
-        </label>
-        <label>
-          Nickname
-          <input name="nickname" maxLength={40} />
-        </label>
-      </div>
-      <Notice state={state} />
-      <Submit>Add player</Submit>
-    </form>
-  );
-}
-
-export function EditPlayerRow({ player, squad, save, remove }: { player: Player; squad: Player[]; save: Action; remove: Action }) {
-  const [open, setOpen] = useState(false);
-  const [state, formAction] = useActionState(save, {});
-  const [delState, deleteAction] = useActionState(remove, {});
-
-  return (
-    <li className="squad-row">
-      <div className="squad-row-head">
-        <span className="muted num" style={{ width: 28 }}>{player.number ?? "–"}</span>
-        <strong style={{ opacity: player.active ? 1 : 0.5 }}>{player.name}</strong>
-        <span className="chip">{player.position}</span>
-        {!player.active && <span className="chip">Inactive</span>}
-        <button type="button" className="btn-link" onClick={() => setOpen(!open)} aria-expanded={open}>
-          {open ? "Close" : "Edit"}
-        </button>
-      </div>
-      {open && (
-        <div className="squad-row-body">
-          <form action={formAction} className="form">
-            <input type="hidden" name="id" value={player.id} />
-            <div className="form-row form-row-player">
-              <label>
-                Name
-                <input name="name" required maxLength={60} defaultValue={player.name} />
-              </label>
-              <label>
-                No.
-                <input name="number" type="number" min={0} max={999} defaultValue={player.number ?? ""} />
-              </label>
-              <label>
-                Position
-                <PositionSelect defaultValue={player.position} />
-              </label>
-              <label>
-                Nickname
-                <input name="nickname" maxLength={40} defaultValue={player.nickname ?? ""} />
-              </label>
-            </div>
-            <label>
-              Bio
-              <textarea name="bio" maxLength={300} rows={2} defaultValue={player.bio ?? ""} />
-            </label>
-            <label>
-              Name on graphics <span className="muted">(optional, e.g. BURAK C)</span>
-              <input name="displayName" maxLength={16} defaultValue={player.displayName ?? ""} placeholder={graphicName(player, squad)} style={{ textTransform: "uppercase" }} />
-            </label>
-            <ImageField name="photo" label={<>Photo <span className="muted">(optional)</span></>} hint={PHOTO_HINT} initial={player.photo} maxPx={PHOTO_PX} />
-            <label className="check">
-              <input type="checkbox" name="active" defaultChecked={player.active} /> Active (shows up when logging matches)
-            </label>
-            <Notice state={state} />
-            <div className="form-actions">
-              <Submit>Save</Submit>
-            </div>
-          </form>
-          <form action={deleteAction} className="form-inline">
-            <input type="hidden" name="id" value={player.id} />
-            <Submit className="btn-link danger" pending="Removing…">Delete player</Submit>
-            <Notice state={delState} />
-          </form>
-        </div>
-      )}
-    </li>
-  );
 }
 
 // ---------- moments ----------

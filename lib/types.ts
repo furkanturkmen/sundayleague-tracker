@@ -96,6 +96,8 @@ export interface Player {
   active: boolean;
   /** Name on the graphics, e.g. "BURAK C". Null means work one out from the name. */
   displayName: string | null;
+  /** Up to two other positions they can play, besides the main one. */
+  extraPositions: Position[];
   /** URL of the uploaded photo, or null. */
   photo: string | null;
 }

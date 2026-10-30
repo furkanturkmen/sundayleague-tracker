@@ -41,7 +41,7 @@ export function GetStarted({ st, admin, what }: { st: Stats; admin: boolean; wha
     <div className="card get-started">
       <p>{what === "players" ? "No players in the squad yet." : "No matches played yet."}</p>
       {admin ? (
-        <Link className="btn" href={what === "players" ? `${st.base}/settings#squad` : `${st.base}/matches/new`}>
+        <Link className="btn" href={what === "players" ? `${st.base}/settings/squad` : `${st.base}/matches/new`}>
           {what === "players" ? "Add players" : "Log a match"}
         </Link>
       ) : (
