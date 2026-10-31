@@ -21,7 +21,7 @@ export async function verifyPassword(password: string, stored: string): Promise<
   return timingSafeEqual(key, expected);
 }
 
-function secret(): string {
+export function serverSecret(): string {
   const s = process.env.SESSION_SECRET ?? process.env.DATABASE_URL ?? process.env.POSTGRES_URL;
   if (!s) throw new Error("SESSION_SECRET is not set.");
   return s;
@@ -35,7 +35,7 @@ const cookieName = (clubId: string, role: Role) => `${role === "admin" ? "club" 
 /** The signature covers the password hash, so changing the password signs everyone out. */
 function sign(clubId: string, passwordHash: string, expires: number, role: Role): string {
   const data = `${role === "admin" ? "" : `${role}.`}${clubId}.${expires}.${passwordHash}`;
-  return createHmac("sha256", secret()).update(data).digest("base64url");
+  return createHmac("sha256", serverSecret()).update(data).digest("base64url");
 }
 
 export async function startSession(clubId: string, passwordHash: string, role: Role = "admin"): Promise<void> {

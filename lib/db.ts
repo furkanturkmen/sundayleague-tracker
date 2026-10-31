@@ -23,6 +23,9 @@ alter table clubs add column if not exists voetbal_team_name text;
 alter table clubs add column if not exists voetbal_league text;
 alter table clubs add column if not exists voetbal_synced_at timestamptz;
 alter table clubs add column if not exists voetbal_error text;
+-- The club's own voetbal.nl login; the password is encrypted (lib/voetbal.ts). Without one the site's account is used.
+alter table clubs add column if not exists voetbal_email text;
+alter table clubs add column if not exists voetbal_password text;
 -- Head coach, shown on the line-up graphic. The photo is a PNG data URL like the logo.
 alter table clubs add column if not exists coach_name text;
 alter table clubs add column if not exists coach_photo text;

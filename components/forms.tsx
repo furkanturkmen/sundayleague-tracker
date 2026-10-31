@@ -231,31 +231,6 @@ export function DeleteClubForm({ action, name }: { action: Action; name: string 
 
 // ---------- voetbal.nl ----------
 
-export function VoetbalForm({ save, sync, teamId, configured }: { save: Action; sync: () => Promise<FormState>; teamId: string | null; configured: boolean }) {
-  const [state, formAction] = useActionState(save, {});
-  const [syncState, syncAction] = useActionState(sync, {});
-  return (
-    <div className="form">
-      <form action={formAction} className="form">
-        <label>
-          voetbal.nl team link
-          <input name="team" defaultValue={teamId ? `https://www.voetbal.nl/team/${teamId}/overzicht` : ""} placeholder="https://www.voetbal.nl/team/T1628317720/overzicht" />
-        </label>
-        <Notice state={state} />
-        <div className="form-actions">
-          <Submit pending="Saving and syncing…">{teamId ? "Save" : "Connect"}</Submit>
-        </div>
-      </form>
-      {teamId && configured && (
-        <form action={syncAction} className="form-inline">
-          <Submit className="btn btn-secondary" pending="Syncing… this takes about half a minute">Sync now</Submit>
-          <Notice state={syncState} />
-        </form>
-      )}
-    </div>
-  );
-}
-
 export function AddLineupPlayer({ action, name, matches }: { action: Action; name: string; matches: number }) {
   const [state, formAction] = useActionState(action, {});
   if (state.ok) return null;

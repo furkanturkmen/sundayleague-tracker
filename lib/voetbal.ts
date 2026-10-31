@@ -1,10 +1,13 @@
 import "server-only";
+import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:crypto";
+import { serverSecret } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { parseLineups, parseSchedule, parseStandings, parseTeamHeader, sameName, type ScheduleRow, type StandingRow } from "@/lib/voetbal-parse";
 
 // Fixtures, results, line-ups and the league table come from voetbal.nl, which needs a login to show team pages.
-// The login (VOETBALNL_EMAIL / VOETBALNL_PASSWORD) belongs to whoever runs this site: use a separate account,
-// not a personal one. Scorers, cards and the halls stay manual; a sync never touches them.
+// Each club can connect its own voetbal.nl login in Settings; the password is stored encrypted. Clubs without one
+// use the site's account (VOETBALNL_EMAIL / VOETBALNL_PASSWORD), which also reads teams for the sign-up screen.
+// Scorers, cards and the halls stay manual; a sync never touches them.
 
 const BASE = "https://www.voetbal.nl";
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0 Safari/537.36";
@@ -18,16 +21,96 @@ export function voetbalConfigured(): boolean {
   return Boolean(process.env.VOETBALNL_EMAIL && process.env.VOETBALNL_PASSWORD);
 }
 
+// ---------- accounts ----------
+
+type Account = { key: string; email: string; password: string };
+
+function siteAccount(): Account | null {
+  const email = process.env.VOETBALNL_EMAIL;
+  const password = process.env.VOETBALNL_PASSWORD;
+  return email && password ? { key: "site", email, password } : null;
+}
+
+// AES-256-GCM with a key derived from the session secret: "v1.<iv>.<tag>.<ciphertext>", each part base64url.
+const sealKey = () => createHash("sha256").update(`voetbal-login:${serverSecret()}`).digest();
+
+function seal(text: string): string {
+  const iv = randomBytes(12);
+  const cipher = createCipheriv("aes-256-gcm", sealKey(), iv);
+  const body = Buffer.concat([cipher.update(text, "utf8"), cipher.final()]);
+  return ["v1", ...[iv, cipher.getAuthTag(), body].map((b) => b.toString("base64url"))].join(".");
+}
+
+function unseal(sealed: string): string {
+  const [v, iv, tag, body] = sealed.split(".");
+  if (v !== "v1" || !iv || !tag || !body) throw new Error("Unknown format.");
+  const decipher = createDecipheriv("aes-256-gcm", sealKey(), Buffer.from(iv, "base64url"));
+  decipher.setAuthTag(Buffer.from(tag, "base64url"));
+  return Buffer.concat([decipher.update(Buffer.from(body, "base64url")), decipher.final()]).toString("utf8");
+}
+
+/** The club's own login, or the site's when it has none. Null when neither exists. */
+async function clubAccount(clubId: string): Promise<Account | null> {
+  const sql = await db();
+  const [row] = await sql<{ email: string | null; password: string | null }[]>`
+    select voetbal_email as email, voetbal_password as password from clubs where id = ${clubId}`;
+  if (!row?.email || !row.password) return siteAccount();
+  try {
+    return { key: `club:${clubId}`, email: row.email, password: unseal(row.password) };
+  } catch {
+    throw new Error("The saved voetbal.nl password can't be read any more. Enter it again in Settings.");
+  }
+}
+
+/** Whether a sync can run for this club: it has its own login, or the site has one. */
+export async function canSync(clubId: string): Promise<boolean> {
+  return Boolean(await voetbalLoginEmail(clubId)) || voetbalConfigured();
+}
+
+/** The email of the club's own voetbal.nl login, for its settings page only. */
+export async function voetbalLoginEmail(clubId: string): Promise<string | null> {
+  const sql = await db();
+  const [row] = await sql<{ email: string | null }[]>`select voetbal_email as email from clubs where id = ${clubId}`;
+  return row?.email ?? null;
+}
+
+/** Logs in with the given details and saves them for the club once voetbal.nl accepts them. */
+export async function connectLogin(clubId: string, email: string, password: string): Promise<void> {
+  const account = { key: `check:${clubId}`, email, password };
+  try {
+    await login(account);
+    // Keep the fresh session, so the next sync doesn't log in again.
+    jars.set(`club:${clubId}`, jarFor(account));
+  } finally {
+    jars.delete(account.key);
+  }
+  const sql = await db();
+  await sql`update clubs set voetbal_email = ${email}, voetbal_password = ${seal(password)}, voetbal_error = null where id = ${clubId}`;
+}
+
+export async function removeLogin(clubId: string): Promise<void> {
+  jars.delete(`club:${clubId}`);
+  const sql = await db();
+  await sql`update clubs set voetbal_email = null, voetbal_password = null where id = ${clubId}`;
+}
+
 // ---------- session ----------
 
-// The session cookie lasts about two weeks, so it's kept between syncs instead of logging in every time.
-const globalForVoetbal = globalThis as unknown as { voetbalCookies?: Map<string, string> };
-const cookies = (globalForVoetbal.voetbalCookies ??= new Map());
+// One cookie jar per account. The session cookie lasts about two weeks, so it's kept between syncs instead of
+// logging in every time.
+const globalForVoetbal = globalThis as unknown as { voetbalJars?: Map<string, Map<string, string>> };
+const jars = (globalForVoetbal.voetbalJars ??= new Map());
+
+function jarFor(account: Account): Map<string, string> {
+  let jar = jars.get(account.key);
+  if (!jar) jars.set(account.key, (jar = new Map()));
+  return jar;
+}
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 /** fetch with our cookie jar, following redirects by hand so cookies set along the way are kept. */
-async function request(path: string, init: RequestInit = {}): Promise<{ url: string; status: number; text: string }> {
+async function request(cookies: Map<string, string>, path: string, init: RequestInit = {}): Promise<{ url: string; status: number; text: string }> {
   let url = new URL(path, BASE).toString();
   let method = init.method ?? "GET";
   let body = init.body;
@@ -65,29 +148,34 @@ async function request(path: string, init: RequestInit = {}): Promise<{ url: str
 
 const loggedOut = (r: { url: string }) => new URL(r.url).pathname.startsWith("/inloggen");
 
-async function login(): Promise<void> {
-  const email = process.env.VOETBALNL_EMAIL;
-  const password = process.env.VOETBALNL_PASSWORD;
-  if (!email || !password) throw new Error("The voetbal.nl login isn't set up on the server (VOETBALNL_EMAIL and VOETBALNL_PASSWORD).");
+async function login(account: Account): Promise<void> {
+  const { email, password } = account;
+  const cookies = jarFor(account);
   cookies.clear();
-  const page = await request("/inloggen");
+  const page = await request(cookies, "/inloggen");
   const buildId = page.text.match(/name="form_build_id"\s+value="([^"]+)"/)?.[1];
   if (!buildId) throw new Error("Couldn't find the voetbal.nl login form. The site may have changed.");
   await sleep(DELAY_MS);
-  const res = await request("/inloggen", {
+  const res = await request(cookies, "/inloggen", {
     method: "POST",
     body: new URLSearchParams({ email, password, form_build_id: buildId, form_id: "login_form", op: "Inloggen" }).toString(),
   });
-  if (loggedOut(res) || res.text.includes('name="password"')) throw new Error("voetbal.nl didn't accept the login. Check the email and password on the server.");
+  if (loggedOut(res) || res.text.includes('name="password"'))
+    throw new Error(
+      account.key === "site"
+        ? "voetbal.nl didn't accept the site's login. Check VOETBALNL_EMAIL and VOETBALNL_PASSWORD on the server."
+        : "voetbal.nl didn't accept that email and password.",
+    );
 }
 
 /** A logged-in page. Logs in (again) when voetbal.nl sends us to the login page. */
-async function page(path: string): Promise<string> {
-  let res = await request(path);
+async function readPage(account: Account, path: string): Promise<string> {
+  const cookies = jarFor(account);
+  let res = await request(cookies, path);
   if (loggedOut(res)) {
-    await login();
+    await login(account);
     await sleep(DELAY_MS);
-    res = await request(path);
+    res = await request(cookies, path);
     if (loggedOut(res)) throw new Error("Still logged out of voetbal.nl after logging in.");
   }
   if (res.status === 404) throw new Error(`voetbal.nl has no page at ${path}. Check the team link.`);
@@ -117,6 +205,9 @@ export async function syncClub(clubId: string): Promise<SyncSummary> {
     const [club] = await sql<{ voetbal_team_id: string | null }[]>`select voetbal_team_id from clubs where id = ${clubId}`;
     const teamId = club?.voetbal_team_id;
     if (!teamId) throw new Error("Add the voetbal.nl team link first.");
+    const account = await clubAccount(clubId);
+    if (!account) throw new Error("Connect a voetbal.nl login in Settings first.");
+    const page = (path: string) => readPage(account, path);
     const base = `/team/${teamId}`;
 
     // Competition first, then the cup. Results come after fixtures so a played match ends up with its score.
@@ -262,6 +353,9 @@ export interface TeamPreview {
 
 /** What a team link points at, for the "is this you?" step when a club signs up. Reads two pages; writes nothing. */
 export async function previewTeam(teamId: string): Promise<TeamPreview> {
+  const account = siteAccount();
+  if (!account) throw new Error("This site can't read voetbal.nl right now.");
+  const page = (path: string) => readPage(account, path);
   const base = `/team/${teamId}`;
   const tableHtml = await page(`${base}/stand/competitie`);
   const header = parseTeamHeader(tableHtml);

@@ -1,7 +1,8 @@
 import { db } from "@/lib/db";
-import { syncClub, voetbalConfigured } from "@/lib/voetbal";
+import { syncClub } from "@/lib/voetbal";
 
-// Called on a schedule (vercel.json, or curl from any always-on machine) to sync every club linked to voetbal.nl.
+// Called on a schedule (vercel.json, or curl from any always-on machine) to sync every club linked to voetbal.nl,
+// each with its own login or the site's. A club without either just gets an error on its settings page.
 // Needs "Authorization: Bearer <CRON_SECRET>"; Vercel Cron sends that header by itself when CRON_SECRET is set.
 
 /** Clubs synced more recently than this are skipped, so a second trigger close to the first does nothing. */
@@ -12,7 +13,6 @@ export const maxDuration = 300;
 export async function GET(req: Request) {
   const secret = process.env.CRON_SECRET;
   if (!secret || req.headers.get("authorization") !== `Bearer ${secret}`) return new Response("Unauthorized", { status: 401 });
-  if (!voetbalConfigured()) return Response.json({ error: "VOETBALNL_EMAIL and VOETBALNL_PASSWORD aren't set." }, { status: 500 });
 
   const sql = await db();
   const clubs = await sql<{ id: string; slug: string }[]>`

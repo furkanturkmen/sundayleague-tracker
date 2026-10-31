@@ -407,9 +407,6 @@ fieldset p { margin: 0; }
 .squad-list { list-style: none; margin: 16px 0 0; padding: 0; border-top: 1px solid var(--line); }
 .squad-row { border-bottom: 1px solid var(--line); padding: 10px 0; }
 .squad-row-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.sync-status { display: flex; flex-wrap: wrap; gap: 8px 32px; margin: 0 0 14px; font-size: 0.9rem; }
-.sync-status dt { color: var(--muted); font-size: 0.78rem; font-weight: 600; }
-.sync-status dd { margin: 0; font-weight: 600; }
 .section-sub { margin: 24px 0 4px; }
 .squad-row-head .btn-link:last-child { margin-left: auto; }
 .squad-row-body { padding: 12px 0 4px; }
@@ -1747,4 +1744,39 @@ h2 > .ranking-accent { font-family: inherit; letter-spacing: inherit; line-heigh
 @media (prefers-reduced-motion: reduce) {
   .ce .ce-swatch, .ce-card, .ce-trim span { transition: none; }
   .ce .ce-swatch:active { transform: none; }
+}
+
+/* ---------- settings: voetbal.nl ---------- */
+/* the connected team as a status block, then the link and the club's own login */
+.ve { display: grid; gap: 56px; }
+.ve-status { display: grid; gap: 8px; justify-items: start; }
+.ve-kicker { margin: 0; font-size: 14px; font-weight: 500; color: var(--hx-ink-3); }
+.ve-status h2 { margin: 0; font-family: inherit; font-size: clamp(32px, 4vw, 48px); font-weight: 600; letter-spacing: -0.045em; line-height: 1.05; color: #fff; }
+.ve-league { margin: 0; max-width: 60ch; font-size: 17px; color: var(--hx-ink-2); }
+.ve-facts { display: grid; grid-template-columns: repeat(3, minmax(0, auto)); gap: 12px 48px; margin: 20px 0 8px; }
+.ve-facts dt { font-size: 13px; color: var(--hx-ink-3); }
+.ve-facts dd { margin: 2px 0 0; font-size: 16px; font-weight: 500; color: #fff; }
+.ve-status > .notice { margin-top: 8px; }
+.ve-sync { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; margin-top: 16px; }
+.ve-sync .notice { margin: 0; }
+.ve .ce-group + .ce-group, .ve-status + .ce-group { padding-top: 48px; border-top: 1px solid rgb(255 255 255 / 0.12); }
+.ve-h { margin: 0; font-size: clamp(24px, 2.6vw, 32px); font-weight: 600; letter-spacing: -0.04em; line-height: 1.1; color: #fff; }
+.ve-block { display: grid; gap: 16px; }
+.ve-block > .notice { margin: 0; }
+.ve-form { display: grid; gap: 14px; }
+.ve-form .ce-note { margin: -4px 0 0; }
+.ve-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.ve-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; }
+.ve-actions form { display: contents; }
+.ve-disconnect { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; font-size: 14px; color: var(--hx-ink-3); }
+.ve-account { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; margin: 0; font-size: 16px; color: var(--hx-ink-2); }
+.ve-account p { margin: 0; }
+.ve-account b { color: #fff; font-weight: 600; overflow-wrap: anywhere; }
+.ve-dot { display: inline-block; width: 8px; height: 8px; margin-right: 10px; border-radius: 50%; background: var(--win); vertical-align: 1px; }
+.ve-dot.shared { background: var(--hx-ink-3); }
+.ve-dot.off { background: var(--shame); }
+
+@media (max-width: 760px) {
+  .ve-facts { grid-template-columns: minmax(0, 1fr); }
+  .ve-pair { grid-template-columns: minmax(0, 1fr); }
 }

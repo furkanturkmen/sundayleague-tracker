@@ -7,7 +7,7 @@ import { getClubAuth } from "@/lib/club";
 import { db } from "@/lib/db";
 import { FORMATIONS, formationSlots, MAX_BENCH } from "@/lib/lineup";
 import { POSITIONS, type Position } from "@/lib/types";
-import { linkLineup, previewTeam, syncClub, voetbalConfigured, type TeamPreview } from "@/lib/voetbal";
+import { canSync, connectLogin, linkLineup, previewTeam, removeLogin, syncClub, voetbalConfigured, type TeamPreview } from "@/lib/voetbal";
 import { parseTeamId, sameName } from "@/lib/voetbal-parse";
 
 export interface FormState {
@@ -251,11 +251,34 @@ export async function saveVoetbalLink(slug: string, _: FormState, f: FormData): 
     return { ok: "Disconnected from voetbal.nl. Matches already synced stay." };
   }
   await sql`update clubs set voetbal_team_id = ${teamId}, voetbal_error = null where id = ${club.id}`;
-  if (!voetbalConfigured()) {
+  if (!(await canSync(club.id))) {
     refresh(slug);
-    return { ok: "Team saved. Syncing needs the voetbal.nl login on the server first." };
+    return { ok: "Team saved. Connect a voetbal.nl login below to sync it." };
   }
   return syncVoetbal(slug);
+}
+
+/** The club's own voetbal.nl login: checked by logging in, then stored with the password encrypted. */
+export async function saveVoetbalLogin(slug: string, _: FormState, f: FormData): Promise<FormState> {
+  const club = await requireAdmin(slug);
+  const email = text(f, "email", 200);
+  const password = String(f.get("password") ?? "").slice(0, 200);
+  if (!/^\S+@\S+\.\S+$/.test(email)) return { error: "Enter the email address of the voetbal.nl account." };
+  if (!password) return { error: "Enter the password of the voetbal.nl account." };
+  try {
+    await connectLogin(club.id, email, password);
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Couldn't reach voetbal.nl. Try again in a minute." };
+  }
+  refresh(slug);
+  return { ok: `Connected as ${email}. Syncs now use this account.` };
+}
+
+export async function removeVoetbalLogin(slug: string): Promise<FormState> {
+  const club = await requireAdmin(slug);
+  await removeLogin(club.id);
+  refresh(slug);
+  return { ok: voetbalConfigured() ? "Login removed. Syncs use the site's shared account again." : "Login removed. Syncing stops until you connect one." };
 }
 
 export async function syncVoetbal(slug: string): Promise<FormState> {
