@@ -3,12 +3,17 @@
 import { useActionState, useEffect, useState } from "react";
 import { Notice, Submit } from "@/components/forms";
 import type { FormState } from "@/lib/actions";
-import { FORMATIONS, formationSlots, MAX_BENCH, suggestLineup } from "@/lib/lineup";
+import { FORMATIONS, formationSlots, MAX_BENCH, playerFit, suggestLineup } from "@/lib/lineup";
 import type { Player } from "@/lib/types";
 
 type Action = (state: FormState, f: FormData) => Promise<FormState>;
 
-const label = (p: Player) => `${p.number != null ? `${p.number}. ` : ""}${p.name} · ${p.position}`;
+const label = (p: Player) => `${p.number != null ? `${p.number}. ` : ""}${p.name} · ${[p.position, ...p.extraPositions].join("/")}`;
+const option = (p: Player) => (
+  <option key={p.id} value={p.id}>
+    {label(p)}
+  </option>
+);
 
 /** Formation, a player per spot and the bench, with the graphic next to it. The preview redraws on every change. */
 export function LineupForm({
@@ -91,9 +96,18 @@ export function LineupForm({
                 <span className="chip">{s.pos}</span>
                 <select name={`slot${i}`} value={starters[i] ?? ""} onChange={(e) => pick(i, e.target.value)} aria-label={`${s.pos}, spot ${i + 1}`}>
                   <option value="">Empty</option>
-                  {options.map((p) => (
-                    <option key={p.id} value={p.id}>{label(p)}</option>
-                  ))}
+                  {/* Whoever plays this spot or one next to it, extra positions included, before everyone else. */}
+                  {[
+                    { label: `Plays ${s.pos}`, players: options.filter((p) => playerFit(p, s.pos) >= 2) },
+                    { label: "Others", players: options.filter((p) => playerFit(p, s.pos) < 2) },
+                  ].map(
+                    (g) =>
+                      g.players.length > 0 && (
+                        <optgroup key={g.label} label={g.label}>
+                          {g.players.map(option)}
+                        </optgroup>
+                      ),
+                  )}
                 </select>
               </li>
             ))}

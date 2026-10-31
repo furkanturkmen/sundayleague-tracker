@@ -17,6 +17,8 @@ const nextConfig: NextConfig = {
     return [
       { source: "/c/:club/analysis", destination: "/c/:club/stats", permanent: true },
       { source: "/c/:club/records", destination: "/c/:club/stats/records", permanent: true },
+      // Browsers and crawlers that ask for /favicon.ico without reading the page get the SVG icon.
+      { source: "/favicon.ico", destination: "/icon.svg", permanent: true },
     ];
   },
 };

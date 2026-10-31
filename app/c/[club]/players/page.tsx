@@ -41,6 +41,7 @@ export default async function PlayersPage({ params, searchParams }: Props) {
       position: s.player.position,
       positionName: POSITION_NAMES[s.player.position],
       group: positionGroup(s.player.position),
+      also: [...new Set(s.player.extraPositions.map(positionGroup))].filter((g) => g !== positionGroup(s.player.position)),
       apps: s.apps,
       goals: s.goals,
       assists: s.assists,

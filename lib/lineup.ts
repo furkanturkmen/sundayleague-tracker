@@ -114,7 +114,7 @@ function fit(player: Position, slot: Position): number {
 }
 
 /** How well a player fits a slot: their main position counts in full, an extra one a step lower. */
-function playerFit(p: Pick<Player, "position"> & { extraPositions?: Position[] }, slot: Position): number {
+export function playerFit(p: Pick<Player, "position"> & { extraPositions?: Position[] }, slot: Position): number {
   return Math.max(fit(p.position, slot), ...(p.extraPositions ?? []).map((x) => fit(x, slot) - 1));
 }
 

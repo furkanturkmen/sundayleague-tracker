@@ -15,6 +15,8 @@ export interface SquadRow {
   position: string;
   positionName: string;
   group: PositionGroup;
+  /** Other lines the player can also play in, from their extra positions. */
+  also: PositionGroup[];
   apps: number;
   goals: number;
   assists: number;
@@ -55,7 +57,9 @@ export function SquadBoard({ rows, kit, initialSort }: { rows: SquadRow[]; kit: 
   const [view, setView] = useState<"squad" | "stats">(startSort ? "stats" : "squad");
   const [line, setLine] = useState<PositionGroup | "ALL">("ALL");
   const [sort, setSort] = useState<SortKey>(startSort ?? "apps");
-  const visible = rows.filter((r) => line === "ALL" || r.group === line);
+  // A line's filter also shows the players who can cover it, marked as such.
+  const inLine = (r: SquadRow, g: PositionGroup) => r.group === g || r.also.includes(g);
+  const visible = rows.filter((r) => line === "ALL" || inLine(r, line));
   const col = COLUMNS.find((c) => c.key === sort)!;
   const sorted = [...visible].sort((a, b) => col.value(b) - col.value(a) || b.apps - a.apps || a.name.localeCompare(b.name));
   const layout = reduce ? false : true;
@@ -72,7 +76,7 @@ export function SquadBoard({ rows, kit, initialSort }: { rows: SquadRow[]; kit: 
         </div>
         <div className="sq-filter" role="group" aria-label="Line">
           {[{ group: "ALL" as const, label: "All" }, ...LINES].map((l) => {
-            const n = l.group === "ALL" ? rows.length : rows.filter((r) => r.group === l.group).length;
+            const n = l.group === "ALL" ? rows.length : rows.filter((r) => inLine(r, l.group)).length;
             return (
               <button key={l.group} type="button" aria-pressed={line === l.group} className={line === l.group ? "on" : undefined} onClick={() => setLine(l.group)} disabled={n === 0}>
                 {l.label}
@@ -86,7 +90,7 @@ export function SquadBoard({ rows, kit, initialSort }: { rows: SquadRow[]; kit: 
       {view === "squad" ? (
         <LayoutGroup>
           {LINES.filter((l) => line === "ALL" || l.group === line).map((l) => {
-            const players = visible.filter((r) => r.group === l.group);
+            const players = visible.filter((r) => r.group === l.group || line === l.group);
             if (!players.length) return null;
             return (
               <motion.section key={l.group} layout={layout} className="sq-line" aria-label={l.plural} transition={{ duration: 0.5, ease: EASE }}>
@@ -109,6 +113,7 @@ export function SquadBoard({ rows, kit, initialSort }: { rows: SquadRow[]; kit: 
                           <span className="sq-name">{r.name}</span>
                           <span className="sq-pos" title={r.positionName}>
                             {r.position}
+                            {r.group !== l.group && <> · also {l.label}</>}
                             {r.nickname && <> · “{r.nickname}”</>}
                           </span>
                           <span className="sq-mini">
