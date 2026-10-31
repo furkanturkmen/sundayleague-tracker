@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
-import { AdminPassword, CoachLogin, DangerZone } from "@/components/AccessEditor";
+import { AdminPassword, DangerZone, RoleLogin, Visibility } from "@/components/AccessEditor";
 import { Page } from "@/components/home/Page";
-import { changePassword, deleteClub, setCoachPassword } from "@/lib/actions";
-import { hasCoachLogin } from "@/lib/club";
+import { changePassword, deleteClub, setCoachPassword, setSquadPassword, setVisibility } from "@/lib/actions";
+import { hasCoachLogin, hasSquadLogin } from "@/lib/club";
 import { loadSettings, SettingsHero } from "../shared";
 
 export const metadata: Metadata = { title: "Access · Settings" };
@@ -12,11 +12,12 @@ export default async function AccessSettingsPage({ params }: { params: Promise<{
   const { club: slug } = await params;
   const { data, st } = await loadSettings(slug, "access");
   const { club } = data;
-  const coachOn = await hasCoachLogin(slug);
+  const [coachOn, squadOn] = await Promise.all([hasCoachLogin(slug), hasSquadLogin(slug)]);
   const h = await headers();
   const host = h.get("x-forwarded-host") ?? h.get("host") ?? "";
   const proto = h.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
-  const loginUrl = `${proto}://${host}/c/${slug}/login`;
+  const clubUrl = `${proto}://${host}/c/${slug}`;
+  const loginUrl = `${clubUrl}/login`;
 
   return (
     <Page accent={club.accent}>
@@ -28,10 +29,17 @@ export default async function AccessSettingsPage({ params }: { params: Promise<{
               Who can do what
             </h2>
             <ul className="ac-roles">
-              <li>
-                <b>Anyone with the link</b>
-                <span>Sees results, players, stats and the halls.</span>
-              </li>
+              {club.private ? (
+                <li>
+                  <b>Squad</b>
+                  <span>Sees results, players, stats and the halls with the squad password. {squadOn ? "" : "No squad password yet."}</span>
+                </li>
+              ) : (
+                <li>
+                  <b>Anyone with the link</b>
+                  <span>Sees results, players, stats and the halls.</span>
+                </li>
+              )}
               <li>
                 <b>Coach</b>
                 <span>Sets line-ups and makes the graphics. {coachOn ? "Login is on." : "Off until you set a coach password."}</span>
@@ -41,6 +49,19 @@ export default async function AccessSettingsPage({ params }: { params: Promise<{
                 <span>Changes everything: squad, results, settings. That&apos;s you.</span>
               </li>
             </ul>
+          </section>
+
+          <section className="ce-group" aria-labelledby="ac-see">
+            <h3 id="ac-see" className="ve-h">
+              Who can see the club
+            </h3>
+            <Visibility action={setVisibility.bind(null, slug)} isPrivate={club.private} />
+            {club.private && (
+              <>
+                <p className="ce-note">The squad password only opens the club to look around. Send it to the team with the link.</p>
+                <RoleLogin role="squad" action={setSquadPassword.bind(null, slug)} isSet={squadOn} loginUrl={clubUrl} />
+              </>
+            )}
           </section>
 
           <section className="ce-group" aria-labelledby="ac-admin">
@@ -56,7 +77,7 @@ export default async function AccessSettingsPage({ params }: { params: Promise<{
               Coach login
             </h3>
             <p className="ce-note">A second password that only lets the coach set line-ups, not change the squad, results or settings.</p>
-            <CoachLogin action={setCoachPassword.bind(null, slug)} isSet={coachOn} loginUrl={loginUrl} />
+            <RoleLogin role="coach" action={setCoachPassword.bind(null, slug)} isSet={coachOn} loginUrl={loginUrl} />
           </section>
 
           <DangerZone action={deleteClub.bind(null, slug)} name={club.name} />

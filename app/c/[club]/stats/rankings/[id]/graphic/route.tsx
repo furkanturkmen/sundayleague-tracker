@@ -1,5 +1,5 @@
 import { ImageResponse } from "next/og";
-import { getGraphicImages, loadClubData } from "@/lib/club";
+import { getGraphicImages, loadClubData, viewAccess } from "@/lib/club";
 import { Backdrop, display, drawable, graphicFonts, palette, pngHeaders, POST } from "@/lib/graphics";
 import { graphicName } from "@/lib/lineup";
 import { getRanking } from "@/lib/rankings";
@@ -14,6 +14,7 @@ const GAP = 16;
 
 export async function GET(req: Request, ctx: RouteContext<"/c/[club]/stats/rankings/[id]/graphic">) {
   const { club: slug, id } = await ctx.params;
+  if (!(await viewAccess(slug)).ok) return new Response("Not found", { status: 404 });
   const data = await loadClubData(slug);
   const ranking = data && getRanking(data, analyse(data), id);
   if (!data || !ranking) return new Response("Not found", { status: 404 });

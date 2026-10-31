@@ -32,6 +32,9 @@ alter table clubs add column if not exists coach_photo text;
 alter table clubs add column if not exists coach_photo_version int not null default 0;
 -- Optional second password that only lets the coach set line-ups.
 alter table clubs add column if not exists coach_password_hash text;
+-- A private club needs a password to view: the squad password (view only), or the admin or coach one.
+alter table clubs add column if not exists private boolean not null default false;
+alter table clubs add column if not exists squad_password_hash text;
 
 create table if not exists players (
   id uuid primary key default gen_random_uuid(),

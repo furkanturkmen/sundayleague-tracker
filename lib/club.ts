@@ -1,5 +1,5 @@
 import "server-only";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { connection } from "next/server";
 import { cache } from "react";
 import { hasSession } from "@/lib/auth";
@@ -28,6 +28,8 @@ interface ClubRow {
   coach_photo_version: number;
   password_hash: string;
   coach_password_hash: string | null;
+  private: boolean;
+  squad_password_hash: string | null;
 }
 
 const logoUrl = (slug: string, hasLogo: boolean, version: number) => (hasLogo ? `/c/${slug}/logo?v=${version}` : null);
@@ -55,40 +57,8 @@ function toClub(r: ClubRow): Club {
         }
       : null,
     coach: { name: r.coach_name, photo: photoUrl(r.slug, "coach", r.has_coach_photo, r.coach_photo_version) },
+    private: r.private,
   };
-}
-
-export interface ClubSummary {
-  slug: string;
-  name: string;
-  shortName: string;
-  accent: string;
-  gold: string;
-  logo: string | null;
-  players: number;
-  matches: number;
-}
-
-export async function listClubs(): Promise<ClubSummary[]> {
-  await connection();
-  const sql = await db();
-  const rows = await sql<{ slug: string; name: string; short_name: string; accent: string; gold: string; has_logo: boolean; logo_version: number; players: number; matches: number }[]>`
-    select c.slug, c.name, c.short_name, c.accent, c.gold, c.logo is not null as has_logo, c.logo_version,
-      (select count(*)::int from players p where p.club_id = c.id) as players,
-      (select count(*)::int from matches m where m.club_id = c.id and m.goals_against is not null) as matches
-    from clubs c
-    order by lower(c.name)
-  `;
-  return rows.map((r) => ({
-    slug: r.slug,
-    name: r.name,
-    shortName: r.short_name,
-    accent: r.accent,
-    gold: r.gold,
-    logo: logoUrl(r.slug, r.has_logo, r.logo_version),
-    players: r.players,
-    matches: r.matches,
-  }));
 }
 
 // The logo itself stays out of page loads; /c/<club>/logo serves it.
@@ -98,7 +68,8 @@ const clubRow = cache(async (slug: string): Promise<ClubRow | undefined> => {
   const [row] = await sql<ClubRow[]>`
     select id, slug, name, short_name, tagline, accent, gold, founded, logo is not null as has_logo, logo_version,
       voetbal_team_id, voetbal_team_name, voetbal_league, voetbal_synced_at, voetbal_error,
-      coach_name, coach_photo is not null as has_coach_photo, coach_photo_version, password_hash, coach_password_hash
+      coach_name, coach_photo is not null as has_coach_photo, coach_photo_version, password_hash, coach_password_hash,
+      private, squad_password_hash
     from clubs where slug = ${slug}`;
   return row;
 });
@@ -137,9 +108,13 @@ export async function getGraphicImages(slug: string): Promise<{ logo: string | n
   return { logo: club.logo, coach: club.coach_photo, players: new Map(rows.map((r) => [r.id, r.photo])) };
 }
 
-export async function getClubAuth(slug: string): Promise<{ club: Club; passwordHash: string; coachPasswordHash: string | null } | undefined> {
+export async function getClubAuth(
+  slug: string,
+): Promise<{ club: Club; passwordHash: string; coachPasswordHash: string | null; squadPasswordHash: string | null } | undefined> {
   const row = await clubRow(slug);
-  return row && { club: toClub(row), passwordHash: row.password_hash, coachPasswordHash: row.coach_password_hash };
+  return (
+    row && { club: toClub(row), passwordHash: row.password_hash, coachPasswordHash: row.coach_password_hash, squadPasswordHash: row.squad_password_hash }
+  );
 }
 
 /** Whether the current visitor is signed in as an admin of this club. */
@@ -157,6 +132,26 @@ export const isCoach = cache(async (slug: string): Promise<boolean> => {
 /** Whether this club has a coach password set, for Settings. */
 export async function hasCoachLogin(slug: string): Promise<boolean> {
   return Boolean((await clubRow(slug))?.coach_password_hash);
+}
+
+/** Whether the current visitor is signed in with the squad password, which only opens a private club. */
+export const isSquad = cache(async (slug: string): Promise<boolean> => {
+  const row = await clubRow(slug);
+  return row?.squad_password_hash ? hasSession(row.id, row.squad_password_hash, "squad") : false;
+});
+
+/** Whether this club has a squad password set, for Settings. */
+export async function hasSquadLogin(slug: string): Promise<boolean> {
+  return Boolean((await clubRow(slug))?.squad_password_hash);
+}
+
+/** For the image routes: whether the current visitor may see this club, and whether it's private. */
+export async function viewAccess(slug: string): Promise<{ ok: boolean; private: boolean }> {
+  const row = await clubRow(slug);
+  if (!row) return { ok: false, private: false };
+  if (!row.private) return { ok: true, private: false };
+  const [admin, coach, squad] = await Promise.all([isAdmin(slug), isCoach(slug), isSquad(slug)]);
+  return { ok: admin || coach || squad, private: true };
 }
 
 const isoDate = (d: Date | string) => (typeof d === "string" ? d.slice(0, 10) : d.toISOString().slice(0, 10));
@@ -291,9 +286,22 @@ export const loadClubData = cache(async (slug: string): Promise<ClubData | undef
 });
 
 /** Everything a club page needs. 404s when the club doesn't exist. */
-export const loadClub = cache(async (slug: string): Promise<{ data: ClubData; st: Stats; admin: boolean; coach: boolean }> => {
+type ClubContext = { data: ClubData; st: Stats; admin: boolean; coach: boolean; squad: boolean; canView: boolean };
+
+/**
+ * The club and who's looking, without the private-club gate: only for the layout and the sign-in page, which must
+ * show something to a visitor who isn't let in yet.
+ */
+export const loadClubOpen = cache(async (slug: string): Promise<ClubContext> => {
   const data = await loadClubData(slug);
   if (!data) notFound();
-  const [admin, coach] = await Promise.all([isAdmin(slug), isCoach(slug)]);
-  return { data, st: analyse(data), admin, coach };
+  const [admin, coach, squad] = await Promise.all([isAdmin(slug), isCoach(slug), isSquad(slug)]);
+  return { data, st: analyse(data), admin, coach, squad, canView: !data.club.private || admin || coach || squad };
+});
+
+/** The club for a page. A private club sends visitors without one of its passwords to sign in. */
+export const loadClub = cache(async (slug: string): Promise<ClubContext> => {
+  const ctx = await loadClubOpen(slug);
+  if (!ctx.canView) redirect(`/c/${slug}/login`);
+  return ctx;
 });

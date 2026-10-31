@@ -1,5 +1,5 @@
 import { ImageResponse } from "next/og";
-import { getGraphicImages, loadClubData } from "@/lib/club";
+import { getGraphicImages, loadClubData, viewAccess } from "@/lib/club";
 import { Backdrop, display, drawable, dutchDate, graphicFonts, NameTag, palette, pngHeaders, Portrait, POST } from "@/lib/graphics";
 import { FORMATIONS, formationSlots, graphicName, MAX_BENCH, matchLineup, shortTeamName } from "@/lib/lineup";
 import type { Player } from "@/lib/types";
@@ -29,6 +29,7 @@ function previewLineup(params: URLSearchParams, byId: Map<string, Player>) {
 
 export async function GET(req: Request, ctx: RouteContext<"/c/[club]/matches/[id]/graphics/lineup">) {
   const { club: slug, id } = await ctx.params;
+  if (!(await viewAccess(slug)).ok) return new Response("Not found", { status: 404 });
   const data = await loadClubData(slug);
   const match = data?.matches.find((m) => m.id === id);
   if (!data || !match) return new Response("Not found", { status: 404 });

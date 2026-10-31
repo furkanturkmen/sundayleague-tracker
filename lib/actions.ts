@@ -202,6 +202,37 @@ export async function setCoachPassword(slug: string, _: FormState, f: FormData):
   return { ok: "Coach password saved. The coach signs in with it at the bottom of any club page." };
 }
 
+/** Public (anyone with the link) or private (one of the club's passwords needed to see anything). */
+export async function setVisibility(slug: string, _: FormState, f: FormData): Promise<FormState> {
+  const club = await requireAdmin(slug);
+  const priv = f.get("visibility") === "private";
+  const sql = await db();
+  await sql`update clubs set private = ${priv} where id = ${club.id}`;
+  refresh(slug);
+  revalidatePath("/");
+  return { ok: priv ? "The club is private now." : "The club is public now. Anyone with the link can see it." };
+}
+
+/** Sets or replaces the squad password (view only, for a private club), or removes it with remove=1. */
+export async function setSquadPassword(slug: string, _: FormState, f: FormData): Promise<FormState> {
+  const club = await requireAdmin(slug);
+  const sql = await db();
+  if (f.get("remove")) {
+    await sql`update clubs set squad_password_hash = null where id = ${club.id}`;
+    refresh(slug);
+    return { ok: "Squad password removed. Only the admin and coach can open the club while it's private." };
+  }
+  const password = String(f.get("password") ?? "");
+  if (password.length < 6) return { error: "The squad password needs at least 6 characters." };
+  if (password !== f.get("confirm")) return { error: "The passwords don't match." };
+  const auth = await getClubAuth(slug);
+  if (auth && (await verifyPassword(password, auth.passwordHash))) return { error: "Use a different password from the admin one." };
+  if (auth?.coachPasswordHash && (await verifyPassword(password, auth.coachPasswordHash))) return { error: "Use a different password from the coach one." };
+  await sql`update clubs set squad_password_hash = ${await hashPassword(password)} where id = ${club.id}`;
+  refresh(slug);
+  return { ok: "Squad password saved. Share it with the team along with the link." };
+}
+
 export async function deleteClub(slug: string, _: FormState, f: FormData): Promise<FormState> {
   const club = await requireAdmin(slug);
   if (text(f, "confirm", 60) !== club.name) return { error: `Type "${club.name}" exactly to confirm.` };
@@ -212,7 +243,7 @@ export async function deleteClub(slug: string, _: FormState, f: FormData): Promi
   redirect("/");
 }
 
-/** One sign-in form for both passwords: the admin one first, then the coach one. */
+/** One sign-in form for every password: the admin one first, then the coach one, then the squad one. */
 export async function login(slug: string, _: FormState, f: FormData): Promise<FormState> {
   const auth = await getClubAuth(slug);
   if (!auth) return { error: "Club not found." };
@@ -220,6 +251,8 @@ export async function login(slug: string, _: FormState, f: FormData): Promise<Fo
   if (await verifyPassword(password, auth.passwordHash)) await startSession(auth.club.id, auth.passwordHash);
   else if (auth.coachPasswordHash && (await verifyPassword(password, auth.coachPasswordHash)))
     await startSession(auth.club.id, auth.coachPasswordHash, "coach");
+  else if (auth.squadPasswordHash && (await verifyPassword(password, auth.squadPasswordHash)))
+    await startSession(auth.club.id, auth.squadPasswordHash, "squad");
   else return { error: "Wrong password." };
   refresh(slug);
   const next = text(f, "next", 200);
@@ -231,6 +264,7 @@ export async function logout(slug: string): Promise<void> {
   if (auth) {
     await endSession(auth.club.id);
     await endSession(auth.club.id, "coach");
+    await endSession(auth.club.id, "squad");
   }
   refresh(slug);
   redirect(`/c/${slug}`);
@@ -600,4 +634,13 @@ export async function deleteRanking(slug: string, f: FormData): Promise<void> {
   }
   refresh(slug);
   redirect(`/c/${slug}/stats/rankings`);
+}
+
+/** Which of the clubs this browser remembers still exist, so "Your clubs" drops deleted ones. Lists nothing else. */
+export async function existingClubs(slugs: string[]): Promise<string[]> {
+  const wanted = slugs.filter((s) => typeof s === "string" && /^[a-z0-9-]{1,40}$/.test(s)).slice(0, 8);
+  if (!wanted.length) return [];
+  const sql = await db();
+  const rows = await sql<{ slug: string }[]>`select slug from clubs where slug in ${sql(wanted)}`;
+  return rows.map((r) => r.slug);
 }

@@ -27,10 +27,13 @@ export function serverSecret(): string {
   return s;
 }
 
-/** Admins can change anything; the coach only sets line-ups. Each has its own password and cookie. */
-export type Role = "admin" | "coach";
+/**
+ * Admins can change anything; the coach only sets line-ups; the squad can only view a private club. Each has its own
+ * password and cookie.
+ */
+export type Role = "admin" | "coach" | "squad";
 
-const cookieName = (clubId: string, role: Role) => `${role === "admin" ? "club" : "coach"}_${clubId.replace(/-/g, "")}`;
+const cookieName = (clubId: string, role: Role) => `${role === "admin" ? "club" : role}_${clubId.replace(/-/g, "")}`;
 
 /** The signature covers the password hash, so changing the password signs everyone out. */
 function sign(clubId: string, passwordHash: string, expires: number, role: Role): string {

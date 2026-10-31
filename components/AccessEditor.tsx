@@ -46,11 +46,11 @@ export function AdminPassword({ action }: { action: Action }) {
 }
 
 /** The link the coach signs in at, with a button that copies it. */
-function ShareLink({ url }: { url: string }) {
+function ShareLink({ url, label }: { url: string; label: string }) {
   const [copied, setCopied] = useState(false);
   return (
     <div className="ac-share">
-      <span>Sign-in link for the coach</span>
+      <span>{label}</span>
       <div>
         <code>{url}</code>
         <button
@@ -73,7 +73,14 @@ function ShareLink({ url }: { url: string }) {
   );
 }
 
-export function CoachLogin({ action, isSet, loginUrl }: { action: Action; isSet: boolean; loginUrl: string }) {
+/** Words for the two extra passwords: the coach (line-ups) and the squad (viewing a private club). */
+const ROLE_TEXT = {
+  coach: { on: "Coach login is on.", off: "No coach login yet.", field: "coach password", turnOn: "Turn on coach login", share: "Sign-in link for the coach" },
+  squad: { on: "Squad password is set.", off: "No squad password yet.", field: "squad password", turnOn: "Set squad password", share: "Link to send the squad" },
+};
+
+export function RoleLogin({ role, action, isSet, loginUrl }: { role: keyof typeof ROLE_TEXT; action: Action; isSet: boolean; loginUrl: string }) {
+  const t = ROLE_TEXT[role];
   const [state, formAction] = useActionState(action, {});
   const ref = useClearOnOk(state);
   const [editing, setEditing] = useState(false);
@@ -87,7 +94,7 @@ export function CoachLogin({ action, isSet, loginUrl }: { action: Action; isSet:
       <div className="ve-account">
         <p>
           <span className={`ve-dot${isSet ? "" : " shared"}`} aria-hidden="true" />
-          {isSet ? "Coach login is on." : "No coach login yet."}
+          {isSet ? t.on : t.off}
         </p>
         {isSet && !editing && (
           <div className="ve-actions">
@@ -103,13 +110,13 @@ export function CoachLogin({ action, isSet, loginUrl }: { action: Action; isSet:
           </div>
         )}
       </div>
-      {isSet && <ShareLink url={loginUrl} />}
+      {isSet && <ShareLink url={loginUrl} label={t.share} />}
 
       {showForm && (
         <form action={formAction} className="form ve-form" ref={ref}>
           <div className="ve-pair">
             <label>
-              {isSet ? "New coach password" : "Coach password"}
+              {isSet ? `New ${t.field}` : t.field.charAt(0).toUpperCase() + t.field.slice(1)}
               <input type="password" name="password" required minLength={6} autoComplete="new-password" />
             </label>
             <label>
@@ -119,7 +126,7 @@ export function CoachLogin({ action, isSet, loginUrl }: { action: Action; isSet:
           </div>
           <div className="ve-actions">
             <Submit className="hx-btn hx-btn-primary" pending="Saving…">
-              {isSet ? "Save password" : "Turn on coach login"}
+              {isSet ? "Save password" : t.turnOn}
             </Submit>
             {isSet && (
               <button type="button" className="btn-link" onClick={() => setEditing(false)}>
@@ -131,6 +138,40 @@ export function CoachLogin({ action, isSet, loginUrl }: { action: Action; isSet:
       )}
       <Notice state={state} />
     </div>
+  );
+}
+
+/** Public or private, saved as soon as it is picked. */
+export function Visibility({ action, isPrivate }: { action: Action; isPrivate: boolean }) {
+  const [state, formAction] = useActionState(action, {});
+  const form = useRef<HTMLFormElement>(null);
+  return (
+    <form action={formAction} ref={form} className="ac-vis">
+      <fieldset>
+        <legend className="sr-only">Who can see the club</legend>
+        {(
+          [
+            ["public", "Public", "Anyone with the link sees results, players, stats and the halls."],
+            ["private", "Private", "Only people with a password: the squad password, or the coach or admin one."],
+          ] as const
+        ).map(([value, label, note]) => (
+          <label key={value} className="ac-vis-option">
+            <input
+              type="radio"
+              name="visibility"
+              value={value}
+              defaultChecked={(value === "private") === isPrivate}
+              onChange={() => form.current?.requestSubmit()}
+            />
+            <span>
+              <b>{label}</b>
+              <small>{note}</small>
+            </span>
+          </label>
+        ))}
+      </fieldset>
+      <Notice state={state} />
+    </form>
   );
 }
 
@@ -147,7 +188,7 @@ export function DangerZone({ action, name }: { action: Action; name: string }) {
           <h3 id="ac-danger" className="ve-h">
             Delete the club
           </h3>
-          <p className="ce-note">Removes {name}, its players, every result and both passwords. This can&apos;t be undone.</p>
+          <p className="ce-note">Removes {name}, its players, every result and every password. This can&apos;t be undone.</p>
         </div>
         {!open && (
           <button type="button" className="ac-danger-open" onClick={() => setOpen(true)}>

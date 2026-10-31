@@ -1,5 +1,5 @@
 import { ImageResponse } from "next/og";
-import { getGraphicImages, loadClubData } from "@/lib/club";
+import { getGraphicImages, loadClubData, viewAccess } from "@/lib/club";
 import {
   Backdrop,
   competitionLabel,
@@ -23,6 +23,7 @@ import { analyse } from "@/lib/stats";
 
 export async function GET(req: Request, ctx: RouteContext<"/c/[club]/matches/[id]/graphics/result">) {
   const { club: slug, id } = await ctx.params;
+  if (!(await viewAccess(slug)).ok) return new Response("Not found", { status: 404 });
   const data = await loadClubData(slug);
   const m = data && analyse(data).getPlayed(id);
   if (!data || !m) return new Response("No result for this match yet", { status: 404 });

@@ -56,6 +56,8 @@ export interface Club {
   logo: string | null;
   voetbal: VoetbalLink | null;
   coach: { name: string | null; photo: string | null };
+  /** Only people with one of the club's passwords can see it. */
+  private: boolean;
 }
 
 /** The club's link to a voetbal.nl team, set in Settings. */

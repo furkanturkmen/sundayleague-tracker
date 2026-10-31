@@ -151,7 +151,7 @@ export function LoginForm({ action, next }: { action: Action; next?: string }) {
     <form action={formAction} className="form">
       <input type="hidden" name="next" value={next ?? ""} />
       <label>
-        Admin password
+        Password
         <input type="password" name="password" required autoFocus autoComplete="current-password" />
       </label>
       <Notice state={state} />

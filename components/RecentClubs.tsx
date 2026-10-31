@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Crest } from "@/components/ui";
+import { existingClubs } from "@/lib/actions";
 
 const KEY = "recent-clubs";
 
@@ -37,13 +38,20 @@ export function RememberClub({ club }: { club: Recent }) {
   return null;
 }
 
-export function RecentClubs({ existing }: { existing: string[] }) {
-  const [list, setList] = useState<Recent[]>([]);
-  useEffect(() => setList(read().filter((c) => existing.includes(c.slug))), [existing]);
-  if (!list.length) return null;
+/** The clubs this browser has opened, newest first. The site lists no clubs itself, so this is the way back in. */
+export function RecentClubs() {
+  const [list, setList] = useState<Recent[] | null>(null);
+  useEffect(() => {
+    const saved = read();
+    if (!saved.length) return setList([]);
+    existingClubs(saved.map((c) => c.slug))
+      .then((ok) => setList(saved.filter((c) => ok.includes(c.slug))))
+      .catch(() => setList(saved));
+  }, []);
+  if (!list?.length) return null;
   return (
     <section className="section">
-      <h2>Jump back in</h2>
+      <h2>Your clubs</h2>
       <div className="club-grid">
         {list.map((c) => (
           <Link key={c.slug} href={`/c/${c.slug}`} className="club-card" style={{ ["--accent" as string]: c.accent, ["--gold" as string]: c.gold }}>

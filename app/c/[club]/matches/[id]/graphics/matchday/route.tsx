@@ -1,5 +1,5 @@
 import { ImageResponse } from "next/og";
-import { getGraphicImages, loadClubData } from "@/lib/club";
+import { getGraphicImages, loadClubData, viewAccess } from "@/lib/club";
 import { Backdrop, competitionLabel, display, drawable, dutchDate, graphicFonts, Kicker, opponentLogo, palette, pngHeaders, POST, TeamBlock } from "@/lib/graphics";
 import { shortTeamName } from "@/lib/lineup";
 
@@ -7,6 +7,7 @@ import { shortTeamName } from "@/lib/lineup";
 
 export async function GET(req: Request, ctx: RouteContext<"/c/[club]/matches/[id]/graphics/matchday">) {
   const { club: slug, id } = await ctx.params;
+  if (!(await viewAccess(slug)).ok) return new Response("Not found", { status: 404 });
   const data = await loadClubData(slug);
   const match = data?.matches.find((m) => m.id === id);
   if (!data || !match) return new Response("Not found", { status: 404 });
