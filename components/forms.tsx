@@ -2,10 +2,8 @@
 
 import { useActionState, useEffect, useRef, useState, type ReactNode } from "react";
 import { useFormStatus } from "react-dom";
-import { Crest } from "@/components/ui";
 import type { FormState } from "@/lib/actions";
-import { inkFor } from "@/lib/color";
-import type { Club, Player } from "@/lib/types";
+import type { Player } from "@/lib/types";
 
 type Action = (state: FormState, f: FormData) => Promise<FormState>;
 
@@ -133,19 +131,6 @@ export function ImageField({
   );
 }
 
-function LogoField({ initial, onChange }: { initial: string | null; onChange: (preview: string | null) => void }) {
-  return (
-    <ImageField
-      name="logo"
-      label={<>Logo <span className="muted">(optional, PNG, JPG or SVG)</span></>}
-      hint="Without one, the badge is a shield in your colours with the short name on it."
-      initial={initial}
-      maxPx={256}
-      onChange={onChange}
-    />
-  );
-}
-
 // Big enough for a 160px card at 2x and the round bench photos.
 export const PHOTO_PX = 480;
 export const PHOTO_HINT = "For the line-up graphic. A cut-out on a transparent background (PNG) looks best; a normal photo works too.";
@@ -160,132 +145,6 @@ export function initials(name: string) {
 }
 
 // ---------- club ----------
-
-export function ClubForm({ action, club }: { action: Action; club?: Club }) {
-  const [state, formAction] = useActionState(action, {});
-  const [name, setName] = useState(club?.name ?? "");
-  const [short, setShort] = useState(club?.shortName ?? "");
-  const [shortTouched, setShortTouched] = useState(Boolean(club));
-  const [slug, setSlug] = useState(club?.slug ?? "");
-  const [slugTouched, setSlugTouched] = useState(Boolean(club));
-  const [accent, setAccent] = useState(club?.accent ?? "#17663f");
-  const [gold, setGold] = useState(club?.gold ?? "#b07d0c");
-  const [logo, setLogo] = useState(club?.logo ?? null);
-  const creating = !club;
-
-  return (
-    <form action={formAction} className="form">
-      <div className="club-preview" style={{ ["--accent" as string]: accent, ["--gold" as string]: gold, ["--accent-ink" as string]: inkFor(accent) }}>
-        <Crest short={short || "?"} logo={logo} size={56} />
-        <div>
-          <strong>{name || "Your club"}</strong>
-          {creating && <div className="small muted">/c/{slug || "your-club"}</div>}
-        </div>
-      </div>
-
-      <label>
-        Club name
-        <input
-          name="name"
-          required
-          maxLength={60}
-          value={name}
-          placeholder="e.g. Sunday Rovers"
-          onChange={(e) => {
-            setName(e.target.value);
-            if (!shortTouched) setShort(initials(e.target.value));
-            if (!slugTouched) setSlug(slugify(e.target.value));
-          }}
-        />
-      </label>
-      <div className="form-row">
-        <label>
-          Short name <span className="muted">(badge)</span>
-          <input
-            name="shortName"
-            required
-            maxLength={5}
-            value={short}
-            onChange={(e) => {
-              setShortTouched(true);
-              setShort(e.target.value.toUpperCase());
-            }}
-          />
-        </label>
-        <label>
-          Founded
-          <input name="founded" type="number" min={1850} max={2100} defaultValue={club?.founded ?? ""} placeholder="2025" />
-        </label>
-      </div>
-      {creating && (
-        <label>
-          Web address
-          <div className="input-prefix">
-            <span>/c/</span>
-            <input
-              name="slug"
-              required
-              maxLength={40}
-              pattern="[a-z0-9]+(-[a-z0-9]+)*"
-              value={slug}
-              onChange={(e) => {
-                setSlugTouched(true);
-                setSlug(e.target.value.toLowerCase());
-              }}
-            />
-          </div>
-        </label>
-      )}
-      <label>
-        Tagline
-        <input name="tagline" maxLength={120} defaultValue={club?.tagline ?? ""} placeholder="Sunday league. Every goal, every card, every excuse." />
-      </label>
-      <div className="form-row">
-        <label>
-          Main colour
-          <input type="color" name="accent" value={accent} onChange={(e) => setAccent(e.target.value)} />
-        </label>
-        <label>
-          Trim colour
-          <input type="color" name="gold" value={gold} onChange={(e) => setGold(e.target.value)} />
-        </label>
-      </div>
-      <LogoField initial={club?.logo ?? null} onChange={setLogo} />
-
-      {club && (
-        <fieldset>
-          <legend>Head coach</legend>
-          <p className="small muted">Shown on the line-up graphic. Leave the name empty to leave the coach off.</p>
-          <label>
-            Name
-            <input name="coach" maxLength={40} defaultValue={club.coach.name ?? ""} placeholder="e.g. Atakan" />
-          </label>
-          <ImageField name="coachPhoto" label="Photo" hint={PHOTO_HINT} initial={club.coach.photo} maxPx={PHOTO_PX} />
-        </fieldset>
-      )}
-
-      {creating && (
-        <fieldset>
-          <legend>Admin password</legend>
-          <p className="small muted">Anyone can view the club. Whoever has this password can add players and results, so share it only with whoever runs the stats.</p>
-          <div className="form-row">
-            <label>
-              Password
-              <input type="password" name="password" required minLength={6} autoComplete="new-password" />
-            </label>
-            <label>
-              Confirm
-              <input type="password" name="confirm" required minLength={6} autoComplete="new-password" />
-            </label>
-          </div>
-        </fieldset>
-      )}
-
-      <Notice state={state} />
-      <Submit>{creating ? "Create club" : "Save settings"}</Submit>
-    </form>
-  );
-}
 
 export function PasswordForm({ action }: { action: Action }) {
   const [state, formAction] = useActionState(action, {});
