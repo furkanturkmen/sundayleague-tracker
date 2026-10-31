@@ -410,7 +410,6 @@ fieldset p { margin: 0; }
 .section-sub { margin: 24px 0 4px; }
 .squad-row-head .btn-link:last-child { margin-left: auto; }
 .squad-row-body { padding: 12px 0 4px; }
-.danger-zone { border-color: color-mix(in srgb, var(--shame) 40%, var(--line)); }
 .get-started { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
 .get-started p { margin: 0; }
 
@@ -1302,7 +1301,6 @@ h2 > .ranking-accent { font-family: inherit; letter-spacing: inherit; line-heigh
 .hx-form-page > .card + .card { margin-top: 72px; padding-top: 48px; border-top: 1px solid rgb(255 255 255 / 0.12); }
 .hx-form-page .card > h2:first-child { font-size: clamp(28px, 3vw, 40px); letter-spacing: -0.045em; }
 .hx-form-page .card > h2 .small { font-size: 15px; font-weight: 400; }
-.hx-form-page .danger-zone h2 { color: var(--hx-L); }
 
 /* ---- matches ---- */
 .mx-fixtures { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--hx-line); }
@@ -1759,7 +1757,7 @@ h2 > .ranking-accent { font-family: inherit; letter-spacing: inherit; line-heigh
 .ve-status > .notice { margin-top: 8px; }
 .ve-sync { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; margin-top: 16px; }
 .ve-sync .notice { margin: 0; }
-.ve .ce-group + .ce-group, .ve-status + .ce-group { padding-top: 48px; border-top: 1px solid rgb(255 255 255 / 0.12); }
+.ve > * + :not(.ac-danger) { padding-top: 48px; border-top: 1px solid rgb(255 255 255 / 0.12); }
 .ve-h { margin: 0; font-size: clamp(24px, 2.6vw, 32px); font-weight: 600; letter-spacing: -0.04em; line-height: 1.1; color: #fff; }
 .ve-block { display: grid; gap: 16px; }
 .ve-block > .notice { margin: 0; }
@@ -1779,4 +1777,34 @@ h2 > .ranking-accent { font-family: inherit; letter-spacing: inherit; line-heigh
 @media (max-width: 760px) {
   .ve-facts { grid-template-columns: minmax(0, 1fr); }
   .ve-pair { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ---------- settings: access ---------- */
+/* who can do what, the two passwords, and deleting the club set apart in red */
+.ac-roles { list-style: none; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 20px 0 0; padding: 0; }
+.ac-roles li { display: grid; align-content: start; gap: 6px; padding: 18px 20px; border-radius: 10px; background: rgb(255 255 255 / 0.04); }
+.ac-roles b { font-size: 17px; font-weight: 600; letter-spacing: -0.02em; color: #fff; }
+.ac-roles span { font-size: 14px; line-height: 1.5; color: var(--hx-ink-2); }
+.ac-share { display: grid; gap: 6px; }
+.ac-share > span { font-size: 14px; font-weight: 500; color: var(--hx-ink-2); }
+.ac-share div { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px; padding: 12px 16px; border-radius: 8px; background: rgb(255 255 255 / 0.05); }
+.ac-share code { flex: 1; min-width: 0; font-family: var(--font-grotesk), var(--font-body), sans-serif; font-size: 15px; color: #fff; overflow-wrap: anywhere; user-select: all; }
+.ac-danger { display: grid; gap: 20px; margin-top: 24px; padding: 28px; border-radius: 12px; border: 1px solid color-mix(in srgb, var(--shame) 45%, transparent); background: color-mix(in srgb, var(--shame) 6%, transparent); }
+.ac-danger-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px 32px; }
+.ac-danger-head > div { display: grid; gap: 10px; }
+.ac-danger .ve-h { color: var(--shame); }
+.ac-danger .ce-note { margin: 0; color: var(--hx-ink-2); }
+.ac-danger-open, .ac-delete { height: 48px; padding: 0 22px; border: 1px solid var(--shame); border-radius: 4px; background: none; color: var(--shame); font: inherit; font-size: 16px; font-weight: 500; cursor: pointer; transition: background-color 200ms ease, color 200ms ease, opacity 200ms ease; }
+.ac-danger-open:hover { background: color-mix(in srgb, var(--shame) 14%, transparent); }
+.ac-delete { background: var(--shame); color: #fff; }
+.ac-delete:disabled { opacity: 0.35; cursor: not-allowed; }
+.ac-danger-open:focus-visible, .ac-delete:focus-visible { outline: 2px solid var(--shame); outline-offset: 3px; }
+.ac-danger label b { color: #fff; }
+
+@media (max-width: 760px) {
+  .ac-roles { grid-template-columns: minmax(0, 1fr); }
+  .ac-danger { padding: 20px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ac-danger-open, .ac-delete { transition: none; }
 }

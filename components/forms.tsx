@@ -146,60 +146,6 @@ export function initials(name: string) {
 
 // ---------- club ----------
 
-export function PasswordForm({ action }: { action: Action }) {
-  const [state, formAction] = useActionState(action, {});
-  const ref = useResetOnOk(state);
-  return (
-    <form action={formAction} className="form" ref={ref}>
-      <label>
-        Current password
-        <input type="password" name="current" required autoComplete="current-password" />
-      </label>
-      <div className="form-row">
-        <label>
-          New password
-          <input type="password" name="password" required minLength={6} autoComplete="new-password" />
-        </label>
-        <label>
-          Confirm
-          <input type="password" name="confirm" required minLength={6} autoComplete="new-password" />
-        </label>
-      </div>
-      <Notice state={state} />
-      <Submit>Change password</Submit>
-    </form>
-  );
-}
-
-export function CoachPasswordForm({ action, isSet }: { action: Action; isSet: boolean }) {
-  const [state, formAction] = useActionState(action, {});
-  const ref = useResetOnOk(state);
-  return (
-    <form action={formAction} className="form" ref={ref}>
-      <p className="small" style={{ margin: 0 }}>{isSet ? "A coach password is set." : "No coach password yet."}</p>
-      <div className="form-row">
-        <label>
-          {isSet ? "New coach password" : "Coach password"}
-          <input type="password" name="password" minLength={6} autoComplete="new-password" />
-        </label>
-        <label>
-          Confirm
-          <input type="password" name="confirm" minLength={6} autoComplete="new-password" />
-        </label>
-      </div>
-      <Notice state={state} />
-      <div className="form-actions">
-        <Submit>{isSet ? "Change coach password" : "Set coach password"}</Submit>
-        {isSet && (
-          <Submit className="btn-link danger" pending="Removing…" name="remove" value="1">
-            Remove coach login
-          </Submit>
-        )}
-      </div>
-    </form>
-  );
-}
-
 export function LoginForm({ action, next }: { action: Action; next?: string }) {
   const [state, formAction] = useActionState(action, {});
   return (
@@ -211,20 +157,6 @@ export function LoginForm({ action, next }: { action: Action; next?: string }) {
       </label>
       <Notice state={state} />
       <Submit pending="Signing in…">Sign in</Submit>
-    </form>
-  );
-}
-
-export function DeleteClubForm({ action, name }: { action: Action; name: string }) {
-  const [state, formAction] = useActionState(action, {});
-  return (
-    <form action={formAction} className="form">
-      <label>
-        Type <strong>{name}</strong> to delete the club, its players and every result. This can&apos;t be undone.
-        <input name="confirm" autoComplete="off" />
-      </label>
-      <Notice state={state} />
-      <Submit className="btn btn-danger" pending="Deleting…">Delete club</Submit>
     </form>
   );
 }

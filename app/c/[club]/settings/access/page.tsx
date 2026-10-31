@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { CoachPasswordForm, DeleteClubForm, PasswordForm } from "@/components/forms";
+import { headers } from "next/headers";
+import { AdminPassword, CoachLogin, DangerZone } from "@/components/AccessEditor";
 import { Page } from "@/components/home/Page";
 import { changePassword, deleteClub, setCoachPassword } from "@/lib/actions";
 import { hasCoachLogin } from "@/lib/club";
@@ -11,25 +12,55 @@ export default async function AccessSettingsPage({ params }: { params: Promise<{
   const { club: slug } = await params;
   const { data, st } = await loadSettings(slug, "access");
   const { club } = data;
+  const coachOn = await hasCoachLogin(slug);
+  const h = await headers();
+  const host = h.get("x-forwarded-host") ?? h.get("host") ?? "";
+  const proto = h.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
+  const loginUrl = `${proto}://${host}/c/${slug}/login`;
+
   return (
     <Page accent={club.accent}>
       <SettingsHero base={st.base} active="access" />
       <div className="hx-wrap hx-body hx-form-page">
-        <section className="card section">
-          <h2>Admin password</h2>
-          <PasswordForm action={changePassword.bind(null, slug)} />
-        </section>
-        <section id="coach-login" className="card section">
-          <h2>Coach login</h2>
-          <p className="small muted">
-            A separate password for the coach. It only lets them set line-ups for the graphics, not change the squad, results or settings.
-          </p>
-          <CoachPasswordForm action={setCoachPassword.bind(null, slug)} isSet={await hasCoachLogin(slug)} />
-        </section>
-        <section className="card section danger-zone">
-          <h2>Danger zone</h2>
-          <DeleteClubForm action={deleteClub.bind(null, slug)} name={club.name} />
-        </section>
+        <div className="ve">
+          <section aria-labelledby="ac-who">
+            <h2 id="ac-who" className="ve-h">
+              Who can do what
+            </h2>
+            <ul className="ac-roles">
+              <li>
+                <b>Anyone with the link</b>
+                <span>Sees results, players, stats and the halls.</span>
+              </li>
+              <li>
+                <b>Coach</b>
+                <span>Sets line-ups and makes the graphics. {coachOn ? "Login is on." : "Off until you set a coach password."}</span>
+              </li>
+              <li>
+                <b>Admin</b>
+                <span>Changes everything: squad, results, settings. That&apos;s you.</span>
+              </li>
+            </ul>
+          </section>
+
+          <section className="ce-group" aria-labelledby="ac-admin">
+            <h3 id="ac-admin" className="ve-h">
+              Admin password
+            </h3>
+            <p className="ce-note">Share it only with whoever runs the stats.</p>
+            <AdminPassword action={changePassword.bind(null, slug)} />
+          </section>
+
+          <section id="coach-login" className="ce-group" aria-labelledby="ac-coach">
+            <h3 id="ac-coach" className="ve-h">
+              Coach login
+            </h3>
+            <p className="ce-note">A second password that only lets the coach set line-ups, not change the squad, results or settings.</p>
+            <CoachLogin action={setCoachPassword.bind(null, slug)} isSet={coachOn} loginUrl={loginUrl} />
+          </section>
+
+          <DangerZone action={deleteClub.bind(null, slug)} name={club.name} />
+        </div>
       </div>
     </Page>
   );
