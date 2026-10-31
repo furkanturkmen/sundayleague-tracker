@@ -1,9 +1,8 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState, type ReactNode } from "react";
+import { useActionState, useRef, useState, type ReactNode } from "react";
 import { useFormStatus } from "react-dom";
 import type { FormState } from "@/lib/actions";
-import type { Player } from "@/lib/types";
 
 type Action = (state: FormState, f: FormData) => Promise<FormState>;
 
@@ -181,62 +180,6 @@ export function AddLineupPlayer({ action, name, matches }: { action: Action; nam
   );
 }
 
-
-function useResetOnOk(state: FormState) {
-  const ref = useRef<HTMLFormElement>(null);
-  useEffect(() => {
-    if (state.ok) ref.current?.reset();
-  }, [state]);
-  return ref;
-}
-
-// ---------- moments ----------
-
-export function MomentForm({ action, players, matches }: { action: Action; players: Player[]; matches: { id: string; label: string }[] }) {
-  const [state, formAction] = useActionState(action, {});
-  const ref = useResetOnOk(state);
-  return (
-    <form action={formAction} className="form" ref={ref}>
-      <div className="form-row">
-        <label>
-          Hall
-          <select name="kind" defaultValue="fame">
-            <option value="fame">Hall of Fame</option>
-            <option value="shame">Hall of Shame</option>
-          </select>
-        </label>
-        <label>
-          Player <span className="muted">(optional)</span>
-          <select name="player" defaultValue="">
-            <option value="">–</option>
-            {players.map((p) => (
-              <option key={p.id} value={p.id}>{p.name}</option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Match <span className="muted">(optional)</span>
-          <select name="match" defaultValue="">
-            <option value="">–</option>
-            {matches.map((m) => (
-              <option key={m.id} value={m.id}>{m.label}</option>
-            ))}
-          </select>
-        </label>
-      </div>
-      <label>
-        Title
-        <input name="title" required maxLength={80} placeholder="e.g. The penalty that's still going" />
-      </label>
-      <label>
-        Story
-        <textarea name="story" maxLength={600} rows={3} />
-      </label>
-      <Notice state={state} />
-      <Submit>Add moment</Submit>
-    </form>
-  );
-}
 
 /** Submit button that asks before doing something destructive. */
 export function ConfirmSubmit({ children, message, className = "btn btn-danger" }: { children: ReactNode; message: string; className?: string }) {

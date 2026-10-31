@@ -4,14 +4,13 @@ import { loadClub } from "@/lib/club";
 
 // Settings is split into short pages under one hero; these are the pieces each of them shares.
 
-export type SettingsTab = "squad" | "club" | "voetbal" | "access" | "moments";
+export type SettingsTab = "squad" | "club" | "voetbal" | "access";
 
 const TABS: { key: SettingsTab; label: string }[] = [
   { key: "squad", label: "Squad" },
   { key: "club", label: "Club" },
   { key: "voetbal", label: "voetbal.nl" },
   { key: "access", label: "Access" },
-  { key: "moments", label: "Moments" },
 ];
 
 /** The club for a settings page, or off to sign in and back here after. */

@@ -1808,3 +1808,22 @@ h2 > .ranking-accent { font-family: inherit; letter-spacing: inherit; line-heigh
 @media (prefers-reduced-motion: reduce) {
   .ac-danger-open, .ac-delete { transition: none; }
 }
+
+/* ---------- halls: moments, added and deleted in place by an admin ---------- */
+.mo-add-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; margin: -8px 0 40px; }
+.mo-add-bar .notice { margin: 0; }
+.mo-form { display: grid; gap: 16px; max-width: 720px; margin: -8px 0 48px; padding: 28px; border-radius: 12px; background: rgb(255 255 255 / 0.04); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.08); }
+.mo-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.mo-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; }
+.mo-form .notice { margin: 0; }
+.hl-block > .hx-empty { margin: 0 0 24px; }
+.hl-moment .mo-delete { margin-top: 12px; padding: 0; border: 0; background: none; color: var(--hx-ink-3); font: inherit; font-size: 13px; text-decoration: underline; text-decoration-color: rgb(255 255 255 / 0.24); text-underline-offset: 3px; cursor: pointer; }
+.hl-moment .mo-delete:hover { color: #fff; }
+.hl-moment .mo-delete.danger { color: var(--shame); text-decoration-color: currentColor; }
+.mo-confirm { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; margin-top: 12px; font-size: 13px; color: var(--hx-ink-2); }
+.mo-confirm .mo-delete { margin-top: 0; }
+
+@media (max-width: 760px) {
+  .mo-form { padding: 20px; }
+  .mo-pair { grid-template-columns: minmax(0, 1fr); }
+}

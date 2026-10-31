@@ -4,6 +4,8 @@ import { Icon } from "@/components/Icon";
 import { Band } from "@/components/home/Band";
 import { Reveal } from "@/components/home/Motion";
 import { Page, PageHero, SeasonLinks } from "@/components/home/Page";
+import { AddMoment, DeleteMoment } from "@/components/MomentEditor";
+import { deleteMoment, saveMoment } from "@/lib/actions";
 import { loadClub } from "@/lib/club";
 import { formatDate, seasonLabel, type Award, type Stats } from "@/lib/stats";
 import type { Moment } from "@/lib/types";
@@ -46,11 +48,21 @@ function AwardItem({ st, award }: { st: Stats; award: Award }) {
   );
 }
 
-function Moments({ st, title, items }: { st: Stats; title: string; items: Moment[] }) {
-  if (!items.length) return null;
+/** What an admin needs to add and delete moments in place; null for everyone else. */
+type Editing = {
+  save: Parameters<typeof AddMoment>[0]["action"];
+  remove: (f: FormData) => Promise<void>;
+  players: { id: string; label: string }[];
+  matches: { id: string; label: string }[];
+} | null;
+
+function Moments({ st, id, kind, title, items, edit }: { st: Stats; id: string; kind: "fame" | "shame"; title: string; items: Moment[]; edit: Editing }) {
+  if (!items.length && !edit) return null;
   return (
-    <div className="hl-block">
+    <div className="hl-block" id={id}>
       <h3 className="hl-sub">{title}</h3>
+      {edit && <AddMoment action={edit.save} kind={kind} players={edit.players} matches={edit.matches} />}
+      {!items.length && <p className="hx-empty">Nothing here yet.</p>}
       <div className="hl-moments">
         {items.map((m, i) => {
           const match = m.matchId ? st.getMatch(m.matchId) : undefined;
@@ -67,6 +79,7 @@ function Moments({ st, title, items }: { st: Stats; title: string; items: Moment
                   </Link>
                 )}
               </p>
+              {edit && <DeleteMoment action={edit.remove} id={m.id} />}
             </Reveal>
           );
         })}
@@ -92,13 +105,22 @@ export default async function HallsPage({ params, searchParams }: Props) {
     .filter((m) => m.result === "L")
     .sort((a, b) => b.ga - b.gf - (a.ga - a.gf) || b.ga - a.ga)
     .slice(0, 3);
+  const slug = data.club.slug;
+  const edit: Editing = admin
+    ? {
+        save: saveMoment.bind(null, slug),
+        remove: deleteMoment.bind(null, slug),
+        players: data.players.filter((p) => p.active).map((p) => ({ id: p.id, label: p.name })),
+        matches: [...data.matches].reverse().map((m) => ({ id: m.id, label: `${formatDate(m.date)} vs ${m.opponent}` })),
+      }
+    : null;
 
   return (
     <Page accent={data.club.accent}>
       <PageHero lead="Fame &" accent="shame." meta={seasonLabel(season)}>
         <SeasonLinks href={(s) => `${st.base}/halls?season=${s}`} seasons={st.seasons} active={season}>
           {admin && (
-            <Link href={`${st.base}/settings/moments`} className="hx-manage">
+            <Link href="#hl-fame-moments" className="hx-manage">
               Add a moment
             </Link>
           )}
@@ -118,7 +140,7 @@ export default async function HallsPage({ params, searchParams }: Props) {
               <AwardItem key={a.title} st={st} award={a} />
             ))}
           </Reveal>
-          <Moments st={st} title="Legendary moments" items={fameMoments} />
+          <Moments st={st} id="hl-fame-moments" kind="fame" title="Legendary moments" items={fameMoments} edit={edit} />
         </Band>
 
         <Band className="hx-band-board hl-hall hl-shame" labelledBy="hl-shame-title" bg={<span className="hl-light" />}>
@@ -133,7 +155,7 @@ export default async function HallsPage({ params, searchParams }: Props) {
               <AwardItem key={a.title} st={st} award={a} />
             ))}
           </Reveal>
-          <Moments st={st} title="Moments we'd rather forget" items={shameMoments} />
+          <Moments st={st} id="hl-shame-moments" kind="shame" title="Moments we'd rather forget" items={shameMoments} edit={edit} />
           {darkest.length > 0 && (
             <div className="hl-block">
               <h3 className="hl-sub">Darkest days</h3>
