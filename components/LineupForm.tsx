@@ -5,6 +5,7 @@ import { Notice, Submit } from "@/components/forms";
 import type { FormState } from "@/lib/actions";
 import { FORMATIONS, formationSlots, MAX_BENCH, playerFit, suggestLineup } from "@/lib/lineup";
 import type { Player } from "@/lib/types";
+import { ShareGraphic } from "@/components/ShareGraphic";
 
 type Action = (state: FormState, f: FormData) => Promise<FormState>;
 
@@ -147,9 +148,7 @@ export function LineupForm({
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={shown} width={1080} height={1350} alt="Line-up graphic" style={{ opacity: loading ? 0.6 : 1, transition: "opacity 150ms" }} />
         <div className="form-actions">
-          <a href={`${image}?download=1&${query}`} className="btn" download>
-            Download PNG
-          </a>
+          <ShareGraphic src={`${image}?${query}`} />
           <span className="small muted">{loading ? "Updating…" : "Save to keep this line-up."}</span>
         </div>
       </div>

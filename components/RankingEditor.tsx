@@ -4,6 +4,7 @@ import { useActionState, useEffect, useRef, useState } from "react";
 import { Notice, Submit } from "@/components/forms";
 import type { FormState } from "@/lib/actions";
 import type { Player } from "@/lib/types";
+import { ShareGraphic } from "@/components/ShareGraphic";
 
 type Action = (state: FormState, f: FormData) => Promise<FormState>;
 
@@ -181,10 +182,8 @@ export function RankingEditor({
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={shown} width={1080} height={1350} alt="Ranking graphic" style={{ opacity: loading ? 0.6 : 1, transition: "opacity 150ms" }} />
         <div className="form-actions">
-          <a href={`${image}?download=1&${query}`} className="btn" download>
-            Download PNG
-          </a>
-          <span className="small muted">{loading ? "Updating…" : order.length > 20 ? "The graphic shows the top 20." : "1080×1350, for Instagram."}</span>
+          <ShareGraphic src={`${image}?${query}`} />
+          <span className="small muted">{loading ? "Updating…" : order.length > 20 ? "The graphic shows the top 20." : "Post 1080×1350, story 1080×1920."}</span>
         </div>
       </div>
     </div>

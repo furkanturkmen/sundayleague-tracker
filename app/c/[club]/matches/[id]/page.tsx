@@ -12,6 +12,7 @@ import { deleteMatch } from "@/lib/actions";
 import { loadClub } from "@/lib/club";
 import { formatDate, seasonLabel, seasonOf } from "@/lib/stats";
 import stadium from "@/public/images/stadium-floodlights.jpg";
+import { ShareGraphic } from "@/components/ShareGraphic";
 
 type Props = { params: Promise<{ club: string; id: string }> };
 
@@ -248,7 +249,7 @@ function Graphics({ base, played }: { base: string; played: boolean }) {
     { key: "lineup", label: "Line-up", edit: `${base}/lineup` },
   ];
   return (
-    <Section id="md-posts" lead="For" accent="Instagram." note="1080×1350 posts, made from this match." small>
+    <Section id="md-posts" lead="For" accent="Instagram." note="Posts and stories, made from this match." small>
       <div className="md-posts">
         {posts.map((g) => (
           <figure key={g.key}>
@@ -258,11 +259,9 @@ function Graphics({ base, played }: { base: string; played: boolean }) {
             </a>
             <figcaption>
               <strong>{g.label}</strong>
-              <a href={`${base}/graphics/${g.key}?download=1`} download>
-                Download
-              </a>
               {g.edit && <Link href={g.edit}>Edit</Link>}
             </figcaption>
+            <ShareGraphic src={`${base}/graphics/${g.key}`} className="gx-share-compact" />
           </figure>
         ))}
       </div>

@@ -1844,3 +1844,8 @@ h2 > .ranking-accent { font-family: inherit; letter-spacing: inherit; line-heigh
 @media (prefers-reduced-motion: reduce) {
   .ac-vis .ac-vis-option { transition: none; }
 }
+
+/* ---------- share a graphic as a post or story ---------- */
+.gx-share { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.gx-share-error { flex-basis: 100%; font-size: 0.85rem; color: var(--hx-L, var(--shame)); }
+.gx-share-compact .btn { padding: 7px 12px; font-size: 0.85rem; }

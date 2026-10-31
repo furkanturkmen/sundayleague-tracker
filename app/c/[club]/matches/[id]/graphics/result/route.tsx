@@ -1,7 +1,6 @@
 import { ImageResponse } from "next/og";
 import { getGraphicImages, loadClubData, viewAccess } from "@/lib/club";
-import {
-  Backdrop,
+import { Canvas, canvasSize, fileName, isStory,
   competitionLabel,
   display,
   drawable,
@@ -50,7 +49,9 @@ export async function GET(req: Request, ctx: RouteContext<"/c/[club]/matches/[id
   const motm = m.motm ? byId.get(m.motm) : undefined;
   const title = m.result === "W" ? "GEWONNEN" : m.result === "D" ? "GELIJKSPEL" : "VERLOREN";
 
-  const download = new URL(req.url).searchParams.has("download") ? `uitslag-${m.date}.png` : null;
+  const params = new URL(req.url).searchParams;
+  const story = isStory(params);
+  const download = params.has("download") ? fileName(`uitslag-${m.date}`, story) : null;
 
   const Score = ({ team }: { team: typeof us }) => (
     <div
@@ -72,8 +73,7 @@ export async function GET(req: Request, ctx: RouteContext<"/c/[club]/matches/[id
   );
 
   return new ImageResponse(
-    <div style={{ position: "relative", width: "100%", height: "100%", display: "flex", fontFamily: "DM Sans", color: "#fff" }}>
-      <Backdrop p={p} logo={null} />
+    <Canvas p={p} story={story}>
       <div
         style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, display: "flex", flexDirection: "column", alignItems: "center", padding: "76px 60px 110px" }}
       >
@@ -131,7 +131,7 @@ export async function GET(req: Request, ctx: RouteContext<"/c/[club]/matches/[id
           )}
         </div>
       </div>
-    </div>,
-    { ...POST, fonts: await graphicFonts(), headers: pngHeaders(download) },
+    </Canvas>,
+    { ...canvasSize(story), fonts: await graphicFonts(), headers: pngHeaders(download) },
   );
 }

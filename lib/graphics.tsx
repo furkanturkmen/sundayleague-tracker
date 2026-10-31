@@ -8,6 +8,12 @@ import { brighten } from "@/lib/color";
 // with more than one child says display: flex, and it can't read WebP, so images come in as PNG or JPEG.
 
 export const POST = { width: 1080, height: 1350 };
+/** Instagram story. The post's design sits inside it, clear of the bars Instagram lays over the top and bottom. */
+export const STORY = { width: 1080, height: 1920 };
+const STORY_TOP = 250;
+
+/** ?size=story asks for the story version of a graphic. */
+export const isStory = (params: URLSearchParams) => params.get("size") === "story";
 
 const font = (file: string) => readFile(join(process.cwd(), "assets/fonts", file));
 const fontFiles = Promise.all([font("BebasNeue-Regular.ttf"), font("DMSans-Medium.ttf"), font("DMSans-Bold.ttf")]);
@@ -39,7 +45,7 @@ export function palette(accent: string, trim: string): Palette {
 export const display: CSSProperties = { fontFamily: "Bebas Neue", fontWeight: 400, lineHeight: 1 };
 
 /** Dark backdrop: a glow of the club colour, faint shirt stripes and the crest as a watermark. */
-export function Backdrop({ p, logo }: { p: Palette; logo: string | null }) {
+function Backdrop({ p, logo, top }: { p: Palette; logo: string | null; top: number }) {
   return (
     <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, display: "flex", background: p.bg }}>
       <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, display: "flex", backgroundImage: `radial-gradient(circle at 50% 46%, ${p.bright}66 0%, ${p.accent}33 38%, transparent 68%)` }} />
@@ -50,7 +56,7 @@ export function Backdrop({ p, logo }: { p: Palette; logo: string | null }) {
       </div>
       {logo && (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={logo} width={640} height={640} style={{ position: "absolute", left: 220, top: 380, objectFit: "contain", opacity: 0.06 }} alt="" />
+        <img src={logo} width={640} height={640} style={{ position: "absolute", left: 220, top: top + 380, objectFit: "contain", opacity: 0.06 }} alt="" />
       )}
       <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, display: "flex", backgroundImage: `linear-gradient(to bottom, ${p.bg} 0%, transparent 16%, transparent 80%, ${p.bg} 100%)` }} />
       <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: 10, display: "flex", gap: 14 }}>
@@ -61,6 +67,24 @@ export function Backdrop({ p, logo }: { p: Palette; logo: string | null }) {
     </div>
   );
 }
+
+/**
+ * The canvas every graphic is drawn on: the backdrop over the whole image, and the 1080×1350 post on top of it. A
+ * story is the same post moved down into the safe area, with the backdrop running on above and below.
+ */
+export function Canvas({ p, logo = null, story, children }: { p: Palette; logo?: string | null; story: boolean; children: ReactNode }) {
+  const top = story ? STORY_TOP : 0;
+  return (
+    <div style={{ position: "relative", width: "100%", height: "100%", display: "flex", fontFamily: "DM Sans", color: "#fff" }}>
+      <Backdrop p={p} logo={logo} top={top} />
+      <div style={{ position: "absolute", top, left: 0, width: POST.width, height: POST.height, display: "flex" }}>{children}</div>
+    </div>
+  );
+}
+
+/** Image size, and the download name with "-story" added for a story. */
+export const canvasSize = (story: boolean) => (story ? STORY : POST);
+export const fileName = (name: string, story: boolean) => `${name}${story ? "-story" : ""}.png`;
 
 /** A striped shirt in the club colours, for players without a photo. The number sits on top as text. */
 function shirtSvg(p: Palette): string {

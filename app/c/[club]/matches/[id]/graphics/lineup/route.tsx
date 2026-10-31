@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 import { getGraphicImages, loadClubData, viewAccess } from "@/lib/club";
-import { Backdrop, display, drawable, dutchDate, graphicFonts, NameTag, palette, pngHeaders, Portrait, POST } from "@/lib/graphics";
+import { Canvas, canvasSize, fileName, isStory, display, drawable, dutchDate, graphicFonts, NameTag, palette, pngHeaders, Portrait, POST } from "@/lib/graphics";
 import { FORMATIONS, formationSlots, graphicName, MAX_BENCH, matchLineup, shortTeamName } from "@/lib/lineup";
 import type { Player } from "@/lib/types";
 
@@ -47,14 +47,14 @@ export async function GET(req: Request, ctx: RouteContext<"/c/[club]/matches/[id
   const coachPhoto = drawable(images.coach);
   const opponent = shortTeamName(match.opponent).toUpperCase();
 
+  const story = isStory(params);
   const download = params.has("download")
-    ? `opstelling-${match.date}-${opponent.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}.png`
+    ? fileName(`opstelling-${match.date}-${opponent.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}`, story)
     : null;
 
   return new ImageResponse(
     (
-      <div style={{ position: "relative", width: "100%", height: "100%", display: "flex", fontFamily: "DM Sans", color: "#fff" }}>
-        <Backdrop p={p} logo={logo} />
+      <Canvas p={p} logo={logo} story={story}>
 
         {/* Header */}
         <div style={{ position: "absolute", top: 54, left: 60, right: 60, display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
@@ -125,8 +125,8 @@ export async function GET(req: Request, ctx: RouteContext<"/c/[club]/matches/[id
             </div>
           )}
         </div>
-      </div>
+      </Canvas>
     ),
-    { ...POST, fonts: await graphicFonts(), headers: pngHeaders(download) },
+    { ...canvasSize(story), fonts: await graphicFonts(), headers: pngHeaders(download) },
   );
 }

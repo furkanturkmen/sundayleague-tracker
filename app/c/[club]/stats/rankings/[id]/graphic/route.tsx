@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 import { getGraphicImages, loadClubData, viewAccess } from "@/lib/club";
-import { Backdrop, display, drawable, graphicFonts, palette, pngHeaders, POST } from "@/lib/graphics";
+import { Canvas, canvasSize, fileName, isStory, display, drawable, graphicFonts, palette, pngHeaders, POST } from "@/lib/graphics";
 import { graphicName } from "@/lib/lineup";
 import { getRanking } from "@/lib/rankings";
 import { analyse } from "@/lib/stats";
@@ -42,14 +42,14 @@ export async function GET(req: Request, ctx: RouteContext<"/c/[club]/stats/ranki
   const titleLength = `${title} ${accent}`.trim().length;
   const titleSize = titleLength > 26 ? 96 : titleLength > 18 ? 122 : 150;
 
+  const story = isStory(params);
   const download = params.has("download")
-    ? `ranglijst-${`${title} ${accent}`.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "lijst"}.png`
+    ? fileName(`ranglijst-${`${title} ${accent}`.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "lijst"}`, story)
     : null;
 
   return new ImageResponse(
     (
-      <div style={{ position: "relative", width: "100%", height: "100%", display: "flex", fontFamily: "DM Sans", color: "#fff" }}>
-        <Backdrop p={p} logo={null} />
+      <Canvas p={p} story={story}>
 
         <div style={{ position: "absolute", top: 64, left: 60, right: 60, display: "flex", flexDirection: "column" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
@@ -119,8 +119,8 @@ export async function GET(req: Request, ctx: RouteContext<"/c/[club]/stats/ranki
             </div>
           ))}
         </div>
-      </div>
+      </Canvas>
     ),
-    { ...POST, fonts: await graphicFonts(), headers: pngHeaders(download) },
+    { ...canvasSize(story), fonts: await graphicFonts(), headers: pngHeaders(download) },
   );
 }

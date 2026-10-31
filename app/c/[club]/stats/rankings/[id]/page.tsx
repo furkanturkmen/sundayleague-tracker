@@ -8,6 +8,7 @@ import { Page, PageHero } from "@/components/home/Page";
 import { deleteRanking, saveRanking } from "@/lib/actions";
 import { loadClub } from "@/lib/club";
 import { getRanking } from "@/lib/rankings";
+import { ShareGraphic } from "@/components/ShareGraphic";
 
 type Props = { params: Promise<{ club: string; id: string }> };
 
@@ -74,10 +75,7 @@ export default async function RankingPage({ params }: Props) {
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={image} width={1080} height={1350} alt={`${ranking.title} graphic`} />
               <div className="form-actions">
-                <a href={`${image}?download=1`} className="btn" download>
-                  Download PNG
-                </a>
-                <span className="small muted">1080×1350, for Instagram.</span>
+                <ShareGraphic src={image} />
               </div>
             </Reveal>
           </div>
