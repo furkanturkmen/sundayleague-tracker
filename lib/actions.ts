@@ -7,7 +7,7 @@ import { getClubAuth } from "@/lib/club";
 import { db } from "@/lib/db";
 import { FORMATIONS, formationSlots, MAX_BENCH } from "@/lib/lineup";
 import { POSITIONS, type Position } from "@/lib/types";
-import { canSync, connectLogin, hiddenPlayersNote, linkLineup, previewTeam, removeLogin, syncClub, voetbalConfigured, type TeamPreview } from "@/lib/voetbal";
+import { canSync, connectLogin, fillPhotos, hiddenPlayersNote, linkLineup, previewTeam, removeLogin, syncClub, voetbalConfigured, type TeamPreview } from "@/lib/voetbal";
 import { parseTeamId, sameName } from "@/lib/voetbal-parse";
 
 export interface FormState {
@@ -357,6 +357,7 @@ export async function syncVoetbal(slug: string): Promise<FormState> {
       s.added && `${s.added} new ${s.added === 1 ? "match" : "matches"}`,
       s.updated && `${s.updated} updated`,
       s.lineups && `${s.lineups} ${s.lineups === 1 ? "line-up" : "line-ups"}`,
+      s.photos && `${s.photos} ${s.photos === 1 ? "photo" : "photos"}`,
       s.table && "league table",
     ].filter(Boolean);
     const hidden = hiddenPlayersNote(s.hidden);
@@ -378,6 +379,7 @@ export async function addLineupPlayer(slug: string, _: FormState, f: FormData): 
   const [player] = await sql<{ id: string; name: string }[]>`insert into players (club_id, name) values (${club.id}, ${name}) returning id, name`;
   const played = await sql<{ id: string; lineup: string[] }[]>`select id, lineup from matches where club_id = ${club.id} and lineup is not null`;
   for (const m of played) if (m.lineup.some((n) => sameName(n, name))) await linkLineup(m.id, m.lineup, [player]);
+  await fillPhotos(club.id).catch(() => 0);
   refresh(slug);
   return { ok: `${name} added to the squad. Set their number and position below.` };
 }
@@ -396,6 +398,8 @@ export async function addPlayers(slug: string, names: string[]): Promise<FormSta
   const added = await sql<{ id: string; name: string }[]>`insert into players ${sql(fresh.map((name) => ({ club_id: club.id, name })))} returning id, name`;
   const played = await sql<{ id: string; lineup: string[] }[]>`select id, lineup from matches where club_id = ${club.id} and lineup is not null`;
   for (const m of played) await linkLineup(m.id, m.lineup, added);
+  // Their voetbal.nl photos, where the line-ups show one.
+  await fillPhotos(club.id).catch(() => 0);
   refresh(slug);
   return { ok: `${added.length} ${added.length === 1 ? "player" : "players"} added.` };
 }

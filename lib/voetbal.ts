@@ -194,6 +194,8 @@ export interface SyncSummary {
   table: number;
   /** Most players voetbal.nl hid on our side in one of the line-ups read this time. */
   hidden: number;
+  /** Squad players who got their voetbal.nl profile photo. */
+  photos: number;
 }
 
 const running = new Set<string>();
@@ -247,7 +249,7 @@ export async function syncClub(clubId: string): Promise<SyncSummary> {
       // no cup this season
     }
 
-    const summary: SyncSummary = { added: 0, updated: 0, results: 0, lineups: 0, table: table.length, hidden: 0 };
+    const summary: SyncSummary = { added: 0, updated: 0, results: 0, lineups: 0, table: table.length, hidden: 0, photos: 0 };
     const players = await sql<{ id: string; name: string }[]>`select id, name from players where club_id = ${clubId}`;
 
     await sql.begin(async (tx) => {
@@ -305,27 +307,31 @@ export async function syncClub(clubId: string): Promise<SyncSummary> {
 
     // Line-ups: one page per match, so only recent results and ones we haven't got yet. Abandoned matches have
     // a line-up too: who played still goes into each player's record, even though the match counts for nothing.
-    // Matches read before captains and Player of the Match were kept are read once more for those.
+    // Matches read before captains, Player of the Match and photos were kept are read once more for those.
     const since = new Date(Date.now() - LINEUP_DAYS * 86_400_000).toISOString().slice(0, 10);
     const needLineup = await sql<{ id: string; external_id: string; venue: "H" | "A" }[]>`
       select id, external_id, venue from matches
       where club_id = ${clubId} and external_id is not null and (goals_against is not null or status = 'abandoned')
-        and (lineup is null or not details_read or date >= ${since})
+        and (lineup is null or not details_read or lineup_photos is null or date >= ${since})
       order by date desc limit ${MAX_LINEUPS}`;
     for (const m of needLineup) {
       const html = await page(`/wedstrijd/${m.external_id}/uitslag`);
       const [home, away] = parseLineups(html);
-      const { names: lineup, hidden, captain } = m.venue === "H" ? home : away;
+      const { names: lineup, hidden, captain, photos } = m.venue === "H" ? home : away;
       // The vote is the team's own; only take it when the name is on our side.
       const motm = parseMotm(html);
       const ours = motm && lineup.some((n) => sameName(n, motm)) ? motm : null;
       summary.hidden = Math.max(summary.hidden, hidden);
-      await sql`update matches set lineup_hidden = ${hidden}, captain = ${captain}, motm_name = ${ours}, details_read = true where id = ${m.id}`;
+      await sql`
+        update matches set lineup_hidden = ${hidden}, captain = ${captain}, motm_name = ${ours}, details_read = true, lineup_photos = ${sql.json(photos)}
+        where id = ${m.id}`;
       if (!lineup.length) continue;
       await sql`update matches set lineup = ${lineup} where id = ${m.id}`;
       await linkLineup(m.id, lineup, players);
       summary.lineups++;
     }
+
+    summary.photos = await fillPhotos(clubId);
 
     await sql`
       update clubs set voetbal_team_name = ${header.name}, voetbal_league = ${header.league}, voetbal_synced_at = now(), voetbal_error = null
@@ -341,13 +347,51 @@ export async function syncClub(clubId: string): Promise<SyncSummary> {
 }
 
 /**
- * What to say when voetbal.nl hid players from the line-ups: a private profile shows only to the player's own
- * team, so the fix is a login of someone in it. Null when nobody was hidden.
+ * What to say when voetbal.nl hid players from the line-ups: a private profile has no name to read, so those
+ * players can only be added by hand. Null when nobody was hidden.
  */
 export function hiddenPlayersNote(hidden: number): string | null {
   if (hidden <= 0) return null;
   const n = `${hidden} ${hidden === 1 ? "player" : "players"}`;
   return `voetbal.nl shows up to ${n} per match in your line-ups as "Afgeschermd": their profile is private, so the name isn't given. Add them to the squad by hand, and to those matches from each match's Edit page.`;
+}
+
+/** Photos fetched per call, so a big squad fills in over a couple of syncs rather than one long request. */
+const MAX_PHOTOS = 30;
+
+/**
+ * Gives squad players without a photo their voetbal.nl profile photo, from the latest line-up that shows one.
+ * Each player gets it once: a photo the admin uploads is never replaced, and one they remove stays removed.
+ * voetbal.nl serves these without a login, as GIFs; the graphics need PNG or JPEG, so they're converted.
+ */
+export async function fillPhotos(clubId: string): Promise<number> {
+  const sql = await db();
+  const players = await sql<{ id: string; name: string }[]>`
+    select id, name from players where club_id = ${clubId} and photo is null and voetbal_photo is null`;
+  if (!players.length) return 0;
+  const lineups = await sql<{ photos: Record<string, string> }[]>`
+    select lineup_photos as photos from matches where club_id = ${clubId} and lineup_photos is not null order by date desc`;
+  const { default: sharp } = await import("sharp");
+  let done = 0;
+  for (const p of players) {
+    if (done >= MAX_PHOTOS) break;
+    const path = lineups.map((l) => Object.entries(l.photos).find(([n]) => sameName(n, p.name))?.[1]).find(Boolean);
+    if (!path || !path.startsWith("/sp-files/")) continue;
+    try {
+      const res = await fetch(new URL(path, BASE), { headers: { "User-Agent": UA }, signal: AbortSignal.timeout(15_000) });
+      if (!res.ok) continue;
+      const jpeg = await sharp(Buffer.from(await res.arrayBuffer())).flatten({ background: "#ffffff" }).jpeg({ quality: 88 }).toBuffer();
+      const photo = `data:image/jpeg;base64,${jpeg.toString("base64")}`;
+      // Only if still empty: an upload in the meantime wins.
+      const updated = await sql`
+        update players set photo = ${photo}, photo_version = photo_version + 1, voetbal_photo = ${path}
+        where id = ${p.id} and photo is null and voetbal_photo is null`;
+      done += updated.count;
+    } catch {
+      // A photo that won't load or convert is skipped; the player keeps the shirt.
+    }
+  }
+  return done;
 }
 
 /** Puts squad players named in a voetbal.nl line-up into that match's squad. Never removes anyone. */

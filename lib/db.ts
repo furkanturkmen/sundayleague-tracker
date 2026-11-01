@@ -92,6 +92,10 @@ alter table matches add column if not exists captain text;
 alter table matches add column if not exists motm_name text;
 -- Set once the match page has been read for captain and Player of the Match.
 alter table matches add column if not exists details_read boolean not null default false;
+-- Profile photo paths on voetbal.nl by name, from our side of the line-up. Null until read.
+alter table matches add column if not exists lineup_photos jsonb;
+-- The voetbal.nl photo once copied in. Never copied again after that, so a photo the admin removes stays removed.
+alter table players add column if not exists voetbal_photo text;
 alter table matches add column if not exists opponent_code text;
 -- Set when voetbal.nl has no result: 'abandoned' (gestaakt) or 'called-off' (afgelast). Not counted in any stats.
 alter table matches add column if not exists status text;

@@ -98,7 +98,10 @@ function shirtSvg(p: Palette): string {
 }
 
 /** A player's photo, or the shirt with their number when there's none. */
-export function Portrait({ p, photo, number, size, round = false }: { p: Palette; photo: string | null; number: number | null; size: number; round?: boolean }) {
+export function Portrait({ p, photo, number, size, round: roundAsked = false }: { p: Palette; photo: string | null; number: number | null; size: number; round?: boolean }) {
+  // A JPEG can't be a cut-out (no transparency), so it's an ordinary photo with a background: framed in a circle
+  // like the bench, not stood on the pitch as a square. PNG cut-outs keep standing free.
+  const round = roundAsked || Boolean(photo?.startsWith("data:image/jpeg"));
   const frame: CSSProperties = round
     ? { borderRadius: size, overflow: "hidden", border: `3px solid ${p.bright}`, background: `linear-gradient(to bottom, ${p.accent}, ${p.bg})` }
     : {};

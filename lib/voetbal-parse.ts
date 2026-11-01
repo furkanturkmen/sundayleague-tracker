@@ -138,6 +138,8 @@ export interface LineupSide {
   hidden: number;
   /** The name marked "(C)" or "(K)", unless that player is hidden. */
   captain: string | null;
+  /** Profile photos by name, as paths on voetbal.nl (/sp-files/…), for players who have one. */
+  photos: Record<string, string>;
 }
 
 /** Both line-ups from a match page, home side first. Hidden players are counted, not named. */
@@ -146,18 +148,23 @@ export function parseLineups(html: string): [LineupSide, LineupSide] {
   const sides = $(".TeamMembers-teamWrapper")
     .toArray()
     .map((wrap) => {
-      const raw = $(wrap)
-        .find(".TeamMembers-name")
+      const rows = $(wrap)
+        .find(".TeamMembers-row")
         .toArray()
-        .map((el) => clean($(el).text()))
-        .filter(Boolean);
+        .map((row) => ({ name: clean($(row).find(".TeamMembers-name").text()), photo: $(row).find("img.Avatar-image").attr("data-src") ?? null }))
+        .filter((r) => r.name);
       const captainMark = /\s*\((C|K)\)$/i;
-      const all = raw.map((n) => n.replace(captainMark, ""));
-      const names = all.filter((n) => !/^afgeschermd/i.test(n));
-      const captain = all[raw.findIndex((n) => captainMark.test(n))] ?? null;
-      return { names, hidden: all.length - names.length, captain: captain && names.includes(captain) ? captain : null };
+      const all = rows.map((r) => r.name.replace(captainMark, ""));
+      const isNamed = (n: string) => !/^afgeschermd/i.test(n);
+      const names = all.filter(isNamed);
+      const captain = all[rows.findIndex((r) => captainMark.test(r.name))] ?? null;
+      const photos: Record<string, string> = {};
+      rows.forEach((r, i) => {
+        if (r.photo?.startsWith("/sp-files/") && isNamed(all[i])) photos[all[i]] = r.photo;
+      });
+      return { names, hidden: all.length - names.length, captain: captain && names.includes(captain) ? captain : null, photos };
     });
-  const empty = { names: [], hidden: 0, captain: null };
+  const empty = { names: [], hidden: 0, captain: null, photos: {} };
   return [sides[0] ?? empty, sides[1] ?? empty];
 }
 
