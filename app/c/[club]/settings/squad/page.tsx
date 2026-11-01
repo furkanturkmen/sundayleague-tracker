@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
+import { CutOutPhotos } from "@/components/CutOutPhotos";
 import { AddAllLineupPlayers, AddLineupPlayer } from "@/components/forms";
 import { Page, Section } from "@/components/home/Page";
 import { SquadEditor } from "@/components/SquadEditor";
 import { Empty } from "@/components/ui";
-import { addLineupPlayer, addLineupPlayers, deletePlayer, savePlayer } from "@/lib/actions";
+import { addLineupPlayer, addLineupPlayers, deletePlayer, photosChanged, savePlayer, setPlayerPhoto } from "@/lib/actions";
 import { getT } from "@/lib/i18n/server";
 import { sameName } from "@/lib/voetbal-parse";
 import { loadSettings, SettingsHero } from "../shared";
@@ -32,6 +33,11 @@ export default async function SquadSettingsPage({ params }: Props) {
       <SettingsHero base={st.base} active="squad" />
       <div className="hx-wrap hx-body hx-form-page">
         <div>
+          <CutOutPhotos
+            photos={players.filter((p) => p.photo && !p.photoCutout).map((p) => ({ id: p.id, name: p.name, url: p.photo! }))}
+            save={setPlayerPhoto.bind(null, slug)}
+            done={photosChanged.bind(null, slug)}
+          />
           <SquadEditor players={players} save={savePlayer.bind(null, slug)} remove={deletePlayer.bind(null, slug)} />
           {players.length === 0 && <Empty>{t("No players yet. Add the first one above.")}</Empty>}
         </div>

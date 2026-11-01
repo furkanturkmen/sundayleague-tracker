@@ -387,6 +387,10 @@ fieldset p { margin: 0; }
 .logo-field-actions { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
 .logo-field input[type="file"] { font: inherit; font-size: 0.88rem; max-width: 100%; }
 .logo-field .small { margin: 0; }
+.logo-field-preview { width: 96px; height: 120px; object-fit: contain; object-position: bottom; border-radius: 8px;
+  background: repeating-conic-gradient(rgb(128 128 128 / 0.18) 0 25%, transparent 0 50%) 0 0 / 16px 16px; }
+.cutout-photos { display: grid; gap: 12px; justify-items: start; margin-bottom: 32px; padding: 18px 20px; border-radius: 12px; background: rgb(255 255 255 / 0.05); }
+.cutout-photos p { margin: 0; }
 .logo-field input[type="file"]::file-selector-button { font: inherit; font-weight: 600; margin-right: 12px; padding: 7px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface-2); color: var(--ink); cursor: pointer; }
 
 /* match entry */
@@ -573,7 +577,15 @@ main.container:has(> :is(.ph, .hx):first-child) { max-width: none; padding: 0; o
 }
 
 /* A photo instead of the shirt: a cut-out stands in the same place; a JPEG is a framed circle in the light. */
-.ph-cutout { max-width: 62%; object-fit: contain; object-position: bottom; }
+/* Faded at the bottom and the far sides, where the photo itself ended (shoulders cut off by the frame). */
+.ph-cutout, .sq-cutout {
+  object-fit: contain; object-position: bottom;
+  -webkit-mask-image: linear-gradient(#000 72%, transparent), linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+  -webkit-mask-composite: source-in;
+  mask-image: linear-gradient(#000 72%, transparent), linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+  mask-composite: intersect;
+}
+.ph-cutout { bottom: 0; height: 66%; max-width: 40%; }
 .ph-portrait {
   position: absolute; z-index: -1; left: 53%; top: 66%; width: min(40vh, 360px); aspect-ratio: 1; transform: translate(-50%, -50%);
   border-radius: 50%; object-fit: cover; border: 6px solid var(--ph-bright);
@@ -685,6 +697,7 @@ main.container:has(> :is(.ph, .hx):first-child) { max-width: none; padding: 0; o
   .ph { grid-template-columns: minmax(0, 1fr) 260px; }
   .ph-kit { height: 78%; bottom: -10%; transform: translateX(-62%); }
   .ph-portrait { width: min(34vh, 280px); left: 50%; }
+  .ph-kit.ph-cutout { bottom: 0; height: 58%; max-width: 42%; }
 }
 @media (max-width: 720px) {
   /* Phone: the shirt behind the name, the loud tile, then the matches as a sideways strip. */
@@ -693,7 +706,7 @@ main.container:has(> :is(.ph, .hx):first-child) { max-width: none; padding: 0; o
   .ph-id { margin-top: 4px; min-height: 330px; align-content: start; }
   .ph-name { font-size: clamp(48px, 15vw, 68px); }
   .ph-kit { left: auto; right: -30%; top: 190px; bottom: auto; height: 380px; transform: none; opacity: 0.9; }
-  .ph-cutout { right: -12%; max-width: 75%; }
+  .ph-kit.ph-cutout { right: -12%; max-width: 75%; top: 190px; bottom: auto; height: 380px; }
   .ph-portrait { left: auto; right: -50px; top: 180px; width: 200px; transform: none; opacity: 0.6; }
   .ph-nav-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
   .ph-bg::after { background: linear-gradient(rgb(0 0 0 / 0.42), rgb(0 0 0 / 0.42)), radial-gradient(60% 40% at 70% 30%, color-mix(in srgb, var(--ph-bright) 34%, transparent), transparent 75%), linear-gradient(180deg, rgb(3 5 9 / 0.55), rgb(3 5 9 / 0.75) 60%, rgb(3 5 9 / 0.92)); }
@@ -1144,7 +1157,6 @@ h2 > .ranking-accent { font-family: inherit; letter-spacing: inherit; line-heigh
 .sq-player::before { content: ""; position: absolute; z-index: -1; left: 10%; right: 10%; top: 140px; height: 48px; border-radius: 50%;
   background: radial-gradient(closest-side, color-mix(in srgb, var(--hx-bright) 40%, transparent), transparent); filter: blur(6px); transition: transform 500ms var(--hx-ease), opacity 300ms ease; }
 .sq-kit { width: 100%; max-width: 168px; height: 180px; filter: drop-shadow(0 20px 24px rgb(0 0 0 / 0.6)); transition: transform 500ms var(--hx-ease); }
-.sq-cutout { object-fit: contain; object-position: bottom; }
 .sq-portrait { width: 150px; height: 150px; margin: 15px 0; border-radius: 50%; object-fit: cover; border: 3px solid var(--hx-bright); }
 .sq-player:hover .sq-kit, .sq-player:focus-visible .sq-kit { transform: translateY(-10px) rotate(-3deg) scale(1.04); }
 .sq-player:hover::before { transform: scale(1.2); }

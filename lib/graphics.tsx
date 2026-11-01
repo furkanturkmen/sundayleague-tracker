@@ -109,7 +109,8 @@ export function Portrait({ p, photo, number, size, round: roundAsked = false }: 
     <div style={{ position: "relative", width: size, height: size, display: "flex", alignItems: "flex-end", justifyContent: "center", ...frame }}>
       {photo ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={photo} width={size} height={size} style={{ objectFit: "cover" }} alt="" />
+        // A cut-out is shown whole, standing on the bottom edge; a framed photo fills its circle.
+        <img src={photo} width={size} height={size} style={{ objectFit: round ? "cover" : "contain", objectPosition: "bottom" }} alt="" />
       ) : (
         // The shirt as a background with the number as plain text on it: Satori misplaces absolutely positioned images.
         <div

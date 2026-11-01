@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useId, useState } from "react";
-import { ImageField, Notice, PHOTO_HINT, PHOTO_PX, Submit } from "@/components/forms";
+import { ImageField, Notice, PHOTO_PX, PLAYER_PHOTO_HINT, Submit } from "@/components/forms";
 import { useT } from "@/components/I18n";
 import type { FormState } from "@/lib/actions";
 import { graphicName } from "@/lib/lineup";
@@ -188,7 +188,7 @@ function PlayerForm({
               {t("Bio")} <span className="muted">{t("(optional)")}</span>
               <textarea name="bio" maxLength={300} rows={3} defaultValue={player.bio ?? ""} />
             </label>
-            <ImageField name="photo" label={t("Photo")} hint={t(PHOTO_HINT)} initial={player.photo} maxPx={PHOTO_PX} />
+            <ImageField name="photo" label={t("Photo")} hint={t(PLAYER_PHOTO_HINT)} initial={player.photo} maxPx={PHOTO_PX} cutout />
             <label className="check se-active" htmlFor={`${ids}-active`}>
               <input id={`${ids}-active`} type="checkbox" name="active" defaultChecked={player.active} />
               <span>

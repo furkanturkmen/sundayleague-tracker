@@ -369,4 +369,21 @@ export const NL_SETTINGS: Record<string, string> = {
   "Open the link your club shared with you. Each club has its own address, like /c/your-club.":
     "Open de link die je club met je heeft gedeeld. Elke club heeft een eigen adres, zoals /c/jouw-club.",
   "Your clubs": "Jouw clubs",
+  // Cut-out photos
+  "For the player pages and the graphics. The background is cut out for you, so they stand like the shirt.":
+    "Voor de spelerspagina's en de graphics. De achtergrond wordt voor je weggeknipt, zodat de speler staat zoals het shirt.",
+  "Cutting out the background…": "Achtergrond wegknippen…",
+  "No person found to cut out, so the photo is kept as it is.": "Geen persoon gevonden om uit te knippen, dus de foto blijft zoals hij is.",
+  "Couldn't cut out the background (no connection?), so the photo is kept as it is.":
+    "De achtergrond kon niet worden weggeknipt (geen verbinding?), dus de foto blijft zoals hij is.",
+  "Cutting out {n} of {total}…": "{n} van {total} uitknippen…",
+  "{n} photo cut out.": "{n} foto uitgeknipt.",
+  "{n} photos cut out.": "{n} foto's uitgeknipt.",
+  "No clear person in: {names}. Those stay as they are.": "Geen duidelijke persoon in: {names}. Die blijven zoals ze zijn.",
+  "Couldn't load the cut-out tool. Check the connection and try again.": "Het uitknip-hulpmiddel kon niet laden. Controleer de verbinding en probeer opnieuw.",
+  "{n} photo still has its background.": "{n} foto heeft nog een achtergrond.",
+  "{n} photos still have their background.": "{n} foto's hebben nog een achtergrond.",
+  "Cut them out so the players stand like the shirt on their pages and in the graphics.":
+    "Knip ze uit, zodat de spelers op hun pagina en in de graphics staan zoals het shirt.",
+  "Cut out photos": "Foto's uitknippen",
 };

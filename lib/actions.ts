@@ -458,6 +458,22 @@ export async function savePlayer(slug: string, _: FormState, f: FormData): Promi
   return { ok: await msg(id ? "{name} updated." : "{name} added to the squad.", { name }) };
 }
 
+/** One player's photo replaced by its cut-out, from the "cut out existing photos" button in settings. */
+export async function setPlayerPhoto(slug: string, id: string, photo: string): Promise<FormState> {
+  const club = await requireAdmin(slug);
+  if (!UUID.test(id)) return { error: await msg("Unknown player.") };
+  if (photo.length > PHOTO_MAX || !photo.startsWith("data:image/png;") || !PHOTO.test(photo)) return { error: await msg("That photo couldn't be used. Try a PNG or JPG.") };
+  const sql = await db();
+  await sql`update players set photo = ${photo}, photo_version = photo_version + 1 where id = ${id} and club_id = ${club.id}`;
+  return { ok: "" };
+}
+
+/** After a run of setPlayerPhoto: one refresh for the lot. */
+export async function photosChanged(slug: string) {
+  await requireAdmin(slug);
+  refresh(slug);
+}
+
 export async function deletePlayer(slug: string, _: FormState, f: FormData): Promise<FormState> {
   const club = await requireAdmin(slug);
   const id = text(f, "id", 36);

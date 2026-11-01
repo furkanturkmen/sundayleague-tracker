@@ -4,6 +4,7 @@ import { useActionState, useRef, useState, type ReactNode } from "react";
 import { useFormStatus } from "react-dom";
 import { useT } from "@/components/I18n";
 import type { FormState } from "@/lib/actions";
+import { cutOut } from "@/lib/cutout";
 
 type Action = (state: FormState, f: FormData) => Promise<FormState>;
 
@@ -64,13 +65,17 @@ export async function shrinkImage(file: File, maxPx: number): Promise<string> {
   }
 }
 
-/** File picker that sends a shrunk data URL in `name`, "remove" to clear the saved image, or nothing to keep it. */
+/**
+ * File picker that sends a shrunk data URL in `name`, "remove" to clear the saved image, or nothing to keep it.
+ * With `cutout`, a photo of a person has its background removed first, so they stand free like the shirt.
+ */
 export function ImageField({
   name,
   label,
   hint,
   initial,
   maxPx,
+  cutout = false,
   onChange,
 }: {
   name: string;
@@ -78,11 +83,14 @@ export function ImageField({
   hint: ReactNode;
   initial: string | null;
   maxPx: number;
+  cutout?: boolean;
   onChange?: (preview: string | null) => void;
 }) {
   const [value, setValue] = useState("");
   const [has, setHas] = useState(Boolean(initial));
   const [error, setError] = useState("");
+  const [note, setNote] = useState("");
+  const [busy, setBusy] = useState(false);
   const input = useRef<HTMLInputElement>(null);
   const t = useT();
 
@@ -99,18 +107,32 @@ export function ImageField({
             const file = e.target.files?.[0];
             if (!file) return;
             setError("");
+            setNote("");
             if (file.size > 5_000_000) {
               setError(t("That file is over 5 MB. Pick a smaller one."));
               return;
             }
+            let data: string;
             try {
-              const data = await shrinkImage(file, maxPx);
-              setValue(data);
-              setHas(true);
-              onChange?.(data);
+              data = await shrinkImage(file, maxPx);
             } catch {
               setError(t("Couldn't read that image. Try a PNG or JPG."));
+              return;
             }
+            if (cutout) {
+              setBusy(true);
+              try {
+                const cut = await cutOut(data, maxPx);
+                if (cut) data = cut;
+                else setNote(t("No person found to cut out, so the photo is kept as it is."));
+              } catch {
+                setNote(t("Couldn't cut out the background (no connection?), so the photo is kept as it is."));
+              }
+              setBusy(false);
+            }
+            setValue(data);
+            setHas(true);
+            onChange?.(data);
           }}
         />
         {has && (
@@ -128,7 +150,17 @@ export function ImageField({
           </button>
         )}
       </div>
-      {error ? <p className="notice notice-error" role="alert">{error}</p> : <p className="small muted">{hint}</p>}
+      {cutout && value && value !== "remove" && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={value} alt="" className="logo-field-preview" />
+      )}
+      {busy ? (
+        <p className="small muted" role="status">{t("Cutting out the background…")}</p>
+      ) : error ? (
+        <p className="notice notice-error" role="alert">{error}</p>
+      ) : (
+        <p className="small muted">{note || hint}</p>
+      )}
     </div>
   );
 }
@@ -137,6 +169,8 @@ export function ImageField({
 export const PHOTO_PX = 480;
 /** English, as a translation key: show it with t(PHOTO_HINT). */
 export const PHOTO_HINT = "For the line-up graphic. A cut-out on a transparent background (PNG) looks best; a normal photo works too.";
+/** A player's photo has its background cut out on upload. */
+export const PLAYER_PHOTO_HINT = "For the player pages and the graphics. The background is cut out for you, so they stand like the shirt.";
 
 export function initials(name: string) {
   const all = name.replace(/[^A-Za-z0-9 ]/g, " ").split(/\s+/).filter(Boolean);
