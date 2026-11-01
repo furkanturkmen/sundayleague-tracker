@@ -21,6 +21,18 @@ export async function verifyPassword(password: string, stored: string): Promise<
   return timingSafeEqual(key, expected);
 }
 
+// No 0/O or 1/I/L, so a code copied off a screen or paper reads back the same.
+const CODE_LETTERS = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+
+/** A recovery code like "K7QM-3XTP-9RWA-FHN2": 16 random characters, about 79 bits. */
+export function newRecoveryCode(): string {
+  const chars = [...randomBytes(16)].map((b) => CODE_LETTERS[b % CODE_LETTERS.length]);
+  return [0, 4, 8, 12].map((i) => chars.slice(i, i + 4).join("")).join("-");
+}
+
+/** The code as typed, without dashes, spaces or case, so "k7qm 3xtp…" matches "K7QM-3XTP-…". */
+export const normaliseCode = (code: string) => code.toUpperCase().replace(/[^A-Z0-9]/g, "");
+
 export function serverSecret(): string {
   const s = process.env.SESSION_SECRET ?? process.env.DATABASE_URL ?? process.env.POSTGRES_URL;
   if (!s) throw new Error("SESSION_SECRET is not set.");

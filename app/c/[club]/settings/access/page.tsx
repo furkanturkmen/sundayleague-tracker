@@ -3,7 +3,8 @@ import { headers } from "next/headers";
 import { AdminPassword, DangerZone, RoleLogin, Visibility } from "@/components/AccessEditor";
 import { Page } from "@/components/home/Page";
 import { changePassword, deleteClub, setCoachPassword, setSquadPassword, setVisibility } from "@/lib/actions";
-import { hasCoachLogin, hasSquadLogin } from "@/lib/club";
+import { hasCoachLogin, hasRecoveryCode, hasSquadLogin } from "@/lib/club";
+import { RecoveryCode } from "@/components/RecoveryCode";
 import { loadSettings, SettingsHero } from "../shared";
 
 export const metadata: Metadata = { title: "Access · Settings" };
@@ -12,7 +13,7 @@ export default async function AccessSettingsPage({ params }: { params: Promise<{
   const { club: slug } = await params;
   const { data, st } = await loadSettings(slug, "access");
   const { club } = data;
-  const [coachOn, squadOn] = await Promise.all([hasCoachLogin(slug), hasSquadLogin(slug)]);
+  const [coachOn, squadOn, recoveryOn] = await Promise.all([hasCoachLogin(slug), hasSquadLogin(slug), hasRecoveryCode(slug)]);
   const h = await headers();
   const host = h.get("x-forwarded-host") ?? h.get("host") ?? "";
   const proto = h.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
@@ -70,6 +71,14 @@ export default async function AccessSettingsPage({ params }: { params: Promise<{
             </h3>
             <p className="ce-note">Share it only with whoever runs the stats.</p>
             <AdminPassword action={changePassword.bind(null, slug)} />
+          </section>
+
+          <section id="recovery" className="ce-group" aria-labelledby="ac-recovery">
+            <h3 id="ac-recovery" className="ve-h">
+              Recovery code
+            </h3>
+            <p className="ce-note">Resets the admin password from the sign-in page when nobody remembers it. Each code works once.</p>
+            <RecoveryCode slug={slug} isSet={recoveryOn} />
           </section>
 
           <section id="coach-login" className="ce-group" aria-labelledby="ac-coach">

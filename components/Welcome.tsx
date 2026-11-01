@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { Progress, StepTitle } from "@/components/Onboarding";
+import { RecoveryCode } from "@/components/RecoveryCode";
 import { Crest } from "@/components/ui";
 import { addPlayers, syncVoetbal } from "@/lib/actions";
 import { inkFor } from "@/lib/color";
@@ -23,6 +24,7 @@ interface Props {
   /** The club's public address without the scheme, e.g. "example.com/c/afc-dws-2". */
   url: string;
   nextMatch: { id: string; opponent: string; date: string } | null;
+  hasRecovery: boolean;
 }
 
 export function Welcome(props: Props) {
@@ -195,7 +197,7 @@ function SquadStep({ slug, linked, counts, suggestions, syncError, hiddenNote }:
   );
 }
 
-function DoneStep({ slug, club, url, nextMatch }: Props) {
+function DoneStep({ slug, club, url, nextMatch, hasRecovery }: Props) {
   const [copied, setCopied] = useState(false);
   const base = `/c/${slug}`;
   const full = `https://${url}`;
@@ -231,6 +233,10 @@ function DoneStep({ slug, club, url, nextMatch }: Props) {
       <a className="btn btn-secondary onb-whatsapp" href={`https://wa.me/?text=${encodeURIComponent(share)}`} target="_blank" rel="noreferrer">
         Share on WhatsApp
       </a>
+
+      <h2 className="onb-next-title">Keep the keys</h2>
+      <p className="onb-recovery-note">If the admin password ever gets lost, this code resets it from the sign-in page.</p>
+      <RecoveryCode slug={slug} isSet={hasRecovery} />
 
       <h2 className="onb-next-title">Next up</h2>
       <ul className="onb-next">

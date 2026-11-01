@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { LoginForm } from "@/components/forms";
 import { Page, PageHero } from "@/components/home/Page";
@@ -34,6 +35,9 @@ export default async function LoginPage({ params, searchParams }: Props) {
       />
       <div className="hx-wrap hx-body hx-form-page hx-narrow">
         <LoginForm action={login.bind(null, slug)} next={next} />
+        <p className="small muted rc-forgot">
+          Forgot the admin password? <Link href={`${st.base}/login/reset`}>Reset it with the recovery code</Link>
+        </p>
       </div>
     </Page>
   );

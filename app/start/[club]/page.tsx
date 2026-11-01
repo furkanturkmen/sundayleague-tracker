@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { Welcome, type WelcomeStep } from "@/components/Welcome";
-import { loadClub } from "@/lib/club";
+import { hasRecoveryCode, loadClub } from "@/lib/club";
 import { formatDate } from "@/lib/stats";
 import { hiddenPlayersNote } from "@/lib/voetbal";
 import { sameName } from "@/lib/voetbal-parse";
@@ -41,6 +41,7 @@ export default async function StartPage({ params, searchParams }: Props) {
       suggestions={suggestions}
       hiddenNote={hiddenPlayersNote(Math.max(0, ...data.matches.map((m) => m.lineupHidden ?? 0)))}
       url={`${host}${st.base}`}
+      hasRecovery={await hasRecoveryCode(slug)}
       nextMatch={next ? { id: next.id, opponent: next.opponent, date: formatDate(next.date, { weekday: "short", day: "numeric", month: "short" }) } : null}
     />
   );

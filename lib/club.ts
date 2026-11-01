@@ -29,6 +29,7 @@ interface ClubRow {
   coach_photo_version: number;
   password_hash: string;
   coach_password_hash: string | null;
+  recovery_hash: string | null;
   private: boolean;
   squad_password_hash: string | null;
 }
@@ -70,7 +71,7 @@ const clubRow = cache(async (slug: string): Promise<ClubRow | undefined> => {
     select id, slug, name, short_name, tagline, accent, gold, founded, logo is not null as has_logo, logo_version,
       voetbal_team_id, voetbal_team_name, voetbal_league, voetbal_synced_at, voetbal_error,
       coach_name, coach_photo is not null as has_coach_photo, coach_photo_version, password_hash, coach_password_hash,
-      private, squad_password_hash
+      private, squad_password_hash, recovery_hash
     from clubs where slug = ${slug}`;
   return row;
 });
@@ -111,10 +112,18 @@ export async function getGraphicImages(slug: string): Promise<{ logo: string | n
 
 export async function getClubAuth(
   slug: string,
-): Promise<{ club: Club; passwordHash: string; coachPasswordHash: string | null; squadPasswordHash: string | null } | undefined> {
+): Promise<
+  { club: Club; passwordHash: string; coachPasswordHash: string | null; squadPasswordHash: string | null; recoveryHash: string | null } | undefined
+> {
   const row = await clubRow(slug);
   return (
-    row && { club: toClub(row), passwordHash: row.password_hash, coachPasswordHash: row.coach_password_hash, squadPasswordHash: row.squad_password_hash }
+    row && {
+      club: toClub(row),
+      passwordHash: row.password_hash,
+      coachPasswordHash: row.coach_password_hash,
+      squadPasswordHash: row.squad_password_hash,
+      recoveryHash: row.recovery_hash,
+    }
   );
 }
 
@@ -140,6 +149,11 @@ export const isSquad = cache(async (slug: string): Promise<boolean> => {
   const row = await clubRow(slug);
   return row?.squad_password_hash ? hasSession(row.id, row.squad_password_hash, "squad") : false;
 });
+
+/** Whether this club has made a recovery code, for Settings. */
+export async function hasRecoveryCode(slug: string): Promise<boolean> {
+  return Boolean((await clubRow(slug))?.recovery_hash);
+}
 
 /** Whether this club has a squad password set, for Settings. */
 export async function hasSquadLogin(slug: string): Promise<boolean> {

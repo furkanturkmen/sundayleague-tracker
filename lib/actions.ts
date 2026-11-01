@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { endSession, hashPassword, hasSession, startSession, verifyPassword } from "@/lib/auth";
+import { endSession, hashPassword, hasSession, newRecoveryCode, normaliseCode, startSession, verifyPassword } from "@/lib/auth";
 import { getClubAuth } from "@/lib/club";
 import { db } from "@/lib/db";
 import { FORMATIONS, formationSlots, MAX_BENCH } from "@/lib/lineup";
@@ -13,6 +13,8 @@ import { parseTeamId, sameName } from "@/lib/voetbal-parse";
 export interface FormState {
   error?: string;
   ok?: string;
+  /** A new recovery code, shown once. */
+  code?: string;
 }
 
 const RESERVED = new Set(["new", "api", "admin", "settings", "login", "c", "start", "logos"]);
@@ -181,6 +183,37 @@ export async function changePassword(slug: string, _: FormState, f: FormData): P
   await sql`update clubs set password_hash = ${hash} where id = ${auth.club.id}`;
   await startSession(auth.club.id, hash);
   return { ok: "Password changed. Everyone else has been signed out." };
+}
+
+/** A new recovery code for the admin password. Replaces the old one, which stops working. */
+export async function makeRecoveryCode(slug: string): Promise<FormState> {
+  const club = await requireAdmin(slug);
+  const code = newRecoveryCode();
+  const sql = await db();
+  await sql`update clubs set recovery_hash = ${await hashPassword(normaliseCode(code))} where id = ${club.id}`;
+  return { ok: "Save this code somewhere safe. It's shown only now.", code };
+}
+
+/**
+ * Forgot password: the recovery code sets a new admin password and signs in. The code is used up, so a fresh one
+ * comes back to save in its place. Everyone else signed in as admin is signed out.
+ */
+export async function resetPassword(slug: string, _: FormState, f: FormData): Promise<FormState> {
+  const auth = await getClubAuth(slug);
+  if (!auth) return { error: "Club not found." };
+  if (!auth.recoveryHash) return { error: "This club has no recovery code, so the password can't be reset here." };
+  const code = normaliseCode(String(f.get("code") ?? ""));
+  const next = String(f.get("password") ?? "");
+  if (!code || !(await verifyPassword(code, auth.recoveryHash))) return { error: "That recovery code isn't right." };
+  if (next.length < 6) return { error: "The new password needs at least 6 characters." };
+  if (next !== f.get("confirm")) return { error: "The new passwords don't match." };
+  const fresh = newRecoveryCode();
+  const hash = await hashPassword(next);
+  const sql = await db();
+  await sql`update clubs set password_hash = ${hash}, recovery_hash = ${await hashPassword(normaliseCode(fresh))} where id = ${auth.club.id}`;
+  await startSession(auth.club.id, hash);
+  refresh(slug);
+  return { ok: "Password changed and you're signed in. Your old code is used up; save this new one.", code: fresh };
 }
 
 /** Sets or replaces the coach password, or removes it with remove=1 (which also signs the coach out). */

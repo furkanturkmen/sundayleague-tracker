@@ -1854,3 +1854,12 @@ h2 > .ranking-accent { font-family: inherit; letter-spacing: inherit; line-heigh
 .gx-share { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .gx-share-error { flex-basis: 100%; font-size: 0.85rem; color: var(--hx-L, var(--shame)); }
 .gx-share-compact .btn { padding: 7px 12px; font-size: 0.85rem; }
+
+/* Recovery code: shown once, in Settings → Access, on the last sign-up step and after a reset. */
+.rc { display: grid; gap: 12px; justify-items: start; }
+.rc-note { margin: 0; font-size: 14px; line-height: 1.5; opacity: 0.8; }
+.rc-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; }
+.rc-code { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px; padding: 14px 18px; border-radius: 8px; background: rgb(127 127 127 / 0.14); }
+.rc-code code { font: 600 clamp(18px, 4.6vw, 24px) / 1.2 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: 0.06em; overflow-wrap: anywhere; }
+.rc-forgot { margin-top: 20px; }
+.onb-recovery-note { margin: 0 0 12px; font-size: 14px; line-height: 1.5; opacity: 0.8; }
