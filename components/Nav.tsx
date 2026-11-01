@@ -18,7 +18,8 @@ export function Nav({ base, admin }: { base: string; admin: boolean }) {
     { href: `${base}/players`, label: "Players" },
     { href: `${base}/stats`, label: "Stats" },
     { href: `${base}/halls`, label: "Fame & Shame" },
-    ...(admin ? [{ href: `${base}/settings`, label: "Settings" }] : []),
+    // Straight to the first tab: going via /settings and its redirect showed the old page for a moment.
+    ...(admin ? [{ href: `${base}/settings/squad`, match: `${base}/settings`, label: "Settings" }] : []),
   ];
 
   // Close on navigation and on Escape, and keep the page behind still while the sheet is open.
@@ -42,7 +43,7 @@ export function Nav({ base, admin }: { base: string; admin: boolean }) {
       </button>
       <nav id="club-nav" className="nav" aria-label="Club" data-open={open || undefined}>
         {links.map((l, i) => {
-          const active = l.href === base ? path === base : path.startsWith(l.href);
+          const active = l.href === base ? path === base : path.startsWith(("match" in l && l.match) || l.href);
           return (
             <Link
               key={l.href}
