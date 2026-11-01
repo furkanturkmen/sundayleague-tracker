@@ -5,6 +5,7 @@ import { cache } from "react";
 import { hasSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { analyse, type Stats } from "@/lib/stats";
+import { sameName } from "@/lib/voetbal-parse";
 import type { Card, Club, ClubData, Goal, Match, MatchStatus, Moment, Player, Position, Ranking, Standing, Venue } from "@/lib/types";
 
 interface ClubRow {
@@ -184,10 +185,12 @@ export const loadClubData = cache(async (slug: string): Promise<ClubData | undef
       starters: (string | null)[] | null;
       bench: string[] | null;
       motm: string | null;
+      motm_name: string | null;
+      captain: string | null;
       notes: string | null;
     }[]>`
       select id, date, opponent, venue, competition, goals_for, goals_against, kickoff, external_id, opponent_code, status, lineup, lineup_hidden,
-        formation, starters, bench, motm, notes
+        formation, starters, bench, motm, motm_name, captain, notes
       from matches where club_id = ${id} order by date, created_at`,
     sql<{ match_id: string; player_id: string }[]>`
       select mp.match_id, mp.player_id from match_players mp join matches m on m.id = mp.match_id where m.club_id = ${id}`,
@@ -219,6 +222,7 @@ export const loadClubData = cache(async (slug: string): Promise<ClubData | undef
     extraPositions: extra_positions ?? [],
     photo: photoUrl(row.slug, p.id, has_photo, photo_version),
   }));
+  const playerNamed = (name: string | null) => (name ? players.find((p) => sameName(p.name, name))?.id : undefined);
   const matches: Match[] = matchRows.map((m) => {
     const ev = events.get(m.id) ?? [];
     return {
@@ -245,7 +249,9 @@ export const loadClubData = cache(async (slug: string): Promise<ClubData | undef
       cards: ev.filter((e) => e.kind === "Y" || e.kind === "R").map((e): Card => ({ player: e.player_id, type: e.kind as Card["type"] })),
       ownGoals: ev.filter((e) => e.kind === "OG").map((e) => e.player_id),
       penaltiesMissed: ev.filter((e) => e.kind === "PM").map((e) => e.player_id),
-      motm: m.motm ?? undefined,
+      // A man of the match picked by hand wins over the voetbal.nl vote.
+      motm: m.motm ?? playerNamed(m.motm_name),
+      captain: playerNamed(m.captain),
       notes: m.notes ?? undefined,
     };
   });

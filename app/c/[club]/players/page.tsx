@@ -46,6 +46,7 @@ export default async function PlayersPage({ params, searchParams }: Props) {
       goals: s.goals,
       assists: s.assists,
       motm: s.motm,
+      captain: s.captain,
       cleanSheets: s.cleanSheets,
       winPct: s.winPct,
       yellows: s.yellows,

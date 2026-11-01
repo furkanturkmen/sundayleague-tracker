@@ -82,8 +82,14 @@ alter table matches add column if not exists external_id text;
 alter table matches add column if not exists goals_for int check (goals_for >= 0);
 alter table matches add column if not exists kickoff text;
 alter table matches add column if not exists lineup text[];
--- Players on our side that voetbal.nl hid ("Afgeschermd": a private profile, shown only to their own team).
+-- Players on our side that voetbal.nl hid ("Afgeschermd": a private profile).
 alter table matches add column if not exists lineup_hidden int not null default 0;
+-- From the voetbal.nl match page, as names: the "(C)" in our line-up and the team's Player of the Match vote.
+-- Matched to players when the club loads, so someone added to the squad later still gets them.
+alter table matches add column if not exists captain text;
+alter table matches add column if not exists motm_name text;
+-- Set once the match page has been read for captain and Player of the Match.
+alter table matches add column if not exists details_read boolean not null default false;
 alter table matches add column if not exists opponent_code text;
 -- Set when voetbal.nl has no result: 'abandoned' (gestaakt) or 'called-off' (afgelast). Not counted in any stats.
 alter table matches add column if not exists status text;

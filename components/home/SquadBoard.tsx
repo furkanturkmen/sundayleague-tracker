@@ -21,6 +21,7 @@ export interface SquadRow {
   goals: number;
   assists: number;
   motm: number;
+  captain: number;
   cleanSheets: number;
   winPct: number;
   yellows: number;
@@ -34,12 +35,13 @@ const LINES: { group: PositionGroup; label: string; plural: string }[] = [
   { group: "FWD", label: "FWD", plural: "Forwards" },
 ];
 
-type SortKey = "apps" | "goals" | "assists" | "motm" | "cleanSheets" | "winPct" | "cards";
+type SortKey = "apps" | "goals" | "assists" | "motm" | "captain" | "cleanSheets" | "winPct" | "cards";
 const COLUMNS: { key: SortKey; label: string; title: string; value: (r: SquadRow) => number; show?: (r: SquadRow) => string }[] = [
   { key: "apps", label: "Apps", title: "Appearances", value: (r) => r.apps },
   { key: "goals", label: "Goals", title: "Goals", value: (r) => r.goals },
   { key: "assists", label: "Assists", title: "Assists", value: (r) => r.assists },
   { key: "motm", label: "MOTM", title: "Man of the match", value: (r) => r.motm },
+  { key: "captain", label: "Captain", title: "Matches as captain", value: (r) => r.captain },
   { key: "cleanSheets", label: "Clean sheets", title: "Clean sheets (keepers and defenders)", value: (r) => r.cleanSheets },
   { key: "winPct", label: "Win %", title: "Win rate when playing", value: (r) => r.winPct, show: (r) => (r.apps ? `${Math.round(r.winPct)}%` : "–") },
   { key: "cards", label: "Cards", title: "Yellow and red cards", value: (r) => r.yellows + r.reds * 2, show: (r) => (r.yellows + r.reds ? `${r.yellows}Y ${r.reds}R` : "0") },

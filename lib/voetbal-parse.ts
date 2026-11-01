@@ -134,8 +134,10 @@ export function parseStandings(html: string): StandingRow[] {
 
 export interface LineupSide {
   names: string[];
-  /** Players shown as "Afgeschermd": a private profile, which voetbal.nl only shows to their own team. */
+  /** Players shown as "Afgeschermd": a private profile, which voetbal.nl doesn't name. */
   hidden: number;
+  /** The name marked "(C)" or "(K)", unless that player is hidden. */
+  captain: string | null;
 }
 
 /** Both line-ups from a match page, home side first. Hidden players are counted, not named. */
@@ -144,14 +146,24 @@ export function parseLineups(html: string): [LineupSide, LineupSide] {
   const sides = $(".TeamMembers-teamWrapper")
     .toArray()
     .map((wrap) => {
-      const all = $(wrap)
+      const raw = $(wrap)
         .find(".TeamMembers-name")
         .toArray()
-        .map((el) => clean($(el).text()).replace(/\s*\((C|K)\)$/i, ""))
+        .map((el) => clean($(el).text()))
         .filter(Boolean);
+      const captainMark = /\s*\((C|K)\)$/i;
+      const all = raw.map((n) => n.replace(captainMark, ""));
       const names = all.filter((n) => !/^afgeschermd/i.test(n));
-      return { names, hidden: all.length - names.length };
+      const captain = all[raw.findIndex((n) => captainMark.test(n))] ?? null;
+      return { names, hidden: all.length - names.length, captain: captain && names.includes(captain) ? captain : null };
     });
-  const empty = { names: [], hidden: 0 };
+  const empty = { names: [], hidden: 0, captain: null };
   return [sides[0] ?? empty, sides[1] ?? empty];
+}
+
+/** The "Player of the Match" the team voted for in the voetbal.nl app, when there was a vote. */
+export function parseMotm(html: string): string | null {
+  const $ = cheerio.load(html);
+  const name = clean($(".FeedItem--motm .FeedItem-scoreName").first().text());
+  return name || null;
 }

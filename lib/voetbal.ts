@@ -2,7 +2,7 @@ import "server-only";
 import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:crypto";
 import { serverSecret } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { parseLineups, parseSchedule, parseStandings, parseTeamHeader, sameName, type ScheduleRow, type StandingRow } from "@/lib/voetbal-parse";
+import { parseLineups, parseMotm, parseSchedule, parseStandings, parseTeamHeader, sameName, type ScheduleRow, type StandingRow } from "@/lib/voetbal-parse";
 
 // Fixtures, results, line-ups and the league table come from voetbal.nl, which needs a login to show team pages.
 // Each club can connect its own voetbal.nl login in Settings; the password is stored encrypted. Clubs without one
@@ -306,17 +306,22 @@ export async function syncClub(clubId: string): Promise<SyncSummary> {
     // Line-ups: one page per match, so only recent results and ones we haven't got yet. Abandoned matches have
     // a line-up too: who played still goes into each player's record, even though the match counts for nothing.
     // With the club's own login, line-ups that had hidden players are read again: a team member sees them.
+    // Matches read before captains and Player of the Match were kept are read once more for those.
     const since = new Date(Date.now() - LINEUP_DAYS * 86_400_000).toISOString().slice(0, 10);
     const needLineup = await sql<{ id: string; external_id: string; venue: "H" | "A" }[]>`
       select id, external_id, venue from matches
       where club_id = ${clubId} and external_id is not null and (goals_against is not null or status = 'abandoned')
-        and (lineup is null or date >= ${since} or (lineup_hidden > 0 and ${account.key !== "site"}))
+        and (lineup is null or not details_read or date >= ${since} or (lineup_hidden > 0 and ${account.key !== "site"}))
       order by date desc limit ${MAX_LINEUPS}`;
     for (const m of needLineup) {
-      const [home, away] = parseLineups(await page(`/wedstrijd/${m.external_id}/uitslag`));
-      const { names: lineup, hidden } = m.venue === "H" ? home : away;
+      const html = await page(`/wedstrijd/${m.external_id}/uitslag`);
+      const [home, away] = parseLineups(html);
+      const { names: lineup, hidden, captain } = m.venue === "H" ? home : away;
+      // The vote is the team's own; only take it when the name is on our side.
+      const motm = parseMotm(html);
+      const ours = motm && lineup.some((n) => sameName(n, motm)) ? motm : null;
       summary.hidden = Math.max(summary.hidden, hidden);
-      await sql`update matches set lineup_hidden = ${hidden} where id = ${m.id}`;
+      await sql`update matches set lineup_hidden = ${hidden}, captain = ${captain}, motm_name = ${ours}, details_read = true where id = ${m.id}`;
       if (!lineup.length) continue;
       await sql`update matches set lineup = ${lineup} where id = ${m.id}`;
       await linkLineup(m.id, lineup, players);

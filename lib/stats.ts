@@ -69,6 +69,8 @@ export interface PlayerStats {
   yellows: number;
   reds: number;
   motm: number;
+  /** Matches with the armband. */
+  captain: number;
   wins: number;
   draws: number;
   losses: number;
@@ -99,6 +101,7 @@ export function statsFor(player: Player, ms: PlayedMatch[]): PlayerStats {
     yellows: cards.filter((c) => c.type === "Y").length,
     reds: cards.filter((c) => c.type === "R").length,
     motm: ms.filter((m) => m.motm === player.id).length,
+    captain: ms.filter((m) => m.captain === player.id).length,
     wins,
     draws,
     losses: apps.length - wins - draws,

@@ -177,6 +177,7 @@ export default async function PlayerPage({ params }: Props) {
             { label: "Goals", value: all.goals },
             { label: "Assists", value: all.assists },
             { label: "MOTM", value: all.motm },
+            ...(all.captain ? [{ label: "Captain", value: all.captain }] : []),
             { label: "W–D–L", value: `${all.wins}–${all.draws}–${all.losses}` },
             ...(["GK", "DEF"].includes(positionGroup(player.position)) ? [{ label: "Clean sheets", value: all.cleanSheets }] : []),
             { label: "Cards", value: all.yellows + all.reds ? `${all.yellows}Y ${all.reds}R` : "0" },
@@ -249,6 +250,7 @@ export default async function PlayerPage({ params }: Props) {
                   g && `⚽ ${g > 1 ? `×${g}` : ""}`.trim(),
                   a && `${a} assist${a > 1 ? "s" : ""}`,
                   fixture.motm === id && "MOTM",
+                  fixture.captain === id && "captain",
                   fixture.ownGoals.includes(id) && "own goal",
                   fixture.penaltiesMissed.includes(id) && "missed pen",
                 ].filter(Boolean);

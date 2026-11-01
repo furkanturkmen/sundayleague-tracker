@@ -185,6 +185,11 @@ export default async function MatchPage({ params }: Props) {
                   {m.squad.map((p) => (
                     <li key={p}>
                       <Link href={`${st.base}/players/${p}`}>{st.playerName(p)}</Link>
+                      {m.captain === p && (
+                        <abbr className="md-captain" title="Captain">
+                          C
+                        </abbr>
+                      )}
                     </li>
                   ))}
                 </ul>

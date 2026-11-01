@@ -149,6 +149,8 @@ export interface Match {
   squad: string[];
   cards: Card[];
   motm?: string;
+  /** Wore the armband: the "(C)" in the voetbal.nl line-up. */
+  captain?: string;
   /** Our players who put it in their own net. */
   ownGoals: string[];
   penaltiesMissed: string[];

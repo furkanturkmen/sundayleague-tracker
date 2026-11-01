@@ -84,8 +84,14 @@ export async function GET(req: Request, ctx: RouteContext<"/c/[club]/matches/[id
               key={i}
               style={{ position: "absolute", left: X0 + s.x * XS - CARD_W / 2, top: Y0 + s.y * YS - (PHOTO + 40) / 2, width: CARD_W, display: "flex", flexDirection: "column", alignItems: "center" }}
             >
-              <div style={{ display: "flex", width: PHOTO, height: PHOTO, backgroundImage: `radial-gradient(circle at 50% 62%, ${p.bright}99 0%, transparent 64%)` }}>
+              <div style={{ position: "relative", display: "flex", width: PHOTO, height: PHOTO, backgroundImage: `radial-gradient(circle at 50% 62%, ${p.bright}99 0%, transparent 64%)` }}>
                 <Portrait p={p} photo={pl ? (images.players.get(pl.id) ?? null) : null} number={pl?.number ?? null} size={PHOTO} />
+                {pl && pl.id === match.captain && (
+                  // The armband, once voetbal.nl has said who wore it.
+                  <div style={{ ...display, position: "absolute", top: 4, right: 4, width: 40, height: 40, borderRadius: 20, display: "flex", alignItems: "center", justifyContent: "center", background: "#fff", color: "#07101f", border: `3px solid ${p.bright}`, fontSize: 26, paddingTop: 3 }}>
+                    C
+                  </div>
+                )}
               </div>
               <div style={{ display: "flex", marginTop: -12 }}>
                 <NameTag p={p} pos={s.pos} name={pl ? name(pl.id) : "?"} size={30} />
