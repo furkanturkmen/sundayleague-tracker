@@ -19,6 +19,8 @@ export interface RankingView {
   auto: boolean;
   /** "2026/27 season" for the stat lists; when it last changed for the coach's own. */
   note: string;
+  /** When the coach's own list last changed, for showing the date in the visitor's language. */
+  updatedAt?: string;
 }
 
 const AUTO: { id: string; title: string; graphic: [string, string]; stat: (s: PlayerStats) => number }[] = [
@@ -51,6 +53,7 @@ function ownRanking(data: ClubData, id: string): RankingView | undefined {
     rows: r.players.map((p) => ({ player: byId.get(p)! })),
     auto: false,
     note: `Updated ${new Date(r.updatedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}`,
+    updatedAt: new Date(r.updatedAt).toISOString(),
   };
 }
 

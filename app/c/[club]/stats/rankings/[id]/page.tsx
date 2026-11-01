@@ -7,6 +7,8 @@ import { Reveal } from "@/components/home/Motion";
 import { Page, PageHero } from "@/components/home/Page";
 import { deleteRanking, saveRanking } from "@/lib/actions";
 import { loadClub } from "@/lib/club";
+import { dateLocale } from "@/lib/i18n";
+import { getLang, getT } from "@/lib/i18n/server";
 import { getRanking } from "@/lib/rankings";
 import { ShareGraphic } from "@/components/ShareGraphic";
 
@@ -15,7 +17,9 @@ type Props = { params: Promise<{ club: string; id: string }> };
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { club, id } = await params;
   const { data, st } = await loadClub(club);
-  return { title: getRanking(data, st, id)?.title ?? "Ranking" };
+  const t = await getT();
+  const r = getRanking(data, st, id);
+  return { title: r ? (r.auto ? t(r.title) : r.title) : t("Ranking") };
 }
 
 export default async function RankingPage({ params }: Props) {
@@ -25,15 +29,24 @@ export default async function RankingPage({ params }: Props) {
   if (!ranking) notFound();
   const image = `${st.base}/stats/rankings/${id}/graphic`;
   const editable = !ranking.auto && (admin || coach);
+  const t = await getT();
+  const lang = await getLang();
+  // The stat lists have English titles to translate; the coach's own are their own words.
+  const title = ranking.auto ? t(ranking.title) : ranking.title;
+  const note = ranking.auto
+    ? `${t("From the stats")} · ${t(ranking.note)}`
+    : ranking.updatedAt
+      ? t("Updated {date}", { date: new Date(ranking.updatedAt).toLocaleDateString(dateLocale(lang), { day: "numeric", month: "short" }) })
+      : ranking.note;
 
   return (
     <Page accent={data.club.accent}>
       <PageHero
         size="mini"
-        back={{ href: `${st.base}/stats/rankings`, label: "All rankings" }}
-        lead={ranking.accentText ? ranking.title : undefined}
-        accent={ranking.accentText || ranking.title}
-        meta={ranking.auto ? `From the stats · ${ranking.note}` : ranking.note}
+        back={{ href: `${st.base}/stats/rankings`, label: t("All rankings") }}
+        lead={ranking.accentText ? title : undefined}
+        accent={ranking.accentText || title}
+        meta={note}
       />
 
       <div className="hx-wrap hx-body">
@@ -47,8 +60,8 @@ export default async function RankingPage({ params }: Props) {
             />
             <form action={deleteRanking.bind(null, slug)} className="rk-delete">
               <input type="hidden" name="id" value={id} />
-              <Submit className="btn-link danger" pending="Deleting…">
-                Delete this ranking
+              <Submit className="btn-link danger" pending={t("Deleting…")}>
+                {t("Delete this ranking")}
               </Submit>
             </form>
           </>
@@ -68,12 +81,12 @@ export default async function RankingPage({ params }: Props) {
                   ))}
                 </ol>
               ) : (
-                <p className="hx-empty">Nobody on this list yet.</p>
+                <p className="hx-empty">{t("Nobody on this list yet.")}</p>
               )}
             </Reveal>
             <Reveal className="lineup-preview" delay={0.08}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={image} width={1080} height={1350} alt={`${ranking.title} graphic`} />
+              <img src={image} width={1080} height={1350} alt={t("{title} graphic", { title })} />
               <div className="form-actions">
                 <ShareGraphic src={image} />
               </div>

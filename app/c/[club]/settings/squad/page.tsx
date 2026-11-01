@@ -4,10 +4,14 @@ import { Page, Section } from "@/components/home/Page";
 import { SquadEditor } from "@/components/SquadEditor";
 import { Empty } from "@/components/ui";
 import { addLineupPlayer, addLineupPlayers, deletePlayer, savePlayer } from "@/lib/actions";
+import { getT } from "@/lib/i18n/server";
 import { sameName } from "@/lib/voetbal-parse";
 import { loadSettings, SettingsHero } from "../shared";
 
-export const metadata: Metadata = { title: "Squad · Settings" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("Squad · Settings") };
+}
 
 type Props = { params: Promise<{ club: string }> };
 
@@ -15,6 +19,7 @@ export default async function SquadSettingsPage({ params }: Props) {
   const { club: slug } = await params;
   const { data, st } = await loadSettings(slug, "squad");
   const { club, players } = data;
+  const t = await getT();
 
   // Names from voetbal.nl line-ups that aren't in the squad yet, most appearances first.
   const lineupCounts = new Map<string, number>();
@@ -28,10 +33,10 @@ export default async function SquadSettingsPage({ params }: Props) {
       <div className="hx-wrap hx-body hx-form-page">
         <div>
           <SquadEditor players={players} save={savePlayer.bind(null, slug)} remove={deletePlayer.bind(null, slug)} />
-          {players.length === 0 && <Empty>No players yet. Add the first one above.</Empty>}
+          {players.length === 0 && <Empty>{t("No players yet. Add the first one above.")}</Empty>}
         </div>
         {suggestions.length > 0 && (
-          <Section id="se-suggest" lead="Seen on" accent="voetbal.nl." note="In line-ups there, not in your squad yet. Players with a private profile aren't listed." small>
+          <Section id="se-suggest" lead={t("Seen on")} accent="voetbal.nl." note={t("In line-ups there, not in your squad yet. Players with a private profile aren't listed.")} small>
             <AddAllLineupPlayers action={addLineupPlayers.bind(null, slug)} names={suggestions.map(([name]) => name)} />
             <ul className="squad-list">
               {suggestions.map(([name, count]) => (

@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { PageHero, PageTabs } from "@/components/home/Page";
 import { loadClub } from "@/lib/club";
+import { getT } from "@/lib/i18n/server";
 
 // Settings is split into short pages under one hero; these are the pieces each of them shares.
 
@@ -21,10 +22,11 @@ export async function loadSettings(slug: string, tab: SettingsTab) {
   return ctx;
 }
 
-export function SettingsHero({ base, active }: { base: string; active: SettingsTab }) {
+export async function SettingsHero({ base, active }: { base: string; active: SettingsTab }) {
+  const t = await getT();
   return (
-    <PageHero size="mini" lead="Club" accent="settings.">
-      <PageTabs label="Settings" tabs={TABS.map((t) => ({ href: `${base}/settings/${t.key}`, label: t.label, on: t.key === active }))} />
+    <PageHero size="mini" lead={t("Club")} accent={t("settings.")}>
+      <PageTabs label={t("Settings")} tabs={TABS.map((tab) => ({ href: `${base}/settings/${tab.key}`, label: t(tab.label), on: tab.key === active }))} />
     </PageHero>
   );
 }

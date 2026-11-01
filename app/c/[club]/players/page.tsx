@@ -4,10 +4,14 @@ import { Page, PageHero, SeasonLinks } from "@/components/home/Page";
 import { SquadBoard, type SquadRow } from "@/components/home/SquadBoard";
 import { GetStarted } from "@/components/ui";
 import { loadClub } from "@/lib/club";
+import { getT } from "@/lib/i18n/server";
 import { seasonLabel } from "@/lib/stats";
 import { POSITION_LINES, POSITION_NAMES, POSITIONS, positionGroup } from "@/lib/types";
 
-export const metadata: Metadata = { title: "Players" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("Players") };
+}
 
 type Props = { params: Promise<{ club: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> };
 
@@ -20,6 +24,7 @@ export default async function PlayersPage({ params, searchParams }: Props) {
   const season = st.resolveSeason(query.season, st.currentSeason);
   const sort = typeof query.sort === "string" ? query.sort : undefined;
   const { club } = data;
+  const t = await getT();
 
   // Back to front, then by shirt number. Players who have left only show if they played in this period.
   const rows: SquadRow[] = st
@@ -39,7 +44,7 @@ export default async function PlayersPage({ params, searchParams }: Props) {
       nickname: s.player.nickname,
       number: s.player.number,
       position: s.player.position,
-      positionName: POSITION_NAMES[s.player.position],
+      positionName: t(POSITION_NAMES[s.player.position]),
       group: positionGroup(s.player.position),
       also: [...new Set(s.player.extraPositions.map(positionGroup))].filter((g) => g !== positionGroup(s.player.position)),
       apps: s.apps,
@@ -56,18 +61,18 @@ export default async function PlayersPage({ params, searchParams }: Props) {
   return (
     <Page accent={club.accent}>
       <PageHero
-        lead="The"
-        accent="squad."
+        lead={t("The")}
+        accent={t("squad.")}
         meta={
           <>
-            {rows.length} {rows.length === 1 ? "player" : "players"} · {seasonLabel(season)}
+            {t(rows.length === 1 ? "{n} player" : "{n} players", { n: rows.length })} · {t(seasonLabel(season))}
           </>
         }
       >
         <SeasonLinks href={(s) => `${st.base}/players?season=${s}`} seasons={st.seasons} active={season}>
           {admin && (
             <Link href={`${st.base}/settings/squad`} className="hx-manage">
-              Manage squad
+              {t("Manage squad")}
             </Link>
           )}
         </SeasonLinks>
@@ -75,7 +80,7 @@ export default async function PlayersPage({ params, searchParams }: Props) {
 
       <div className="hx-wrap hx-body">
         {rows.length === 0 ? (
-          <GetStarted st={st} admin={admin} what="players" />
+          <GetStarted st={st} admin={admin} what="players" t={t} />
         ) : (
           <SquadBoard rows={rows} kit={{ main: club.accent, trim: club.gold, logo: club.logo }} initialSort={sort} />
         )}

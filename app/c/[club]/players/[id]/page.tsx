@@ -7,6 +7,8 @@ import { Page } from "@/components/home/Page";
 import { Kit } from "@/components/Kit";
 import { Crest, TeamLogo } from "@/components/ui";
 import { loadClub } from "@/lib/club";
+import { homeVenue } from "@/lib/i18n/nl-matches";
+import { getLang, getT } from "@/lib/i18n/server";
 import { brighten } from "@/lib/color";
 import { placesFor } from "@/lib/rankings";
 import stadium from "@/public/images/stadium-night.jpg";
@@ -18,7 +20,8 @@ type Props = { params: Promise<{ club: string; id: string }> };
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { club, id } = await params;
   const { st } = await loadClub(club);
-  return { title: st.getPlayer(id)?.name ?? "Player" };
+  const t = await getT();
+  return { title: st.getPlayer(id)?.name ?? t("Player") };
 }
 
 export default async function PlayerPage({ params }: Props) {
@@ -26,6 +29,8 @@ export default async function PlayerPage({ params }: Props) {
   const { data, st } = await loadClub(club);
   const player = st.getPlayer(id);
   if (!player) notFound();
+  const t = await getT();
+  const lang = await getLang();
 
   const all = statsFor(player, st.played);
   const bySeason = [...st.seasons]
@@ -55,16 +60,16 @@ export default async function PlayerPage({ params }: Props) {
         <div className="ph-bg" aria-hidden="true">
           <Image src={stadium} alt="" fill sizes="(max-width: 720px) 100vw, 1120px" placeholder="blur" priority className="ph-photo" />
         </div>
-        <Kit main={data.club.accent} trim={data.club.gold} number={player.number} logo={data.club.logo} className="ph-kit" />
+        <Kit main={data.club.accent} trim={data.club.gold} number={player.number} logo={data.club.logo} className="ph-kit" t={t} />
 
         <nav className="ph-top">
           <Link href={`${st.base}/players`} className="ph-nav">
             <span className="ph-round" aria-hidden="true">‹</span>
-            All players
+            {t("All players")}
           </Link>
           {next && (
             <Link href={`${st.base}/players/${next.id}`} className="ph-nav">
-              <span className="ph-nav-label">Next player</span>
+              <span className="ph-nav-label">{t("Next player")}</span>
               <span className="ph-round" aria-hidden="true">›</span>
             </Link>
           )}
@@ -72,7 +77,7 @@ export default async function PlayerPage({ params }: Props) {
 
         <div className="ph-id">
           <div className="ph-eyebrow">
-            {player.number != null ? `Number ${player.number}` : POSITION_NAMES[player.position]}
+            {player.number != null ? t("Number {n}", { n: player.number }) : t(POSITION_NAMES[player.position])}
             {player.nickname && <> · “{player.nickname}”</>}
           </div>
           <h1 className="ph-name">
@@ -83,18 +88,18 @@ export default async function PlayerPage({ params }: Props) {
           </h1>
           <div className="ph-role">
             <span className="ph-pill">{player.position}</span>
-            {POSITION_NAMES[player.position]}
-            {player.extraPositions.length > 0 && <> · also plays {player.extraPositions.map((x) => POSITION_NAMES[x].toLowerCase()).join(" and ")}</>}
-            {!player.active && <> · no longer active</>}
+            {t(POSITION_NAMES[player.position])}
+            {player.extraPositions.length > 0 && (
+              <> · {t("also plays {positions}", { positions: player.extraPositions.map((x) => t(POSITION_NAMES[x]).toLowerCase()).join(t(" and ")) })}</>
+            )}
+            {!player.active && <> · {t("no longer active")}</>}
           </div>
         </div>
 
         <div className="ph-feature">
           <div className="ph-feature-head">
-            <span>Win rate</span>
-            <span>
-              {all.apps} {all.apps === 1 ? "game" : "games"}
-            </span>
+            <span>{t("Win rate")}</span>
+            <span>{t(all.apps === 1 ? "{n} game" : "{n} games", { n: all.apps })}</span>
           </div>
           <div className="ph-feature-value">
             {all.apps ? Math.round(all.winPct) : "–"}
@@ -105,14 +110,14 @@ export default async function PlayerPage({ params }: Props) {
           </div>
           {log.length > 0 && (
             <div className="ph-feature-form">
-              <span>Form</span>
-              <ol aria-label="Last results, oldest first">
+              <span>{t("Form")}</span>
+              <ol aria-label={t("Last results, oldest first")}>
                 {log
                   .slice(0, 5)
                   .reverse()
                   .map((m) => (
-                    <li key={m.id} className={`ph-form-${m.result}`} title={`${m.result} ${m.gf}–${m.ga} vs ${m.opponent}`}>
-                      {m.result}
+                    <li key={m.id} className={`ph-form-${m.result}`} title={`${t(m.result)} ${m.gf}–${m.ga} ${t("vs")} ${m.opponent}`}>
+                      {t(m.result)}
                     </li>
                   ))}
               </ol>
@@ -122,8 +127,8 @@ export default async function PlayerPage({ params }: Props) {
 
         <aside className="ph-matches">
           <div className="ph-matches-head">
-            <span>Recent matches</span>
-            <span className="ph-matches-sub">Last {Math.min(5, log.length)}</span>
+            <span>{t("Recent matches")}</span>
+            <span className="ph-matches-sub">{t("Last {n}", { n: Math.min(5, log.length) })}</span>
           </div>
           {log.length ? (
             <ol>
@@ -140,13 +145,13 @@ export default async function PlayerPage({ params }: Props) {
                         <small>{home ? data.club.shortName : abbr(m.opponent)}</small>
                       </span>
                       <span className="ph-match-mid">
-                        <span className="ph-match-pill">{g ? `⚽ ${g}` : m.motm === id ? "MOTM" : m.result}</span>
+                        <span className="ph-match-pill">{g ? `⚽ ${g}` : m.motm === id ? "MOTM" : t(m.result)}</span>
                         <span className="ph-match-score">
                           {home ? m.gf : m.ga}
                           <i>:</i>
                           {home ? m.ga : m.gf}
                         </span>
-                        <span className={`ph-comp ph-comp-${m.competition === "League" ? "league" : "cup"}`}>{m.competition}</span>
+                        <span className={`ph-comp ph-comp-${m.competition === "League" ? "league" : "cup"}`}>{t(m.competition)}</span>
                       </span>
                       <span className="ph-match-team">
                         {home ? them : us}
@@ -158,18 +163,18 @@ export default async function PlayerPage({ params }: Props) {
               })}
             </ol>
           ) : (
-            <p className="ph-empty">No appearances yet.</p>
+            <p className="ph-empty">{t("No appearances yet.")}</p>
           )}
         </aside>
         <a className="ph-credit" href="https://commons.wikimedia.org/wiki/File:Mecz_pi%C5%82karski_Wis%C5%82a_Krak%C3%B3w_-_Zag%C5%82%C4%99bie_Sosnwoiec,_28_pa%C5%BAdziernika_2022,_Po%C5%BCegnanie_Stadionu_Ludowego,_KP.jpg" target="_blank" rel="noreferrer">
-          Photo: Krzysztof Popławski, CC BY 4.0
+          {t("Photo")}: Krzysztof Popławski, CC BY 4.0
         </a>
       </section>
 
       <div className="ph-more">
         <section className="ph-block">
           <h2>
-            Stats <span>{!all.apps ? "No games yet" : st.seasons.length > 1 ? "All seasons" : seasonLabel(st.currentSeason)}</span>
+            {t("Stats")} <span>{!all.apps ? t("No games yet") : st.seasons.length > 1 ? t("All seasons") : t(seasonLabel(st.currentSeason))}</span>
           </h2>
           <div className="ph-stats">
           {[
@@ -180,11 +185,11 @@ export default async function PlayerPage({ params }: Props) {
             ...(all.captain ? [{ label: "Captain", value: all.captain }] : []),
             { label: "W–D–L", value: `${all.wins}–${all.draws}–${all.losses}` },
             ...(["GK", "DEF"].includes(positionGroup(player.position)) ? [{ label: "Clean sheets", value: all.cleanSheets }] : []),
-            { label: "Cards", value: all.yellows + all.reds ? `${all.yellows}Y ${all.reds}R` : "0" },
-          ].map((t) => (
-            <div key={t.label} className="ph-stat">
-              <span className="ph-stat-value">{t.value}</span>
-              <span className="ph-stat-label">{t.label}</span>
+            { label: "Cards", value: all.yellows + all.reds ? t("{y}Y {r}R", { y: all.yellows, r: all.reds }) : "0" },
+          ].map((tile) => (
+            <div key={tile.label} className="ph-stat">
+              <span className="ph-stat-value">{tile.value}</span>
+              <span className="ph-stat-label">{t(tile.label)}</span>
             </div>
           ))}
           </div>
@@ -193,7 +198,7 @@ export default async function PlayerPage({ params }: Props) {
         {places.length > 0 && (
           <section className="ph-block">
             <h2>
-              Rankings <span>{places.length}</span>
+              {t("Rankings")} <span>{places.length}</span>
             </h2>
             <ul className="ph-ranks">
               {places.map((r) => (
@@ -212,7 +217,7 @@ export default async function PlayerPage({ params }: Props) {
 
         {moments.map((m) => (
           <div key={m.id} className={`ph-moment ph-moment-${m.kind}`}>
-            <span className="ph-moment-kind">{m.kind === "fame" ? "Hall of Fame" : "Hall of Shame"}</span>
+            <span className="ph-moment-kind">{m.kind === "fame" ? t("Hall of Fame") : t("Hall of Shame")}</span>
             <strong>{m.title}</strong>
             {m.story && <p>{m.story}</p>}
           </div>
@@ -220,15 +225,15 @@ export default async function PlayerPage({ params }: Props) {
 
         {bySeason.length > 1 && (
           <section className="ph-block">
-            <h2>By season</h2>
+            <h2>{t("By season")}</h2>
             <ul className="ph-seasons">
               {bySeason.map(({ season, stats }) => (
                 <li key={season}>
-                  <span>{seasonLabel(season)}</span>
-                  <span>{stats.apps} apps</span>
-                  <span>{stats.goals} G</span>
-                  <span>{stats.assists} A</span>
-                  <span>{Math.round(stats.winPct)}% won</span>
+                  <span>{t(seasonLabel(season))}</span>
+                  <span>{t("{n} apps", { n: stats.apps })}</span>
+                  <span>{t("{n} G", { n: stats.goals })}</span>
+                  <span>{t("{n} A", { n: stats.assists })}</span>
+                  <span>{t("{n}% won", { n: Math.round(stats.winPct) })}</span>
                 </li>
               ))}
             </ul>
@@ -237,7 +242,7 @@ export default async function PlayerPage({ params }: Props) {
 
         <section className="ph-block">
           <h2>
-            Every match <span>{history.length}</span>
+            {t("Every match")} <span>{history.length}</span>
           </h2>
           {history.length ? (
             <ol className="ph-log">
@@ -248,30 +253,30 @@ export default async function PlayerPage({ params }: Props) {
                 const cards = fixture.cards.filter((c) => c.player === id);
                 const bits = [
                   g && `⚽ ${g > 1 ? `×${g}` : ""}`.trim(),
-                  a && `${a} assist${a > 1 ? "s" : ""}`,
+                  a && t(a > 1 ? "{n} assists" : "{n} assist", { n: a }),
                   fixture.motm === id && "MOTM",
-                  fixture.captain === id && "captain",
-                  fixture.ownGoals.includes(id) && "own goal",
-                  fixture.penaltiesMissed.includes(id) && "missed pen",
+                  fixture.captain === id && t("captain"),
+                  fixture.ownGoals.includes(id) && t("own goal"),
+                  fixture.penaltiesMissed.includes(id) && t("missed pen"),
                 ].filter(Boolean);
                 return (
                   <li key={fixture.id}>
                     <Link href={`${st.base}/matches/${fixture.id}`} className={`ph-log-row ${m ? `ph-match-${m.result}` : "ph-log-void"}`}>
-                      <span className="ph-log-date">{formatDate(fixture.date, { day: "numeric", month: "short" })}</span>
+                      <span className="ph-log-date">{formatDate(fixture.date, { day: "numeric", month: "short" }, lang)}</span>
                       <TeamLogo code={fixture.opponentCode} name={fixture.opponent} size={28} />
                       <span className="ph-log-team">
                         {fixture.opponent}
                         <small>
-                          {fixture.venue === "H" ? "Home" : "Away"}
+                          {fixture.venue === "H" ? homeVenue(lang) : t("Away")}
                           {" · "}
-                          <span className={`ph-comp ph-comp-${fixture.competition === "League" ? "league" : "cup"}`}>{fixture.competition}</span>
-                          <span className="ph-log-inline-date"> · {formatDate(fixture.date, { day: "numeric", month: "short" })}</span>
+                          <span className={`ph-comp ph-comp-${fixture.competition === "League" ? "league" : "cup"}`}>{t(fixture.competition)}</span>
+                          <span className="ph-log-inline-date"> · {formatDate(fixture.date, { day: "numeric", month: "short" }, lang)}</span>
                         </small>
                       </span>
                       <span className="ph-log-bits">
                         {bits.join(" · ")}
                         {cards.map((c, i) => (
-                          <span key={i} className={c.type === "Y" ? "card-y" : "card-r"} title={c.type === "Y" ? "Yellow card" : "Red card"} />
+                          <span key={i} className={c.type === "Y" ? "card-y" : "card-r"} title={c.type === "Y" ? t("Yellow card") : t("Red card")} />
                         ))}
                       </span>
                       {m ? (
@@ -279,10 +284,10 @@ export default async function PlayerPage({ params }: Props) {
                           <span className="ph-log-score">
                             {m.gf}–{m.ga}
                           </span>
-                          <span className="ph-log-result">{m.result}</span>
+                          <span className="ph-log-result">{t(m.result)}</span>
                         </>
                       ) : (
-                        <span className="ph-log-void-label">{fixture.status === "abandoned" ? "Abandoned" : "Called off"}</span>
+                        <span className="ph-log-void-label">{fixture.status === "abandoned" ? t("Abandoned") : t("Called off")}</span>
                       )}
                     </Link>
                   </li>
@@ -290,7 +295,7 @@ export default async function PlayerPage({ params }: Props) {
               })}
             </ol>
           ) : (
-            <p className="ph-empty">Yet to make a debut.</p>
+            <p className="ph-empty">{t("Yet to make a debut.")}</p>
           )}
         </section>
       </div>

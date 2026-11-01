@@ -2,6 +2,7 @@ import "server-only";
 import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:crypto";
 import { serverSecret } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { translate, type T } from "@/lib/i18n";
 import { parseLineups, parseMotm, parseSchedule, parseStandings, parseTeamHeader, sameName, type ScheduleRow, type StandingRow } from "@/lib/voetbal-parse";
 
 // Fixtures, results, line-ups and the league table come from voetbal.nl, which needs a login to show team pages.
@@ -350,10 +351,14 @@ export async function syncClub(clubId: string): Promise<SyncSummary> {
  * What to say when voetbal.nl hid players from the line-ups: a private profile has no name to read, so those
  * players can only be added by hand. Null when nobody was hidden.
  */
-export function hiddenPlayersNote(hidden: number): string | null {
+export function hiddenPlayersNote(hidden: number, t: T = (s, v) => translate("en", s, v)): string | null {
   if (hidden <= 0) return null;
-  const n = `${hidden} ${hidden === 1 ? "player" : "players"}`;
-  return `voetbal.nl shows up to ${n} per match in your line-ups as "Afgeschermd": their profile is private, so the name isn't given. Add them to the squad by hand, and to those matches from each match's Edit page.`;
+  return t(
+    hidden === 1
+      ? `voetbal.nl shows up to {n} player per match in your line-ups as "Afgeschermd": their profile is private, so the name isn't given. Add them to the squad by hand, and to those matches from each match's Edit page.`
+      : `voetbal.nl shows up to {n} players per match in your line-ups as "Afgeschermd": their profile is private, so the name isn't given. Add them to the squad by hand, and to those matches from each match's Edit page.`,
+    { n: hidden },
+  );
 }
 
 /** Photos fetched per call, so a big squad fills in over a couple of syncs rather than one long request. */

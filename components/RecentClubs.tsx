@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useT } from "@/components/I18n";
 import { Crest } from "@/components/ui";
 import { existingClubs } from "@/lib/actions";
 
@@ -40,6 +41,7 @@ export function RememberClub({ club }: { club: Recent }) {
 
 /** The clubs this browser has opened, newest first. The site lists no clubs itself, so this is the way back in. */
 export function RecentClubs() {
+  const t = useT();
   const [list, setList] = useState<Recent[] | null>(null);
   useEffect(() => {
     const saved = read();
@@ -51,7 +53,7 @@ export function RecentClubs() {
   if (!list?.length) return null;
   return (
     <section className="section">
-      <h2>Your clubs</h2>
+      <h2>{t("Your clubs")}</h2>
       <div className="club-grid">
         {list.map((c) => (
           <Link key={c.slug} href={`/c/${c.slug}`} className="club-card" style={{ ["--accent" as string]: c.accent, ["--gold" as string]: c.gold }}>

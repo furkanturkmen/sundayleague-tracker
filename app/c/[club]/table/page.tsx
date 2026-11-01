@@ -5,8 +5,13 @@ import { Reveal } from "@/components/home/Motion";
 import { Page, PageHero, PageTabs, Pitch } from "@/components/home/Page";
 import { TeamLogo } from "@/components/ui";
 import { loadClub } from "@/lib/club";
+import { dateLocale, type Lang } from "@/lib/i18n";
+import { getLang, getT } from "@/lib/i18n/server";
 
-export const metadata: Metadata = { title: "Table" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("Table") };
+}
 
 type Props = { params: Promise<{ club: string }>; searchParams: Promise<{ competition?: string }> };
 
@@ -21,19 +26,25 @@ export default async function TablePage({ params, searchParams }: Props) {
   const us = rows.find((r) => r.isUs);
   const penalties = rows.some((r) => r.penaltyPoints > 0);
   const vnl = data.club.voetbal;
+  const [t, lang] = await Promise.all([getT(), getLang()]);
 
   return (
     <Page accent={data.club.accent}>
       <PageHero
-        lead="The"
-        accent="table."
+        lead={t("The")}
+        accent={t("table.")}
         meta={
           <>
-            {showCup ? "Cup group" : (vnl?.league ?? "League")}
+            {showCup ? t("Cup group") : (vnl?.league ?? t("League"))}
             {us && (
               <>
                 {" "}
-                · {data.club.shortName} {ordinal(us.position)} on {us.points} {us.points === 1 ? "point" : "points"}
+                ·{" "}
+                {t(us.points === 1 ? "{club} {pos} on {n} point" : "{club} {pos} on {n} points", {
+                  club: data.club.shortName,
+                  pos: ordinal(us.position, lang),
+                  n: us.points,
+                })}
               </>
             )}
           </>
@@ -41,10 +52,10 @@ export default async function TablePage({ params, searchParams }: Props) {
       >
         {cup.length > 0 && (
           <PageTabs
-            label="Competition"
+            label={t("Competition")}
             tabs={[
-              { href: `${st.base}/table`, label: "League", on: !showCup },
-              { href: `${st.base}/table?competition=cup`, label: "Cup", on: showCup },
+              { href: `${st.base}/table`, label: t("League"), on: !showCup },
+              { href: `${st.base}/table?competition=cup`, label: t("Cup"), on: showCup },
             ]}
           />
         )}
@@ -58,32 +69,32 @@ export default async function TablePage({ params, searchParams }: Props) {
                 <thead>
                   <tr>
                     <th className="num">#</th>
-                    <th>Team</th>
-                    <th className="num" title="Played">
-                      P
+                    <th>{t("Team")}</th>
+                    <th className="num" title={t("Played")}>
+                      {t("P")}
                     </th>
-                    <th className="num tb-wdl" title="Won">
-                      W
+                    <th className="num tb-wdl" title={t("Won")}>
+                      {t("W")}
                     </th>
-                    <th className="num tb-wdl" title="Drawn">
-                      D
+                    <th className="num tb-wdl" title={t("Drawn")}>
+                      {t("D")}
                     </th>
-                    <th className="num tb-wdl" title="Lost">
-                      L
+                    <th className="num tb-wdl" title={t("Lost")}>
+                      {t("L")}
                     </th>
-                    <th className="num tb-goals" title="Goals for and against">
-                      Goals
+                    <th className="num tb-goals" title={t("Goals for and against")}>
+                      {t("Goals")}
                     </th>
-                    <th className="num" title="Goal difference">
-                      GD
+                    <th className="num" title={t("Goal difference")}>
+                      {t("GD")}
                     </th>
                     {penalties && (
-                      <th className="num tb-pen" title="Points deducted">
-                        Pen
+                      <th className="num tb-pen" title={t("Points deducted")}>
+                        {t("Pen")}
                       </th>
                     )}
-                    <th className="num" title="Points">
-                      Pts
+                    <th className="num" title={t("Points")}>
+                      {t("Pts")}
                     </th>
                   </tr>
                 </thead>
@@ -114,20 +125,20 @@ export default async function TablePage({ params, searchParams }: Props) {
             </Reveal>
           ) : (
             <p className="hx-empty">
-              No table yet.{" "}
+              {t("No table yet.")}{" "}
               {admin ? (
                 <>
-                  Connect your team to voetbal.nl in <Link href={`${st.base}/settings/voetbal`}>Settings</Link> to pull it in.
+                  {t("Connect your team to voetbal.nl in")} <Link href={`${st.base}/settings/voetbal`}>{t("Settings")}</Link> {t("to pull it in.")}
                 </>
               ) : (
-                "It shows up once the club admin connects the team to voetbal.nl."
+                t("It shows up once the club admin connects the team to voetbal.nl.")
               )}
             </p>
           )}
           {vnl?.syncedAt && (
             <p className="tb-source">
-              From voetbal.nl, updated{" "}
-              {new Date(vnl.syncedAt).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short", timeZone: "Europe/Amsterdam" })}.
+              {t("From voetbal.nl, updated")}{" "}
+              {new Date(vnl.syncedAt).toLocaleString(dateLocale(lang), { dateStyle: "medium", timeStyle: "short", timeZone: "Europe/Amsterdam" })}.
             </p>
           )}
         </Band>
@@ -138,7 +149,8 @@ export default async function TablePage({ params, searchParams }: Props) {
 
 const signed = (n: number) => (n > 0 ? `+${n}` : n < 0 ? `−${-n}` : "0");
 
-function ordinal(n: number) {
+function ordinal(n: number, lang: Lang) {
+  if (lang === "nl") return `${n}e`;
   const s = ["th", "st", "nd", "rd"];
   const v = n % 100;
   return `${n}${s[(v - 20) % 10] ?? s[v] ?? s[0]}`;

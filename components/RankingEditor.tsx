@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useRef, useState } from "react";
 import { Notice, Submit } from "@/components/forms";
+import { useT } from "@/components/I18n";
 import type { FormState } from "@/lib/actions";
 import type { Player } from "@/lib/types";
 import { ShareGraphic } from "@/components/ShareGraphic";
@@ -12,22 +13,23 @@ const label = (p: Player) => `${p.number != null ? `${p.number}. ` : ""}${p.name
 
 /** Title fields for a new ranking. Creating it opens the editor. */
 export function NewRankingForm({ action }: { action: Action }) {
+  const t = useT();
   const [state, formAction] = useActionState(action, {});
   return (
-    <form action={formAction} className="form ranking-new" aria-label="New ranking">
+    <form action={formAction} className="form ranking-new" aria-label={t("New ranking")}>
       <div className="ranking-title-fields">
         <label>
-          Title
-          <input name="title" required maxLength={40} placeholder="e.g. Snelste" />
+          {t("Title")}
+          <input name="title" required maxLength={40} placeholder={t("e.g. Snelste")} />
         </label>
         <label>
-          In club colour <span className="muted small">(optional)</span>
-          <input name="accentText" maxLength={40} placeholder="e.g. van het team" />
+          {t("In club colour")} <span className="muted small">{t("(optional)")}</span>
+          <input name="accentText" maxLength={40} placeholder={t("e.g. van het team")} />
         </label>
       </div>
       <Notice state={state} />
       <div className="form-actions">
-        <Submit>Create and pick players</Submit>
+        <Submit>{t("Create and pick players")}</Submit>
       </div>
     </form>
   );
@@ -45,6 +47,7 @@ export function RankingEditor({
   initial: { title: string; accentText: string; players: string[] };
   image: string;
 }) {
+  const t = useT();
   const [state, formAction] = useActionState(action, {});
   const [title, setTitle] = useState(initial.title);
   const [accentText, setAccentText] = useState(initial.accentText);
@@ -95,11 +98,11 @@ export function RankingEditor({
       <form action={formAction} className="card form">
         <div className="ranking-title-fields">
           <label>
-            Title
+            {t("Title")}
             <input name="title" required maxLength={40} value={title} onChange={(e) => setTitle(e.target.value)} />
           </label>
           <label>
-            In club colour <span className="muted small">(optional)</span>
+            {t("In club colour")} <span className="muted small">{t("(optional)")}</span>
             <input name="accentText" maxLength={40} value={accentText} onChange={(e) => setAccentText(e.target.value)} />
           </label>
         </div>
@@ -107,7 +110,7 @@ export function RankingEditor({
 
         <fieldset>
           <legend>
-            Order <span className="muted small">best first · drag or use the arrows</span>
+            {t("Order")} <span className="muted small">{t("best first · drag or use the arrows")}</span>
           </legend>
           {order.length ? (
             <ol className="ranking-order">
@@ -141,21 +144,21 @@ export function RankingEditor({
                   >
                     <span className="ranking-place">{i + 1}</span>
                     <span className="ranking-name">{p.name}</span>
-                    <button type="button" className="icon-btn" onClick={() => move(i, i - 1)} disabled={i === 0} aria-label={`Move ${p.name} up`}>↑</button>
-                    <button type="button" className="icon-btn" onClick={() => move(i, i + 1)} disabled={i === order.length - 1} aria-label={`Move ${p.name} down`}>↓</button>
-                    <button type="button" className="icon-btn" onClick={() => setOrder((o) => o.filter((x) => x !== id))} aria-label={`Take ${p.name} off the list`}>✕</button>
+                    <button type="button" className="icon-btn" onClick={() => move(i, i - 1)} disabled={i === 0} aria-label={t("Move {name} up", { name: p.name })}>↑</button>
+                    <button type="button" className="icon-btn" onClick={() => move(i, i + 1)} disabled={i === order.length - 1} aria-label={t("Move {name} down", { name: p.name })}>↓</button>
+                    <button type="button" className="icon-btn" onClick={() => setOrder((o) => o.filter((x) => x !== id))} aria-label={t("Take {name} off the list", { name: p.name })}>✕</button>
                   </li>
                 );
               })}
             </ol>
           ) : (
-            <p className="muted small" style={{ margin: 0 }}>Nobody on the list yet. Add players below.</p>
+            <p className="muted small" style={{ margin: 0 }}>{t("Nobody on the list yet. Add players below.")}</p>
           )}
         </fieldset>
 
         {rest.length > 0 && (
           <fieldset>
-            <legend>Add to the bottom</legend>
+            <legend>{t("Add to the bottom")}</legend>
             <div className="ranking-add">
               {rest.map((p) => (
                 <button key={p.id} type="button" className="chip-btn" onClick={() => setOrder((o) => [...o, p.id])}>
@@ -164,7 +167,7 @@ export function RankingEditor({
               ))}
               {rest.length > 1 && (
                 <button type="button" className="chip-btn chip-btn-all" onClick={() => setOrder((o) => [...o, ...rest.map((p) => p.id)])}>
-                  + Everyone left ({rest.length})
+                  + {t("Everyone left ({n})", { n: rest.length })}
                 </button>
               )}
             </div>
@@ -173,17 +176,17 @@ export function RankingEditor({
 
         <Notice state={state} />
         <div className="form-actions">
-          <Submit>Save ranking</Submit>
-          {!saved && <span className="small muted">Unsaved changes</span>}
+          <Submit>{t("Save ranking")}</Submit>
+          {!saved && <span className="small muted">{t("Unsaved changes")}</span>}
         </div>
       </form>
 
       <div className="card lineup-preview">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={shown} width={1080} height={1350} alt="Ranking graphic" style={{ opacity: loading ? 0.6 : 1, transition: "opacity 150ms" }} />
+        <img src={shown} width={1080} height={1350} alt={t("Ranking graphic")} style={{ opacity: loading ? 0.6 : 1, transition: "opacity 150ms" }} />
         <div className="form-actions">
           <ShareGraphic src={`${image}?${query}`} />
-          <span className="small muted">{loading ? "Updating…" : order.length > 20 ? "The graphic shows the top 20." : "Post 1080×1350, story 1080×1920."}</span>
+          <span className="small muted">{loading ? t("Updating…") : order.length > 20 ? t("The graphic shows the top 20.") : t("Post 1080×1350, story 1080×1920.")}</span>
         </div>
       </div>
     </div>

@@ -3,8 +3,10 @@
 import Link from "next/link";
 import { useActionState, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { initials, Notice, shrinkImage, slugify, Submit } from "@/components/forms";
+import { useLang, useT } from "@/components/I18n";
 import { Crest } from "@/components/ui";
 import { createClub, findVoetbalTeam, slugProblem } from "@/lib/actions";
+import type { Lang } from "@/lib/i18n";
 import { inkFor } from "@/lib/color";
 import { tidyTeamName } from "@/lib/lineup";
 import { formatDate } from "@/lib/stats";
@@ -22,6 +24,7 @@ const DEFAULT_ACCENT = "#17663f";
 const DEFAULT_TRIM = "#b07d0c";
 
 export function Onboarding({ host }: { host: string }) {
+  const t = useT();
   const [state, formAction] = useActionState(createClub, {});
   const [step, setStep] = useState<Step>("team");
   const [team, setTeam] = useState<TeamPreview | null>(null);
@@ -44,12 +47,12 @@ export function Onboarding({ host }: { host: string }) {
     if (!touched.slug) setSlug(slugify(next));
   }
 
-  async function confirmTeam(t: TeamPreview) {
-    setTeam(t);
-    rename(tidyTeamName(t.name));
-    if (t.logo) {
+  async function confirmTeam(picked: TeamPreview) {
+    setTeam(picked);
+    rename(tidyTeamName(picked.name));
+    if (picked.logo) {
       // Redrawn as a small PNG like any upload, then the crest suggests the colours.
-      const png = await redraw(t.logo);
+      const png = await redraw(picked.logo);
       setLogo(png);
       const colours = await crestColours(png);
       if (colours) {
@@ -67,11 +70,11 @@ export function Onboarding({ host }: { host: string }) {
         <header className="onb-top">
           {index > 0 ? (
             <button type="button" className="btn-link" onClick={() => setStep(STEPS[index - 1])}>
-              ← Back
+              ← {t("Back")}
             </button>
           ) : (
             <Link href="/" className="btn-link">
-              ← Home
+              ← {t("Home")}
             </Link>
           )}
           <Progress at={index + 1} />
@@ -95,48 +98,48 @@ export function Onboarding({ host }: { host: string }) {
           </section>
 
           <section hidden={step !== "club"} className="onb-step">
-            <StepTitle kicker="Your club" title="Make it yours">
-              {team ? "We filled this in from voetbal.nl. Change anything that's off." : "How your club shows up on every page and graphic."}
+            <StepTitle kicker={t("Your club")} title={t("Make it yours")}>
+              {team ? t("We filled this in from voetbal.nl. Change anything that's off.") : t("How your club shows up on every page and graphic.")}
             </StepTitle>
 
             <div className="onb-preview">
               <Crest short={short || "?"} logo={logo} size={64} />
               <div>
-                <div className="onb-preview-name">{name || "Your club"}</div>
-                <div className="small muted">{team?.league ?? "Sunday league"}</div>
+                <div className="onb-preview-name">{name || t("Your club")}</div>
+                <div className="small muted">{team?.league ?? t("Sunday league")}</div>
               </div>
             </div>
 
             <div className="form">
               <label>
-                Club name
-                <input name="name" required maxLength={60} value={name} placeholder="e.g. Sunday Rovers" onChange={(e) => rename(e.target.value)} />
+                {t("Club name")}
+                <input name="name" required maxLength={60} value={name} placeholder={t("e.g. Sunday Rovers")} onChange={(e) => rename(e.target.value)} />
               </label>
               <div className="form-row">
                 <label>
-                  Badge letters
+                  {t("Badge letters")}
                   <input
                     name="shortName"
                     required
                     maxLength={5}
                     value={short}
                     onChange={(e) => {
-                      setTouched((t) => ({ ...t, short: true }));
+                      setTouched((was) => ({ ...was, short: true }));
                       setShort(e.target.value.toUpperCase());
                     }}
                   />
                 </label>
                 <label>
-                  Founded <span className="muted">(optional)</span>
+                  {t("Founded")} <span className="muted">{t("(optional)")}</span>
                   <input name="founded" type="number" min={1850} max={2100} inputMode="numeric" placeholder="1907" />
                 </label>
               </div>
 
               <div className="onb-colours">
-                <ColourPick label="Main colour" value={accent} onChange={(v) => (setAccent(v), setFromCrest(false))} />
-                <ColourPick label="Second colour" value={trim} onChange={(v) => (setTrim(v), setFromCrest(false))} />
+                <ColourPick label={t("Main colour")} value={accent} onChange={(v) => (setAccent(v), setFromCrest(false))} />
+                <ColourPick label={t("Second colour")} value={trim} onChange={(v) => (setTrim(v), setFromCrest(false))} />
               </div>
-              {fromCrest && <p className="small muted onb-hint">Colours picked from your crest.</p>}
+              {fromCrest && <p className="small muted onb-hint">{t("Colours picked from your crest.")}</p>}
 
               <CrestPicker
                 logo={logo}
@@ -152,10 +155,10 @@ export function Onboarding({ host }: { host: string }) {
               />
 
               <details className="onb-more">
-                <summary>Add a tagline</summary>
+                <summary>{t("Add a tagline")}</summary>
                 <label>
-                  Tagline <span className="muted">(under the club name)</span>
-                  <input name="tagline" maxLength={120} placeholder="Every goal, every card, every excuse." />
+                  {t("Tagline")} <span className="muted">{t("(under the club name)")}</span>
+                  <input name="tagline" maxLength={120} placeholder={t("Every goal, every card, every excuse.")} />
                 </label>
               </details>
             </div>
@@ -167,20 +170,20 @@ export function Onboarding({ host }: { host: string }) {
                 disabled={name.trim().length < 2 || !short.trim()}
                 onClick={() => setStep("claim")}
               >
-                Continue
+                {t("Continue")}
               </button>
             </div>
           </section>
 
           <section hidden={step !== "claim"} className="onb-step">
-            <StepTitle kicker="Almost there" title="Claim your page">
-              Anyone with the link can follow the club. Only someone with the admin password can change things.
+            <StepTitle kicker={t("Almost there")} title={t("Claim your page")}>
+              {t("Anyone with the link can follow the club. Only someone with the admin password can change things.")}
             </StepTitle>
-            <ClaimStep host={host} slug={slug} onSlug={(v) => (setSlug(v), setTouched((t) => ({ ...t, slug: true })))} />
+            <ClaimStep host={host} slug={slug} onSlug={(v) => (setSlug(v), setTouched((was) => ({ ...was, slug: true })))} />
             <Notice state={state} />
             <div className="onb-actions">
-              <Submit className="btn btn-lg" pending={team ? "Creating your club…" : "Creating…"}>
-                Create {name || "club"}
+              <Submit className="btn btn-lg" pending={team ? t("Creating your club…") : t("Creating…")}>
+                {name ? t("Create {name}", { name }) : t("Create club")}
               </Submit>
             </div>
           </section>
@@ -193,8 +196,16 @@ export function Onboarding({ host }: { host: string }) {
 // ---------- pieces ----------
 
 export function Progress({ at }: { at: number }) {
+  const t = useT();
   return (
-    <div className="onb-progress" role="progressbar" aria-valuemin={1} aria-valuemax={ONBOARDING_TOTAL} aria-valuenow={at} aria-label={`Step ${at} of ${ONBOARDING_TOTAL}`}>
+    <div
+      className="onb-progress"
+      role="progressbar"
+      aria-valuemin={1}
+      aria-valuemax={ONBOARDING_TOTAL}
+      aria-valuenow={at}
+      aria-label={t("Step {at} of {total}", { at, total: ONBOARDING_TOTAL })}
+    >
       {Array.from({ length: ONBOARDING_TOTAL }, (_, i) => (
         <span key={i} className={i < at ? "is-done" : undefined} />
       ))}
@@ -212,7 +223,9 @@ export function StepTitle({ kicker, title, children }: { kicker: string; title: 
   );
 }
 
-function TeamStep({ team, onConfirm, onSkip }: { team: TeamPreview | null; onConfirm: (t: TeamPreview) => void; onSkip: () => void }) {
+function TeamStep({ team, onConfirm, onSkip }: { team: TeamPreview | null; onConfirm: (picked: TeamPreview) => void; onSkip: () => void }) {
+  const t = useT();
+  const lang = useLang();
   const [link, setLink] = useState("");
   const [found, setFound] = useState<TeamPreview | null>(team);
   const [error, setError] = useState("");
@@ -231,7 +244,7 @@ function TeamStep({ team, onConfirm, onSkip }: { team: TeamPreview | null; onCon
   if (found)
     return (
       <div className="onb-step">
-        <StepTitle kicker="Found it" title="Is this your team?" />
+        <StepTitle kicker={t("Found it")} title={t("Is this your team?")} />
         <div className="onb-team">
           {found.logo ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -244,17 +257,18 @@ function TeamStep({ team, onConfirm, onSkip }: { team: TeamPreview | null; onCon
           <dl className="onb-team-facts">
             {found.standing && (
               <div>
-                <dt>Table</dt>
+                <dt>{t("Table")}</dt>
                 <dd>
-                  {ordinal(found.standing.position)} of {found.standing.teams} · {found.standing.points} {found.standing.points === 1 ? "pt" : "pts"}
+                  {t("{pos} of {teams}", { pos: ordinal(found.standing.position, lang), teams: found.standing.teams })} ·{" "}
+                  {found.standing.points === 1 ? t("{n} pt", { n: 1 }) : t("{n} pts", { n: found.standing.points })}
                 </dd>
               </div>
             )}
             {found.next && (
               <div>
-                <dt>Next up</dt>
+                <dt>{t("Next up")}</dt>
                 <dd>
-                  {found.next.home ? "vs" : "at"} {found.next.opponent} · {formatDate(found.next.date)}
+                  {found.next.home ? t("vs") : t("at")} {found.next.opponent} · {formatDate(found.next.date, undefined, lang)}
                   {found.next.kickoff && `, ${found.next.kickoff}`}
                 </dd>
               </div>
@@ -272,10 +286,10 @@ function TeamStep({ team, onConfirm, onSkip }: { team: TeamPreview | null; onCon
               setConfirming(false);
             }}
           >
-            {confirming ? "One moment…" : "Yes, that's us"}
+            {confirming ? t("One moment…") : t("Yes, that's us")}
           </button>
           <button type="button" className="btn-link" onClick={() => setFound(null)}>
-            No, try another link
+            {t("No, try another link")}
           </button>
         </div>
       </div>
@@ -283,12 +297,12 @@ function TeamStep({ team, onConfirm, onSkip }: { team: TeamPreview | null; onCon
 
   return (
     <div className="onb-step">
-      <StepTitle kicker="Let's set up your club" title="Find your team">
-        Paste your team&apos;s link from voetbal.nl. We&apos;ll bring in your crest, fixtures, results and the league table, and keep them up to date.
+      <StepTitle kicker={t("Let's set up your club")} title={t("Find your team")}>
+        {t("Paste your team's link from voetbal.nl. We'll bring in your crest, fixtures, results and the league table, and keep them up to date.")}
       </StepTitle>
       <div className="form">
         <label>
-          voetbal.nl team link
+          {t("voetbal.nl team link")}
           <input
             type="url"
             inputMode="url"
@@ -307,20 +321,20 @@ function TeamStep({ team, onConfirm, onSkip }: { team: TeamPreview | null; onCon
         </label>
         {error && <p className="notice notice-error" role="alert">{error}</p>}
         <details className="onb-more">
-          <summary>Where do I find the link?</summary>
+          <summary>{t("Where do I find the link?")}</summary>
           <ol className="onb-how">
-            <li>Open voetbal.nl and log in.</li>
-            <li>Go to your team. Search the club, then pick your team, e.g. &ldquo;Zondag 2&rdquo;.</li>
-            <li>Copy the address from the browser bar. It looks like voetbal.nl/team/T1628317720/overzicht.</li>
+            <li>{t("Open voetbal.nl and log in.")}</li>
+            <li>{t("Go to your team. Search the club, then pick your team, e.g. “Zondag 2”.")}</li>
+            <li>{t("Copy the address from the browser bar. It looks like voetbal.nl/team/T1628317720/overzicht.")}</li>
           </ol>
         </details>
       </div>
       <div className="onb-actions">
         <button type="button" className="btn btn-lg" disabled={!link.trim() || busy} onClick={find}>
-          {busy ? "Looking up your team…" : "Find my team"}
+          {busy ? t("Looking up your team…") : t("Find my team")}
         </button>
         <button type="button" className="btn-link" onClick={onSkip}>
-          We&apos;re not on voetbal.nl
+          {t("We're not on voetbal.nl")}
         </button>
       </div>
     </div>
@@ -340,6 +354,7 @@ function ColourPick({ label, value, onChange }: { label: string; value: string; 
 }
 
 function CrestPicker({ logo, onChange }: { logo: string | null; onChange: (png: string | null) => void }) {
+  const t = useT();
   const input = useRef<HTMLInputElement>(null);
   const [error, setError] = useState("");
   return (
@@ -353,28 +368,29 @@ function CrestPicker({ logo, onChange }: { logo: string | null; onChange: (png: 
           const file = e.target.files?.[0];
           if (!file) return;
           setError("");
-          if (file.size > 5_000_000) return setError("That file is over 5 MB. Pick a smaller one.");
+          if (file.size > 5_000_000) return setError(t("That file is over 5 MB. Pick a smaller one."));
           try {
             onChange(await shrinkImage(file, 256));
           } catch {
-            setError("Couldn't read that image. Try a PNG or JPG.");
+            setError(t("Couldn't read that image. Try a PNG or JPG."));
           }
         }}
       />
       <button type="button" className="btn btn-secondary" onClick={() => input.current?.click()}>
-        {logo ? "Change crest" : "Upload crest"}
+        {logo ? t("Change crest") : t("Upload crest")}
       </button>
       {logo && (
         <button type="button" className="btn-link danger" onClick={() => onChange(null)}>
-          Remove
+          {t("Remove")}
         </button>
       )}
-      {error ? <p className="notice notice-error" role="alert">{error}</p> : !logo && <span className="small muted">No crest? The badge uses your colours and letters.</span>}
+      {error ? <p className="notice notice-error" role="alert">{error}</p> : !logo && <span className="small muted">{t("No crest? The badge uses your colours and letters.")}</span>}
     </div>
   );
 }
 
 function ClaimStep({ host, slug, onSlug }: { host: string; slug: string; onSlug: (v: string) => void }) {
+  const t = useT();
   const [problem, setProblem] = useState<string | null | undefined>(undefined);
   const [show, setShow] = useState(false);
 
@@ -388,7 +404,7 @@ function ClaimStep({ host, slug, onSlug }: { host: string; slug: string; onSlug:
   return (
     <div className="form">
       <label>
-        Web address
+        {t("Web address")}
         <div className="input-prefix">
           <span>{host}/c/</span>
           <input
@@ -404,30 +420,31 @@ function ClaimStep({ host, slug, onSlug }: { host: string; slug: string; onSlug:
         </div>
       </label>
       <p className={`small onb-slug ${problem ? "is-bad" : problem === null ? "is-ok" : ""}`} aria-live="polite">
-        {!slug ? "Pick the address people will open." : problem === undefined ? "Checking…" : problem ?? "✓ That address is free."}
+        {!slug ? t("Pick the address people will open.") : problem === undefined ? t("Checking…") : problem ? t(problem) : t("✓ That address is free.")}
       </p>
 
       <label>
-        Admin password
+        {t("Admin password")}
         <div className="onb-password">
           <input type={show ? "text" : "password"} name="password" required minLength={6} autoComplete="new-password" />
           <button type="button" className="btn-link" onClick={() => setShow((s) => !s)}>
-            {show ? "Hide" : "Show"}
+            {show ? t("Hide") : t("Show")}
           </button>
         </div>
       </label>
       <label>
-        Type it again
+        {t("Type it again")}
         <input type={show ? "text" : "password"} name="confirm" required minLength={6} autoComplete="new-password" />
       </label>
-      <p className="small muted">At least 6 characters. You can add a separate coach password later, for setting line-ups only.</p>
+      <p className="small muted">{t("At least 6 characters. You can add a separate coach password later, for setting line-ups only.")}</p>
     </div>
   );
 }
 
 // ---------- helpers ----------
 
-const ordinal = (n: number) => `${n}${n % 100 >= 11 && n % 100 <= 13 ? "th" : ["th", "st", "nd", "rd"][n % 10] ?? "th"}`;
+const ordinal = (n: number, lang: Lang) =>
+  lang === "nl" ? `${n}e` : `${n}${n % 100 >= 11 && n % 100 <= 13 ? "th" : ["th", "st", "nd", "rd"][n % 10] ?? "th"}`;
 
 async function loadImage(src: string): Promise<HTMLImageElement> {
   const img = new Image();

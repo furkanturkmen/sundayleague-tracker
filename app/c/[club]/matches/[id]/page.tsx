@@ -10,6 +10,9 @@ import { Page, Section } from "@/components/home/Page";
 import { Crest, TeamLogo } from "@/components/ui";
 import { deleteMatch } from "@/lib/actions";
 import { loadClub } from "@/lib/club";
+import type { T } from "@/lib/i18n";
+import { getLang, getT } from "@/lib/i18n/server";
+import { homeVenue } from "@/lib/i18n/nl-matches";
 import { formatDate, seasonLabel, seasonOf } from "@/lib/stats";
 import stadium from "@/public/images/stadium-floodlights.jpg";
 import { ShareGraphic } from "@/components/ShareGraphic";
@@ -20,7 +23,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { club, id } = await params;
   const { st } = await loadClub(club);
   const m = st.getMatch(id);
-  return { title: m ? `${st.fixtureTitle(m)} (${formatDate(m.date)})` : "Match" };
+  const [t, lang] = await Promise.all([getT(), getLang()]);
+  return { title: m ? `${st.fixtureTitle(m)} (${formatDate(m.date, undefined, lang)})` : t("Match") };
 }
 
 // One match. The scoreboard is the hero: both crests and the score as big as the stadium allows. Under it the
@@ -36,13 +40,14 @@ export default async function MatchPage({ params }: Props) {
   const m = st.getPlayed(id);
   const { prev, next } = st.neighbours(id);
   const { club } = data;
+  const [t, lang] = await Promise.all([getT(), getLang()]);
 
   const us = { name: club.name, crest: <Crest short={club.shortName} logo={club.logo} size={96} /> };
   const them = { name: fixture.opponent, crest: <TeamLogo code={fixture.opponentCode} name={fixture.opponent} size={96} /> };
   const [home, away] = fixture.venue === "H" ? [us, them] : [them, us];
   const [hs, as] = m ? (fixture.venue === "H" ? [m.gf, m.ga] : [m.ga, m.gf]) : [null, null];
-  const status = fixture.status === "abandoned" ? "Abandoned" : fixture.status === "called-off" ? "Called off" : null;
-  const verdict = m ? WORD[m.result] : (status ?? "To play");
+  const status = fixture.status === "abandoned" ? t("Abandoned") : fixture.status === "called-off" ? t("Called off") : null;
+  const verdict = m ? t(WORD[m.result]) : (status ?? t("To play"));
 
   return (
     <Page accent={club.accent}>
@@ -53,24 +58,24 @@ export default async function MatchPage({ params }: Props) {
         <div className="hx-hero-inner">
           <Reveal className="md-top">
             <Link href={`${st.base}/matches`} className="hx-back">
-              <span aria-hidden="true">←</span> All matches
+              <span aria-hidden="true">←</span> {t("All matches")}
             </Link>
             {admin && (
               <div className="md-admin">
                 <Link href={`${st.base}/matches/${id}/edit`} className="hx-btn">
-                  Edit
+                  {t("Edit")}
                 </Link>
                 <form action={deleteMatch.bind(null, slug)}>
                   <input type="hidden" name="id" value={id} />
-                  <ConfirmSubmit className="md-delete" message="Delete this match and everything recorded in it?">
-                    Delete
+                  <ConfirmSubmit className="md-delete" message={t("Delete this match and everything recorded in it?")}>
+                    {t("Delete")}
                   </ConfirmSubmit>
                 </form>
               </div>
             )}
           </Reveal>
           <h1 id="page-title" className="sr-only">
-            {home.name} {m ? `${hs}–${as}` : "vs"} {away.name}
+            {home.name} {m ? `${hs}–${as}` : t("vs")} {away.name}
           </h1>
           <Reveal className="md-board" delay={0.05}>
             <span className="md-side">
@@ -85,7 +90,7 @@ export default async function MatchPage({ params }: Props) {
                   {as}
                 </>
               ) : (
-                <em>vs</em>
+                <em>{t("vs")}</em>
               )}
             </span>
             <span className="md-side">
@@ -98,14 +103,14 @@ export default async function MatchPage({ params }: Props) {
               <em>{verdict}.</em>
             </p>
             <p>
-              {formatDate(fixture.date, { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
+              {formatDate(fixture.date, { weekday: "long", day: "numeric", month: "long", year: "numeric" }, lang)}
               {fixture.kickoff && !m && `, ${fixture.kickoff}`}
               <span> · </span>
-              <span className={fixture.competition === "League" ? undefined : "hx-cup"}>{fixture.competition}</span>
+              <span className={fixture.competition === "League" ? undefined : "hx-cup"}>{t(fixture.competition)}</span>
               <span> · </span>
-              {fixture.venue === "H" ? "Home" : "Away"}
+              {fixture.venue === "H" ? homeVenue(lang) : t("Away")}
               <span> · </span>
-              {seasonLabel(seasonOf(fixture.date))}
+              {t(seasonLabel(seasonOf(fixture.date)))}
             </p>
           </Reveal>
         </div>
@@ -115,63 +120,67 @@ export default async function MatchPage({ params }: Props) {
         {!m ? (
           <p className="md-note">
             {fixture.status === "abandoned"
-              ? "Abandoned. voetbal.nl has no result for this match, so it doesn't count in any stats."
+              ? t("Abandoned. voetbal.nl has no result for this match, so it doesn't count in any stats.")
               : fixture.status === "called-off"
-                ? "Called off. It doesn't count in any stats."
-                : `Not played yet.${admin ? " Edit the match to add the result once it's done." : ""}`}
+                ? t("Called off. It doesn't count in any stats.")
+                : admin
+                  ? t("Not played yet. Edit the match to add the result once it's done.")
+                  : t("Not played yet.")}
           </p>
         ) : (
           <div className="md-grid">
-            <Section id="md-goals" lead="The" accent="goals." small>
+            <Section id="md-goals" lead={t("The")} accent={t("goals.")} small>
               {m.gf > 0 ? (
                 <ol className="md-events">
                   {m.goals.map((g, i) => (
                     <Event key={i} when={g.minute !== undefined ? `${g.minute}′` : "–"}>
-                      <PlayerName base={st.base} id={g.scorer} name={st.playerName(g.scorer)} />
-                      {g.penalty && <small>penalty</small>}
-                      {g.assist && <small>assist {st.playerName(g.assist)}</small>}
+                      <PlayerName base={st.base} id={g.scorer} name={st.playerName(g.scorer)} t={t} />
+                      {g.penalty && <small>{t("penalty")}</small>}
+                      {g.assist && <small>{t("assist {name}", { name: st.playerName(g.assist) })}</small>}
                     </Event>
                   ))}
                   {/* The official score can come from voetbal.nl before anyone has said who scored. */}
                   {m.gf > m.goals.length && (
                     <Event when="–">
                       <small>
-                        {m.gf - m.goals.length} {m.gf - m.goals.length === 1 ? "goal" : "goals"} without a scorer yet
+                        {m.gf - m.goals.length === 1
+                          ? t("{n} goal without a scorer yet", { n: 1 })
+                          : t("{n} goals without a scorer yet", { n: m.gf - m.goals.length })}
                       </small>
                     </Event>
                   )}
                   {m.ownGoals.map((p, i) => (
-                    <Event key={`og${i}`} when="OG">
-                      <PlayerName base={st.base} id={p} name={st.playerName(p)} />
-                      <small>scored an own goal</small>
+                    <Event key={`og${i}`} when={t("OG")}>
+                      <PlayerName base={st.base} id={p} name={st.playerName(p)} t={t} />
+                      <small>{t("scored an own goal")}</small>
                     </Event>
                   ))}
                   {m.penaltiesMissed.map((p, i) => (
                     <Event key={`pm${i}`} when={<Icon name="miss" />}>
-                      <PlayerName base={st.base} id={p} name={st.playerName(p)} />
-                      <small>missed a penalty</small>
+                      <PlayerName base={st.base} id={p} name={st.playerName(p)} t={t} />
+                      <small>{t("missed a penalty")}</small>
                     </Event>
                   ))}
                 </ol>
               ) : (
-                <p className="hx-empty">Didn&apos;t trouble the scorers.</p>
+                <p className="hx-empty">{t("Didn't trouble the scorers.")}</p>
               )}
             </Section>
 
-            <Section id="md-awards" lead="The" accent="verdict." small>
+            <Section id="md-awards" lead={t("The")} accent={t("verdict.")} small>
               <div className="md-motm">
                 <span className="md-motm-star">
                   <Icon name="star" />
                 </span>
-                <span className="hx-label">Man of the Match</span>
-                {m.motm ? <PlayerName base={st.base} id={m.motm} name={st.playerName(m.motm)} /> : <span className="hx-empty">Not given</span>}
+                <span className="hx-label">{t("Man of the Match")}</span>
+                {m.motm ? <PlayerName base={st.base} id={m.motm} name={st.playerName(m.motm)} t={t} /> : <span className="hx-empty">{t("Not given")}</span>}
               </div>
               {m.cards.length > 0 && (
                 <ol className="md-events">
                   {m.cards.map((c, i) => (
-                    <Event key={i} when={<span className={c.type === "Y" ? "card-y" : "card-r"} title={c.type === "Y" ? "Yellow card" : "Red card"} />}>
-                      <PlayerName base={st.base} id={c.player} name={st.playerName(c.player)} />
-                      <small>{c.type === "Y" ? "booked" : "sent off"}</small>
+                    <Event key={i} when={<span className={c.type === "Y" ? "card-y" : "card-r"} title={c.type === "Y" ? t("Yellow card") : t("Red card")} />}>
+                      <PlayerName base={st.base} id={c.player} name={st.playerName(c.player)} t={t} />
+                      <small>{c.type === "Y" ? t("booked") : t("sent off")}</small>
                     </Event>
                   ))}
                 </ol>
@@ -179,33 +188,39 @@ export default async function MatchPage({ params }: Props) {
               {m.notes && <blockquote className="md-notes">{m.notes}</blockquote>}
             </Section>
 
-            <Section id="md-squad" lead="The" accent="squad." note={m.squad.length ? `${m.squad.length} players` : undefined} small>
+            <Section
+              id="md-squad"
+              lead={t("The")}
+              accent={t("squad.")}
+              note={m.squad.length ? (m.squad.length === 1 ? t("{n} player", { n: 1 }) : t("{n} players", { n: m.squad.length })) : undefined}
+              small
+            >
               {m.squad.length ? (
                 <ul className="md-squad">
                   {m.squad.map((p) => (
                     <li key={p}>
                       <Link href={`${st.base}/players/${p}`}>{st.playerName(p)}</Link>
                       {m.captain === p && (
-                        <abbr className="md-captain" title="Captain">
-                          C
+                        <abbr className="md-captain" title={t("Captain")}>
+                          {t("C")}
                         </abbr>
                       )}
                     </li>
                   ))}
                 </ul>
               ) : (
-                <p className="hx-empty">Squad not recorded.</p>
+                <p className="hx-empty">{t("Squad not recorded.")}</p>
               )}
             </Section>
           </div>
         )}
 
-        {(admin || coach) && !fixture.status && <Graphics base={`${st.base}/matches/${id}`} played={Boolean(m)} />}
+        {(admin || coach) && !fixture.status && <Graphics base={`${st.base}/matches/${id}`} played={Boolean(m)} t={t} />}
 
-        <nav className="md-pager" aria-label="Other matches">
+        <nav className="md-pager" aria-label={t("Other matches")}>
           {prev ? (
             <Link href={`${st.base}/matches/${prev.id}`}>
-              <span className="hx-label">Previous match</span>
+              <span className="hx-label">{t("Previous match")}</span>
               <b>
                 <span aria-hidden="true">← </span>
                 {prev.opponent}
@@ -216,7 +231,7 @@ export default async function MatchPage({ params }: Props) {
           )}
           {next && (
             <Link href={`${st.base}/matches/${next.id}`} className="md-pager-next">
-              <span className="hx-label">Next match</span>
+              <span className="hx-label">{t("Next match")}</span>
               <b>
                 {next.opponent}
                 <span aria-hidden="true"> →</span>
@@ -238,8 +253,8 @@ function Event({ when, children }: { when: ReactNode; children: ReactNode }) {
   );
 }
 
-function PlayerName({ base, id, name }: { base: string; id: string; name: string }) {
-  if (id === "og") return <b>Own goal</b>;
+function PlayerName({ base, id, name, t }: { base: string; id: string; name: string; t: T }) {
+  if (id === "og") return <b>{t("Own goal")}</b>;
   return (
     <Link href={`${base}/players/${id}`} className="md-player">
       {name}
@@ -248,23 +263,23 @@ function PlayerName({ base, id, name }: { base: string; id: string; name: string
 }
 
 /** Instagram posts for this match: matchday before it, the result after, and the line-up either way. */
-function Graphics({ base, played }: { base: string; played: boolean }) {
+function Graphics({ base, played, t }: { base: string; played: boolean; t: T }) {
   const posts = [
-    played ? { key: "result", label: "Result" } : { key: "matchday", label: "Matchday" },
-    { key: "lineup", label: "Line-up", edit: `${base}/lineup` },
+    played ? { key: "result", label: t("Result") } : { key: "matchday", label: t("Matchday") },
+    { key: "lineup", label: t("Line-up"), edit: `${base}/lineup` },
   ];
   return (
-    <Section id="md-posts" lead="For" accent="Instagram." note="Posts and stories, made from this match." small>
+    <Section id="md-posts" lead={t("For")} accent="Instagram." note={t("Posts and stories, made from this match.")} small>
       <div className="md-posts">
         {posts.map((g) => (
           <figure key={g.key}>
             <a href={`${base}/graphics/${g.key}`} target="_blank" rel="noreferrer">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={`${base}/graphics/${g.key}`} width={1080} height={1350} alt={`${g.label} graphic`} loading="lazy" />
+              <img src={`${base}/graphics/${g.key}`} width={1080} height={1350} alt={t("{label} graphic", { label: g.label })} loading="lazy" />
             </a>
             <figcaption>
               <strong>{g.label}</strong>
-              {g.edit && <Link href={g.edit}>Edit</Link>}
+              {g.edit && <Link href={g.edit}>{t("Edit")}</Link>}
             </figcaption>
             <ShareGraphic src={`${base}/graphics/${g.key}`} className="gx-share-compact" />
           </figure>

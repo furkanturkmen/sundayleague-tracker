@@ -6,9 +6,13 @@ import { Page, PageHero } from "@/components/home/Page";
 import { saveLineup } from "@/lib/actions";
 import { loadClub } from "@/lib/club";
 import { matchLineup } from "@/lib/lineup";
+import { getLang, getT } from "@/lib/i18n/server";
 import { formatDate } from "@/lib/stats";
 
-export const metadata: Metadata = { title: "Line-up graphic" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("Line-up graphic") };
+}
 
 export default async function LineupPage({ params }: { params: Promise<{ club: string; id: string }> }) {
   const { club: slug, id } = await params;
@@ -17,28 +21,31 @@ export default async function LineupPage({ params }: { params: Promise<{ club: s
   const match = st.getMatch(id);
   if (!match) notFound();
   const noPhotos = data.players.filter((p) => p.active && !p.photo).length;
+  const [t, lang] = await Promise.all([getT(), getLang()]);
 
   return (
     <Page accent={data.club.accent}>
       <PageHero
         size="mini"
-        back={{ href: `${st.base}/matches/${id}`, label: "Back to the match" }}
-        lead="The"
-        accent="line-up."
-        meta={`${st.fixtureTitle(match)} · ${formatDate(match.date)}`}
+        back={{ href: `${st.base}/matches/${id}`, label: t("Back to the match") }}
+        lead={t("The")}
+        accent={t("line-up.")}
+        meta={`${st.fixtureTitle(match)} · ${formatDate(match.date, undefined, lang)}`}
       >
         <p className="hx-hero-note">
-          The players start out guessed from the squad and their positions. Change anything, save, and download the PNG for Instagram.
+          {t("The players start out guessed from the squad and their positions. Change anything, save, and download the PNG for Instagram.")}
           {noPhotos > 0 && (
             <>
               {" "}
-              {noPhotos} active {noPhotos === 1 ? "player has" : "players have"} no photo yet and {noPhotos === 1 ? "shows" : "show"} as a shirt;{" "}
+              {noPhotos === 1
+                ? t("{n} active player has no photo yet and shows as a shirt;", { n: 1 })
+                : t("{n} active players have no photo yet and show as a shirt;", { n: noPhotos })}{" "}
               {admin ? (
                 <>
-                  add photos and short names under <Link href={`${st.base}/settings/squad`}>Settings → Squad</Link>.
+                  {t("add photos and short names under")} <Link href={`${st.base}/settings/squad`}>{t("Settings → Squad")}</Link>.
                 </>
               ) : (
-                "a club admin can add photos and short names."
+                t("a club admin can add photos and short names.")
               )}
             </>
           )}

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState, type CSSProperties } from "react";
+import { useT } from "@/components/I18n";
 
 /**
  * The club's links. On a wide screen they sit in the header; on the redesigned pages on a phone they fold behind a
@@ -11,15 +12,16 @@ import { useEffect, useState, type CSSProperties } from "react";
 export function Nav({ base, admin }: { base: string; admin: boolean }) {
   const path = usePathname();
   const [open, setOpen] = useState(false);
+  const t = useT();
   const links = [
-    { href: base, label: "Home" },
-    { href: `${base}/matches`, label: "Matches" },
-    { href: `${base}/table`, label: "Table" },
-    { href: `${base}/players`, label: "Players" },
-    { href: `${base}/stats`, label: "Stats" },
-    { href: `${base}/halls`, label: "Fame & Shame" },
+    { href: base, label: t("Home") },
+    { href: `${base}/matches`, label: t("Matches") },
+    { href: `${base}/table`, label: t("Table") },
+    { href: `${base}/players`, label: t("Players") },
+    { href: `${base}/stats`, label: t("Stats") },
+    { href: `${base}/halls`, label: t("Fame & Shame") },
     // Straight to the first tab: going via /settings and its redirect showed the old page for a moment.
-    ...(admin ? [{ href: `${base}/settings/squad`, match: `${base}/settings`, label: "Settings" }] : []),
+    ...(admin ? [{ href: `${base}/settings/squad`, match: `${base}/settings`, label: t("Settings") }] : []),
   ];
 
   // Close on navigation and on Escape, and keep the page behind still while the sheet is open.
@@ -38,7 +40,7 @@ export function Nav({ base, admin }: { base: string; admin: boolean }) {
   return (
     <>
       <button type="button" className="nav-toggle" aria-expanded={open} aria-controls="club-nav" onClick={() => setOpen((o) => !o)}>
-        <span>{open ? "Close" : "Menu"}</span>
+        <span>{open ? t("Close") : t("Menu")}</span>
         <span className="nav-toggle-icon" aria-hidden="true" />
       </button>
       <nav id="club-nav" className="nav" aria-label="Club" data-open={open || undefined}>

@@ -3,6 +3,8 @@
 import { motion, useMotionValue, useReducedMotion, useScroll, useSpring, useTransform } from "motion/react";
 import Link from "next/link";
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useLang, useT } from "@/components/I18n";
+import { dateLocale, type Lang, type T } from "@/lib/i18n";
 import { amsterdam } from "@/lib/time";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
@@ -40,7 +42,9 @@ export function HomeHero({ photo, club, fixture, actions }: { photo: ReactNode; 
   const top = useTransform(sy, (v) => `${v * 100}%`);
 
   const now = useNow();
-  const until = fixture ? countdown(fixture, now) : null;
+  const t = useT();
+  const lang = useLang();
+  const until = fixture ? countdown(fixture, now, t, lang) : null;
   const rise = (delay: number) => ({
     initial: { opacity: 0, y: 28 },
     animate: { opacity: 1, y: 0 },
@@ -70,7 +74,7 @@ export function HomeHero({ photo, club, fixture, actions }: { photo: ReactNode; 
           {/* The header already shows the club; the title keeps its name for screen readers and search only. */}
           <span className="sr-only">{club}: </span>
           <span className="hx-headline">
-            {until ? until.lead : "Season"} <em>{until ? until.accent : "on."}</em>
+            {until ? until.lead : t("Season")} <em>{until ? until.accent : t("on.")}</em>
           </span>
         </motion.h1>
 
@@ -81,7 +85,7 @@ export function HomeHero({ photo, club, fixture, actions }: { photo: ReactNode; 
                 {fixture.home.crest}
                 {fixture.home.name}
               </span>
-              <span className="hx-vs">vs</span>
+              <span className="hx-vs">{t("vs")}</span>
               <span className="hx-team">
                 {fixture.away.crest}
                 {fixture.away.name}
@@ -97,7 +101,7 @@ export function HomeHero({ photo, club, fixture, actions }: { photo: ReactNode; 
           <div className="hx-actions">{actions}</div>
           {until?.clock && (
             <div className="hx-clock" aria-hidden="true">
-              <span className="hx-clock-lead">Kick-off in</span>
+              <span className="hx-clock-lead">{t("Kick-off in")}</span>
               {until.clock.map((c) => (
                 <span key={c.label} className="hx-clock-part">
                   <b>{String(c.value).padStart(2, "0")}</b>
@@ -124,32 +128,32 @@ function useNow(): number | null {
 }
 
 /** The headline in two parts ("Matchday on" + "Sunday.") and the clock to kick-off, when there is a time. */
-function countdown(f: HeroFixture, now: number | null) {
-  if (now === null) return { lead: "Matchday", accent: "soon.", clock: null };
+function countdown(f: HeroFixture, now: number | null, t: T, lang: Lang) {
+  if (now === null) return { lead: t("Matchday"), accent: t("soon."), clock: null };
   const target = f.at ?? f.day;
   const ms = target - now;
   const days = Math.floor((f.day - startOfToday(now)) / 86_400_000);
-  if (f.at !== null && ms <= 0 && ms > -2 * 3_600_000) return { lead: "We're", accent: "playing.", clock: null };
+  if (f.at !== null && ms <= 0 && ms > -2 * 3_600_000) return { lead: t("We're"), accent: t("playing."), clock: null };
   // Within the week the day is named ("on Sunday."), so the headline never disagrees with the clock: Thursday
   // afternoon is "3 days" by the calendar but 2d 22h to a 13:00 kick-off.
-  const weekday = new Date(f.day).toLocaleDateString("en-GB", { weekday: "long", timeZone: "Europe/Amsterdam" });
+  const weekday = new Date(f.day).toLocaleDateString(dateLocale(lang), { weekday: "long", timeZone: "Europe/Amsterdam" });
   const head =
     days <= 0
-      ? { lead: "Matchday", accent: "today." }
+      ? { lead: t("Matchday"), accent: t("today.") }
       : days === 1
-        ? { lead: "Matchday", accent: "tomorrow." }
+        ? { lead: t("Matchday"), accent: t("tomorrow.") }
         : days < 7
-          ? { lead: "Matchday on", accent: `${weekday}.` }
-          : { lead: "Matchday in", accent: `${days} days.` };
+          ? { lead: t("Matchday on"), accent: `${weekday}.` }
+          : { lead: t("Matchday in"), accent: t("{n} days.", { n: days }) };
   if (f.at === null || ms <= 0) return { ...head, clock: null };
   const s = Math.floor(ms / 1000);
   return {
     ...head,
     clock: [
-      { value: Math.floor(s / 86400), label: "d" },
-      { value: Math.floor((s % 86400) / 3600), label: "h" },
-      { value: Math.floor((s % 3600) / 60), label: "m" },
-      { value: s % 60, label: "s" },
+      { value: Math.floor(s / 86400), label: t("d") },
+      { value: Math.floor((s % 86400) / 3600), label: t("h") },
+      { value: Math.floor((s % 3600) / 60), label: t("m") },
+      { value: s % 60, label: t("s") },
     ],
   };
 }

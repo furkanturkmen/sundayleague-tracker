@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import type { CSSProperties, ReactNode } from "react";
+import { LangSwitch } from "@/components/I18n";
 import { Nav } from "@/components/Nav";
 import { RememberClub } from "@/components/RecentClubs";
 import { Crest } from "@/components/ui";
 import { logout } from "@/lib/actions";
 import { loadClubOpen } from "@/lib/club";
 import { inkFor } from "@/lib/color";
+import { getT } from "@/lib/i18n/server";
 
 type Props = { children: ReactNode; params: Promise<{ club: string }> };
 
@@ -24,6 +26,7 @@ export default async function ClubLayout({ children, params }: Props) {
   const { club: slug } = await params;
   // Open, not gated: a visitor who isn't let into a private club still gets the header and the sign-in page.
   const { data, st, admin, coach, squad, canView } = await loadClubOpen(slug);
+  const t = await getT();
   const { club } = data;
   const theme = { "--accent": club.accent, "--gold": club.gold, "--accent-ink": inkFor(club.accent) } as CSSProperties;
 
@@ -43,16 +46,17 @@ export default async function ClubLayout({ children, params }: Props) {
       <footer className="site-footer container">
         <span>
           {club.name}
-          {club.founded && <> · Est. {club.founded}</>}
+          {club.founded && <> · {t("Est. {year}", { year: club.founded })}</>}
         </span>
         <span className="footer-links">
+          <LangSwitch />
           <Link href="/">Sunday League Tracker</Link>
           {admin || coach || (squad && data.club.private) ? (
             <form action={logout.bind(null, slug)}>
-              <button className="btn-link">{admin ? "Sign out" : coach ? "Sign out (coach)" : "Sign out"}</button>
+              <button className="btn-link">{coach && !admin ? t("Sign out (coach)") : t("Sign out")}</button>
             </form>
           ) : (
-            <Link href={`${st.base}/login`}>Sign in</Link>
+            <Link href={`${st.base}/login`}>{t("Sign in")}</Link>
           )}
         </span>
       </footer>

@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useId, useState } from "react";
 import { ImageField, Notice, PHOTO_HINT, PHOTO_PX, Submit } from "@/components/forms";
+import { useT } from "@/components/I18n";
 import type { FormState } from "@/lib/actions";
 import { graphicName } from "@/lib/lineup";
 import { POSITION_LINES, POSITION_NAMES, positionGroup, type Player, type Position } from "@/lib/types";
@@ -54,6 +55,7 @@ const MARKINGS = (
  * mode up to two more positions toggled on the same pitch. A third extra replaces the oldest.
  */
 export function PositionPicker({ defaultValue, defaultExtra = [] }: { defaultValue: Position; defaultExtra?: Position[] }) {
+  const t = useT();
   const [pos, setPos] = useState<Position>(defaultValue);
   const [extra, setExtra] = useState<Position[]>(defaultExtra);
   const [mode, setMode] = useState<"main" | "extra">("main");
@@ -66,13 +68,13 @@ export function PositionPicker({ defaultValue, defaultExtra = [] }: { defaultVal
 
   return (
     <fieldset className={`pp pp-${mode}`}>
-      <legend>Position</legend>
-      <div className="pp-mode" role="group" aria-label="What to pick">
+      <legend>{t("Position")}</legend>
+      <div className="pp-mode" role="group" aria-label={t("What to pick")}>
         <button type="button" aria-pressed={mode === "main"} onClick={() => setMode("main")}>
-          Main position
+          {t("Main position")}
         </button>
         <button type="button" aria-pressed={mode === "extra"} onClick={() => setMode("extra")}>
-          Also plays <span>{extra.length}/2</span>
+          {t("Also plays")} <span>{extra.length}/2</span>
         </button>
       </div>
       {mode === "extra" && <input type="hidden" name="position" value={pos} />}
@@ -84,7 +86,7 @@ export function PositionPicker({ defaultValue, defaultExtra = [] }: { defaultVal
           {ANY.map((a) => (
             <label key={a.pos} className="pp-chip">
               {radio(a.pos)}
-              {a.label}
+              {t(a.label)}
             </label>
           ))}
         </div>
@@ -97,11 +99,11 @@ export function PositionPicker({ defaultValue, defaultExtra = [] }: { defaultVal
           const label = (
             <>
               <span aria-hidden="true">{s.pos}</span>
-              <span className="sr-only">{POSITION_NAMES[s.pos]}</span>
+              <span className="sr-only">{t(POSITION_NAMES[s.pos])}</span>
             </>
           );
           return mode === "main" ? (
-            <label key={s.pos} className={cls} style={style} title={POSITION_NAMES[s.pos]}>
+            <label key={s.pos} className={cls} style={style} title={t(POSITION_NAMES[s.pos])}>
               {radio(s.pos)}
               {label}
             </label>
@@ -111,7 +113,7 @@ export function PositionPicker({ defaultValue, defaultExtra = [] }: { defaultVal
               type="button"
               className={cls}
               style={style}
-              title={s.pos === pos ? "Main position" : POSITION_NAMES[s.pos]}
+              title={s.pos === pos ? t("Main position") : t(POSITION_NAMES[s.pos])}
               aria-pressed={extra.includes(s.pos)}
               disabled={s.pos === pos}
               onClick={() => toggleExtra(s.pos)}
@@ -122,9 +124,9 @@ export function PositionPicker({ defaultValue, defaultExtra = [] }: { defaultVal
         })}
       </div>
       <p className="pp-now" aria-live="polite">
-        <b>{pos}</b> {POSITION_NAMES[pos]}
-        {extra.length > 0 && <span> · also {extra.join(", ")}</span>}
-        {mode === "extra" && extra.length === 0 && <span> · tap up to two more</span>}
+        <b>{pos}</b> {t(POSITION_NAMES[pos])}
+        {extra.length > 0 && <span> · {t("also {positions}", { positions: extra.join(", ") })}</span>}
+        {mode === "extra" && extra.length === 0 && <span> · {t("tap up to two more")}</span>}
       </p>
     </fieldset>
   );
@@ -144,6 +146,7 @@ function PlayerForm({
   onSaved: (message: string) => void;
   onCancel: () => void;
 }) {
+  const t = useT();
   const [state, formAction] = useActionState(save, {});
   const ids = useId();
   useEffect(() => {
@@ -157,22 +160,22 @@ function PlayerForm({
       <div className="se-fields">
         <div className="se-pair">
           <label>
-            Name
+            {t("Name")}
             <input name="name" required maxLength={60} defaultValue={player?.name} autoFocus={!player} />
           </label>
           <label>
-            No.
+            {t("No.")}
             <input name="number" type="number" min={0} max={999} defaultValue={player?.number ?? ""} />
           </label>
         </div>
         <label>
-          Nickname <span className="muted">(optional)</span>
+          {t("Nickname")} <span className="muted">{t("(optional)")}</span>
           <input name="nickname" maxLength={40} defaultValue={player?.nickname ?? ""} />
         </label>
         {player && (
           <>
             <label>
-              Name on graphics <span className="muted">(optional)</span>
+              {t("Name on graphics")} <span className="muted">{t("(optional)")}</span>
               <input
                 name="displayName"
                 maxLength={16}
@@ -182,15 +185,15 @@ function PlayerForm({
               />
             </label>
             <label>
-              Bio <span className="muted">(optional)</span>
+              {t("Bio")} <span className="muted">{t("(optional)")}</span>
               <textarea name="bio" maxLength={300} rows={3} defaultValue={player.bio ?? ""} />
             </label>
-            <ImageField name="photo" label="Photo" hint={PHOTO_HINT} initial={player.photo} maxPx={PHOTO_PX} />
+            <ImageField name="photo" label={t("Photo")} hint={t(PHOTO_HINT)} initial={player.photo} maxPx={PHOTO_PX} />
             <label className="check se-active" htmlFor={`${ids}-active`}>
               <input id={`${ids}-active`} type="checkbox" name="active" defaultChecked={player.active} />
               <span>
-                Active
-                <small>Inactive players keep their stats but don&apos;t show up when you log a match.</small>
+                {t("Active")}
+                <small>{t("Inactive players keep their stats but don't show up when you log a match.")}</small>
               </span>
             </label>
           </>
@@ -199,9 +202,9 @@ function PlayerForm({
       <PositionPicker defaultValue={player?.position ?? "MID"} defaultExtra={player?.extraPositions} />
       <div className="se-actions">
         <Notice state={state.error ? state : {}} />
-        <Submit className="btn btn-primary">{player ? "Save" : "Add to squad"}</Submit>
+        <Submit className="btn btn-primary">{player ? t("Save") : t("Add to squad")}</Submit>
         <button type="button" className="btn-link" onClick={onCancel}>
-          Cancel
+          {t("Cancel")}
         </button>
       </div>
     </form>
@@ -209,12 +212,13 @@ function PlayerForm({
 }
 
 function RemovePlayer({ player, remove }: { player: Player; remove: Action }) {
+  const t = useT();
   const [state, formAction] = useActionState(remove, {});
   return (
     <form action={formAction} className="se-remove">
       <input type="hidden" name="id" value={player.id} />
-      <Submit className="btn-link danger" pending="Removing…">
-        Remove {player.name} from the club
+      <Submit className="btn-link danger" pending={t("Removing…")}>
+        {t("Remove {name} from the club", { name: player.name })}
       </Submit>
       <Notice state={state} />
     </form>
@@ -222,6 +226,7 @@ function RemovePlayer({ player, remove }: { player: Player; remove: Action }) {
 }
 
 function SquadRow({ player, squad, save, remove }: { player: Player; squad: Player[]; save: Action; remove: Action }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [saved, setSaved] = useState("");
   const panel = useId();
@@ -247,9 +252,9 @@ function SquadRow({ player, squad, save, remove }: { player: Player; squad: Play
           {player.extraPositions.map((x) => (
             <i key={x}>{x}</i>
           ))}
-          <span>{POSITION_NAMES[player.position]}</span>
+          <span>{t(POSITION_NAMES[player.position])}</span>
         </span>
-        <span className="se-edit">{saved ? <em role="status">Saved</em> : open ? "Close" : "Edit"}</span>
+        <span className="se-edit">{saved ? <em role="status">{t("Saved")}</em> : open ? t("Close") : t("Edit")}</span>
       </button>
       {open && (
         <div className="se-panel" id={panel}>
@@ -271,6 +276,7 @@ function SquadRow({ player, squad, save, remove }: { player: Player; squad: Play
 }
 
 function AddPlayer({ squad, save }: { squad: Player[]; save: Action }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [round, setRound] = useState(0);
   const [added, setAdded] = useState("");
@@ -278,8 +284,8 @@ function AddPlayer({ squad, save }: { squad: Player[]; save: Action }) {
     <div className="se-add">
       <div className="se-bar">
         <p>
-          {squad.filter((p) => p.active).length} active
-          {squad.some((p) => !p.active) && <span> · {squad.filter((p) => !p.active).length} not active</span>}
+          {t("{n} active", { n: squad.filter((p) => p.active).length })}
+          {squad.some((p) => !p.active) && <span> · {t("{n} not active", { n: squad.filter((p) => !p.active).length })}</span>}
         </p>
         {added && !open && (
           <p className="se-added" role="status">
@@ -288,7 +294,7 @@ function AddPlayer({ squad, save }: { squad: Player[]; save: Action }) {
         )}
         {!open && (
           <button type="button" className="hx-btn hx-btn-primary" onClick={() => setOpen(true)}>
-            Add a player
+            {t("Add a player")}
           </button>
         )}
       </div>
@@ -296,7 +302,7 @@ function AddPlayer({ squad, save }: { squad: Player[]; save: Action }) {
         <div className="se-panel se-panel-new">
           {added && (
             <p className="notice notice-ok" role="status">
-              {added} Add the next one, or close.
+              {added} {t("Add the next one, or close.")}
             </p>
           )}
           {/* A fresh form after each add, so the fields and the pitch start empty again. */}
@@ -317,6 +323,7 @@ function AddPlayer({ squad, save }: { squad: Player[]; save: Action }) {
 }
 
 export function SquadEditor({ players, save, remove }: { players: Player[]; save: Action; remove: Action }) {
+  const t = useT();
   const byNumber = (a: Player, b: Player) => (a.number ?? 1000) - (b.number ?? 1000) || a.name.localeCompare(b.name);
   const active = players.filter((p) => p.active);
   const inactive = players.filter((p) => !p.active).sort(byNumber);
@@ -331,7 +338,7 @@ export function SquadEditor({ players, save, remove }: { players: Player[]; save
         return (
           <section key={line.group} className="se-line" aria-labelledby={`se-${line.group}`}>
             <h3 id={`se-${line.group}`}>
-              {line.group === "GK" ? "Goalkeepers" : line.label} <span>{list.length}</span>
+              {line.group === "GK" ? t("Goalkeepers") : t(line.label)} <span>{list.length}</span>
             </h3>
             <ul className="se-list">{list.map(row)}</ul>
           </section>
@@ -341,9 +348,9 @@ export function SquadEditor({ players, save, remove }: { players: Player[]; save
         <details className="se-line se-inactive">
           <summary>
             <h3>
-              Not active <span>{inactive.length}</span>
+              {t("Not active")} <span>{inactive.length}</span>
             </h3>
-            <p>They keep their stats but don&apos;t show up when you log a match.</p>
+            <p>{t("They keep their stats but don't show up when you log a match.")}</p>
           </summary>
           <ul className="se-list">{inactive.map(row)}</ul>
         </details>

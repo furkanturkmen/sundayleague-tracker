@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { makeT, type T } from "@/lib/i18n";
 import type { Stats } from "@/lib/stats";
 
 /** The club's uploaded logo, or a shield drawn in its colours when there isn't one. */
@@ -36,16 +37,17 @@ export function Empty({ children }: { children: ReactNode }) {
 }
 
 /** Shown where admins would add data, so a new club isn't a wall of blanks. */
-export function GetStarted({ st, admin, what }: { st: Stats; admin: boolean; what: "players" | "matches" }) {
+// This file is shared with client components, so the server's t() comes in as a prop (English without it).
+export function GetStarted({ st, admin, what, t = makeT("en") }: { st: Stats; admin: boolean; what: "players" | "matches"; t?: T }) {
   return (
     <div className="card get-started">
-      <p>{what === "players" ? "No players in the squad yet." : "No matches played yet."}</p>
+      <p>{what === "players" ? t("No players in the squad yet.") : t("No matches played yet.")}</p>
       {admin ? (
         <Link className="btn" href={what === "players" ? `${st.base}/settings/squad` : `${st.base}/matches/new`}>
-          {what === "players" ? "Add players" : "Log a match"}
+          {what === "players" ? t("Add players") : t("Log a match")}
         </Link>
       ) : (
-        <p className="muted small">The club admin can add them after signing in.</p>
+        <p className="muted small">{t("The club admin can add them after signing in.")}</p>
       )}
     </div>
   );

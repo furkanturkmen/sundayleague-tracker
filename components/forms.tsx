@@ -2,6 +2,7 @@
 
 import { useActionState, useRef, useState, type ReactNode } from "react";
 import { useFormStatus } from "react-dom";
+import { useT } from "@/components/I18n";
 import type { FormState } from "@/lib/actions";
 
 type Action = (state: FormState, f: FormData) => Promise<FormState>;
@@ -20,9 +21,10 @@ export function Submit({
   value?: string;
 }) {
   const { pending } = useFormStatus();
+  const t = useT();
   return (
     <button type="submit" className={className} disabled={pending} name={name} value={value}>
-      {pending ? (pendingLabel ?? "Saving…") : children}
+      {pending ? (pendingLabel ?? t("Saving…")) : children}
     </button>
   );
 }
@@ -82,6 +84,7 @@ export function ImageField({
   const [has, setHas] = useState(Boolean(initial));
   const [error, setError] = useState("");
   const input = useRef<HTMLInputElement>(null);
+  const t = useT();
 
   return (
     <div className="logo-field">
@@ -97,7 +100,7 @@ export function ImageField({
             if (!file) return;
             setError("");
             if (file.size > 5_000_000) {
-              setError("That file is over 5 MB. Pick a smaller one.");
+              setError(t("That file is over 5 MB. Pick a smaller one."));
               return;
             }
             try {
@@ -106,7 +109,7 @@ export function ImageField({
               setHas(true);
               onChange?.(data);
             } catch {
-              setError("Couldn't read that image. Try a PNG or JPG.");
+              setError(t("Couldn't read that image. Try a PNG or JPG."));
             }
           }}
         />
@@ -121,7 +124,7 @@ export function ImageField({
               if (input.current) input.current.value = "";
             }}
           >
-            Remove
+            {t("Remove")}
           </button>
         )}
       </div>
@@ -132,6 +135,7 @@ export function ImageField({
 
 // Big enough for a 160px card at 2x and the round bench photos.
 export const PHOTO_PX = 480;
+/** English, as a translation key: show it with t(PHOTO_HINT). */
 export const PHOTO_HINT = "For the line-up graphic. A cut-out on a transparent background (PNG) looks best; a normal photo works too.";
 
 export function initials(name: string) {
@@ -147,15 +151,16 @@ export function initials(name: string) {
 
 export function LoginForm({ action, next }: { action: Action; next?: string }) {
   const [state, formAction] = useActionState(action, {});
+  const t = useT();
   return (
     <form action={formAction} className="form">
       <input type="hidden" name="next" value={next ?? ""} />
       <label>
-        Password
+        {t("Password")}
         <input type="password" name="password" required autoFocus autoComplete="current-password" />
       </label>
       <Notice state={state} />
-      <Submit pending="Signing in…">Sign in</Submit>
+      <Submit pending={t("Signing in…")}>{t("Sign in")}</Submit>
     </form>
   );
 }
@@ -164,16 +169,17 @@ export function LoginForm({ action, next }: { action: Action; next?: string }) {
 
 export function AddLineupPlayer({ action, name, matches }: { action: Action; name: string; matches: number }) {
   const [state, formAction] = useActionState(action, {});
+  const t = useT();
   if (state.ok) return null;
   return (
     <li className="squad-row">
       <form action={formAction} className="squad-row-head">
         <input type="hidden" name="name" value={name} />
         <strong>{name}</strong>
-        <span className="muted small">
-          in {matches} {matches === 1 ? "line-up" : "line-ups"}
-        </span>
-        <Submit className="btn-link" pending="Adding…">Add to squad</Submit>
+        <span className="muted small">{t(matches === 1 ? "in {n} line-up" : "in {n} line-ups", { n: matches })}</span>
+        <Submit className="btn-link" pending={t("Adding…")}>
+          {t("Add to squad")}
+        </Submit>
       </form>
       {state.error && <Notice state={state} />}
     </li>
@@ -183,12 +189,13 @@ export function AddLineupPlayer({ action, name, matches }: { action: Action; nam
 /** One button for every line-up name at once. */
 export function AddAllLineupPlayers({ action, names }: { action: Action; names: string[] }) {
   const [state, formAction] = useActionState(action, {});
+  const t = useT();
   return (
     <form action={formAction} className="squad-add-all">
       {names.map((n) => (
         <input key={n} type="hidden" name="name" value={n} />
       ))}
-      <Submit pending="Adding…">Add all {names.length}</Submit>
+      <Submit pending={t("Adding…")}>{t("Add all {n}", { n: names.length })}</Submit>
       {state.error && <Notice state={state} />}
     </form>
   );
@@ -197,6 +204,7 @@ export function AddAllLineupPlayers({ action, names }: { action: Action; names: 
 /** Submit button that asks before doing something destructive. */
 export function ConfirmSubmit({ children, message, className = "btn btn-danger" }: { children: ReactNode; message: string; className?: string }) {
   const { pending } = useFormStatus();
+  const t = useT();
   return (
     <button
       type="submit"
@@ -206,7 +214,7 @@ export function ConfirmSubmit({ children, message, className = "btn btn-danger" 
         if (!window.confirm(message)) e.preventDefault();
       }}
     >
-      {pending ? "Deleting…" : children}
+      {pending ? t("Deleting…") : children}
     </button>
   );
 }

@@ -1863,3 +1863,8 @@ h2 > .ranking-accent { font-family: inherit; letter-spacing: inherit; line-heigh
 .rc-code code { font: 600 clamp(18px, 4.6vw, 24px) / 1.2 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: 0.06em; overflow-wrap: anywhere; }
 .rc-forgot { margin-top: 20px; }
 .onb-recovery-note { margin: 0 0 12px; font-size: 14px; line-height: 1.5; opacity: 0.8; }
+
+/* EN | NL in the footer. */
+.lang-switch { display: inline-flex; gap: 2px; }
+.lang-switch button { padding: 2px 6px; opacity: 0.55; text-decoration: none; }
+.lang-switch button[aria-pressed="true"] { opacity: 1; font-weight: 700; }

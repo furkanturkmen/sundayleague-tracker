@@ -1,4 +1,5 @@
 import { positionGroup, type ClubData, type IconName, type Match, type Player } from "@/lib/types";
+import { dateLocale, type Lang } from "@/lib/i18n";
 
 export type Result = "W" | "D" | "L";
 
@@ -385,10 +386,11 @@ export function sum(ns: number[]): number {
   return ns.reduce((a, b) => a + b, 0);
 }
 
-export function formatDate(date: string, opts: Intl.DateTimeFormatOptions = { day: "numeric", month: "short", year: "numeric" }): string {
-  return new Date(`${date}T12:00:00Z`).toLocaleDateString("en-GB", { timeZone: "UTC", ...opts });
+/** A date for people to read, in the visitor's language (pass it on from getLang or useLang). */
+export function formatDate(date: string, opts: Intl.DateTimeFormatOptions = { day: "numeric", month: "short", year: "numeric" }, lang: Lang = "en"): string {
+  return new Date(`${date}T12:00:00Z`).toLocaleDateString(dateLocale(lang), { timeZone: "UTC", ...opts });
 }
 
-export function formatMonth(month: string): string {
-  return new Date(`${month}-01T12:00:00Z`).toLocaleDateString("en-GB", { timeZone: "UTC", month: "short", year: "2-digit" });
+export function formatMonth(month: string, lang: Lang = "en"): string {
+  return new Date(`${month}-01T12:00:00Z`).toLocaleDateString(dateLocale(lang), { timeZone: "UTC", month: "short", year: "2-digit" });
 }

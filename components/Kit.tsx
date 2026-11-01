@@ -1,14 +1,30 @@
 import { useId } from "react";
+import { makeT, type T } from "@/lib/i18n";
 
 /**
  * A lit, striped club shirt with the number on it: the stand-in for a player photo. Stripes in the two club
  * colours, then a highlight down the chest and shade towards the sides and sleeves so it reads as fabric.
  */
-export function Kit({ main, trim, number, logo, className }: { main: string; trim: string; number: number | null; logo?: string | null; className?: string }) {
+// Used on server and client pages, so t() comes in as a prop (English without it).
+export function Kit({
+  main,
+  trim,
+  number,
+  logo,
+  className,
+  t = makeT("en"),
+}: {
+  main: string;
+  trim: string;
+  number: number | null;
+  logo?: string | null;
+  className?: string;
+  t?: T;
+}) {
   const id = useId().replace(/:/g, "");
   const shirt = "M128 40 L168 22 Q200 44 232 22 L272 40 L352 86 L326 166 L284 150 L284 400 Q200 414 116 400 L116 150 L74 166 L48 86 Z";
   return (
-    <svg viewBox="0 0 400 430" className={className} role="img" aria-label={number != null ? `Shirt number ${number}` : "Club shirt"}>
+    <svg viewBox="0 0 400 430" className={className} role="img" aria-label={number != null ? t("Shirt number {n}", { n: number }) : t("Club shirt")}>
       <defs>
         <pattern id={`${id}-stripes`} width="56" height="10" patternUnits="userSpaceOnUse" x="4">
           <rect width="28" height="10" fill={main} />

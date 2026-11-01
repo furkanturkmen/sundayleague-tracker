@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useT } from "@/components/I18n";
 
 type Size = "post" | "story";
 
@@ -36,6 +37,7 @@ export function ShareGraphic({ src, className }: { src: string; className?: stri
   // A file made but not shared yet: Safari drops the tap if the image took too long, so the next tap shares it at once.
   const [ready, setReady] = useState<{ size: Size; src: string; file: File } | null>(null);
   const [error, setError] = useState(false);
+  const t = useT();
 
   useEffect(() => {
     const probe = new File([], "x.png", { type: "image/png" });
@@ -71,12 +73,16 @@ export function ShareGraphic({ src, className }: { src: string; className?: stri
     <div className={`gx-share${className ? ` ${className}` : ""}`}>
       {SIZES.map(({ size, label }) => (
         <button key={size} type="button" className="btn" onClick={() => share(size)} disabled={busy !== null} aria-busy={busy === size}>
-          {busy === size ? "Making…" : ready?.size === size && ready.src === src ? `Tap to share ${label}` : `${canShare ? "Share" : "Download"} ${label}`}
+          {busy === size
+            ? t("Making…")
+            : ready?.size === size && ready.src === src
+              ? t(`Tap to share ${label}`)
+              : t(`${canShare ? "Share" : "Download"} ${label}`)}
         </button>
       ))}
       {error && (
         <span className="gx-share-error" role="alert">
-          Couldn&apos;t make the image. Try again.
+          {t("Couldn't make the image. Try again.")}
         </span>
       )}
     </div>

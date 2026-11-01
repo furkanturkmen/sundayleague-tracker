@@ -2,10 +2,14 @@ import type { Metadata } from "next";
 import { ClubEditor } from "@/components/ClubEditor";
 import { Page } from "@/components/home/Page";
 import { updateClub } from "@/lib/actions";
+import { getT } from "@/lib/i18n/server";
 import { graphicName } from "@/lib/lineup";
 import { loadSettings, SettingsHero } from "../shared";
 
-export const metadata: Metadata = { title: "Club · Settings" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("Club · Settings") };
+}
 
 export default async function ClubSettingsPage({ params }: { params: Promise<{ club: string }> }) {
   const { club: slug } = await params;

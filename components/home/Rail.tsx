@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useT } from "@/components/I18n";
 
 /**
  * A row of cards that scrolls sideways: swipe on touch, drag or use the arrows with a mouse. Snaps to cards.
@@ -10,6 +11,7 @@ export function Rail({ children, label, className }: { children: ReactNode; labe
   const ref = useRef<HTMLDivElement>(null);
   const drag = useRef<{ x: number; left: number; moved: boolean } | null>(null);
   const [edges, setEdges] = useState({ start: true, end: false });
+  const t = useT();
 
   useEffect(() => {
     const el = ref.current;
@@ -29,10 +31,10 @@ export function Rail({ children, label, className }: { children: ReactNode; labe
   return (
     <div className={`hx-rail ${className ?? ""}`}>
       <div className="hx-rail-arrows">
-        <button type="button" onClick={() => page(-1)} disabled={edges.start} aria-label={`Scroll ${label} back`}>
+        <button type="button" onClick={() => page(-1)} disabled={edges.start} aria-label={t("Scroll {label} back", { label })}>
           ←
         </button>
-        <button type="button" onClick={() => page(1)} disabled={edges.end} aria-label={`Scroll ${label} on`}>
+        <button type="button" onClick={() => page(1)} disabled={edges.end} aria-label={t("Scroll {label} on", { label })}>
           →
         </button>
       </div>

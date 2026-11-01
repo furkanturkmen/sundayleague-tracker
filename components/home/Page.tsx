@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import type { CSSProperties, ReactNode } from "react";
 import { brighten } from "@/lib/color";
+import { getT } from "@/lib/i18n/server";
 import { seasonLabel } from "@/lib/stats";
 import stadium from "@/public/images/stadium-floodlights.jpg";
 import { Reveal, ScrollFlag } from "./Motion";
@@ -81,21 +82,22 @@ export function PageTabs({ label, tabs }: { label: string; tabs: { href: string;
 }
 
 /** Stats | Records | Rankings, at the top of each. */
-export function StatsNav({ base, active }: { base: string; active: "overview" | "records" | "rankings" }) {
+export async function StatsNav({ base, active }: { base: string; active: "overview" | "records" | "rankings" }) {
+  const t = await getT();
   return (
     <PageTabs
-      label="Stats"
+      label={t("Stats")}
       tabs={[
-        { href: `${base}/stats`, label: "Overview", on: active === "overview" },
-        { href: `${base}/stats/records`, label: "Records", on: active === "records" },
-        { href: `${base}/stats/rankings`, label: "Rankings", on: active === "rankings" },
+        { href: `${base}/stats`, label: t("Overview"), on: active === "overview" },
+        { href: `${base}/stats/records`, label: t("Records"), on: active === "records" },
+        { href: `${base}/stats/rankings`, label: t("Rankings"), on: active === "rankings" },
       ]}
     />
   );
 }
 
 /** All time and each season as quiet links; the one showing is white and underlined. */
-export function SeasonLinks({
+export async function SeasonLinks({
   href,
   seasons,
   active,
@@ -108,11 +110,12 @@ export function SeasonLinks({
 }) {
   const opts = seasons.length > 1 ? ["all", ...[...seasons].reverse()] : [];
   if (!opts.length && !children) return null;
+  const t = await getT();
   return (
-    <nav className="hx-seasons" aria-label="Season">
+    <nav className="hx-seasons" aria-label={t("Season")}>
       {opts.map((s) => (
         <Link key={s} href={href(s)} className={s === active ? "on" : undefined} aria-current={s === active ? "true" : undefined}>
-          {seasonLabel(s)}
+          {t(seasonLabel(s))}
         </Link>
       ))}
       {children}

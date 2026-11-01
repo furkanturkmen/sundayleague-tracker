@@ -10,6 +10,8 @@ import { Icon } from "@/components/Icon";
 import { Kit } from "@/components/Kit";
 import { Crest, GetStarted, TeamLogo } from "@/components/ui";
 import { loadClub } from "@/lib/club";
+import { getLang, getT } from "@/lib/i18n/server";
+import { homeVenue } from "@/lib/i18n/nl-matches";
 import { brighten } from "@/lib/color";
 import { formatDate, seasonLabel, summarise, type PlayedMatch } from "@/lib/stats";
 import type { Match } from "@/lib/types";
@@ -23,6 +25,7 @@ import stadium from "@/public/images/stadium-floodlights.jpg";
 export default async function ClubHome({ params }: { params: Promise<{ club: string }> }) {
   const { data, st, admin, coach } = await loadClub((await params).club);
   const { club } = data;
+  const [t, lang] = await Promise.all([getT(), getLang()]);
   const season = st.inSeason(st.currentSeason);
   const s = summarise(season);
   const stats = st.allStats(season);
@@ -45,8 +48,8 @@ export default async function ClubHome({ params }: { params: Promise<{ club: str
         href: `${st.base}/matches/${next.id}`,
         at: next.kickoff ? amsterdam(next.date, next.kickoff) : null,
         day: amsterdam(next.date),
-        when: `${formatDate(next.date, { weekday: "long", day: "numeric", month: "long" })}${next.kickoff ? `, ${next.kickoff}` : ""}`,
-        meta: `${next.venue === "H" ? "Home" : "Away"} · ${next.competition}`,
+        when: `${formatDate(next.date, { weekday: "long", day: "numeric", month: "long" }, lang)}${next.kickoff ? `, ${next.kickoff}` : ""}`,
+        meta: `${next.venue === "H" ? homeVenue(lang) : t("Away")} · ${t(next.competition)}`,
         home: next.venue === "H" ? { name: club.shortName, crest: crest(40) } : { name: next.opponent, crest: theirs(next, 40) },
         away: next.venue === "H" ? { name: next.opponent, crest: theirs(next, 40) } : { name: club.shortName, crest: crest(40) },
       }
@@ -63,16 +66,16 @@ export default async function ClubHome({ params }: { params: Promise<{ club: str
           <>
             {next && (admin || coach) && (
               <Link href={`${st.base}/matches/${next.id}/lineup`} className="hx-btn hx-btn-primary">
-                Set the line-up
+                {t("Set the line-up")}
               </Link>
             )}
             {next && (
               <Link href={`${st.base}/matches/${next.id}`} className={admin || coach ? "hx-btn" : "hx-btn hx-btn-primary"}>
-                Match details
+                {t("Match details")}
               </Link>
             )}
             <Link href={`${st.base}/players`} className="hx-btn hx-btn-ghost">
-              Meet the squad
+              {t("Meet the squad")}
             </Link>
           </>
         }
@@ -81,7 +84,7 @@ export default async function ClubHome({ params }: { params: Promise<{ club: str
       <div className="hx-bands">
         {(data.players.length === 0 || st.played.length === 0) && (
           <div className="hx-wrap hx-start">
-            {data.players.length === 0 ? <GetStarted st={st} admin={admin} what="players" /> : <GetStarted st={st} admin={admin} what="matches" />}
+            {data.players.length === 0 ? <GetStarted st={st} admin={admin} what="players" t={t} /> : <GetStarted st={st} admin={admin} what="matches" t={t} />}
           </div>
         )}
 
@@ -89,7 +92,7 @@ export default async function ClubHome({ params }: { params: Promise<{ club: str
           <Band className="hx-band-pitch" labelledBy="hx-stand-title" bg={<Pitch />}>
             <Reveal className="hx-head">
               <h2 id="hx-stand-title">
-                Where we <em>stand.</em>
+                {t("Where we")} <em>{t("stand.")}</em>
               </h2>
             </Reveal>
             <Reveal className="hx-table hx-table-home">
@@ -97,10 +100,10 @@ export default async function ClubHome({ params }: { params: Promise<{ club: str
                 <thead>
                   <tr>
                     <th className="num">#</th>
-                    <th>Team</th>
-                    <th className="num">P</th>
-                    <th className="num">GD</th>
-                    <th className="num">Pts</th>
+                    <th>{t("Team")}</th>
+                    <th className="num">{t("P")}</th>
+                    <th className="num">{t("GD")}</th>
+                    <th className="num">{t("Pts")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -117,7 +120,7 @@ export default async function ClubHome({ params }: { params: Promise<{ club: str
                       <td className="num">{signed(r.goalsFor - r.goalsAgainst)}</td>
                       <td className="num">
                         {r.points}
-                        {r.penaltyPoints > 0 && <small title={`${r.penaltyPoints} points deducted`}> −{r.penaltyPoints}</small>}
+                        {r.penaltyPoints > 0 && <small title={t("{n} points deducted", { n: r.penaltyPoints })}> −{r.penaltyPoints}</small>}
                       </td>
                     </tr>
                   ))}
@@ -131,21 +134,21 @@ export default async function ClubHome({ params }: { params: Promise<{ club: str
           <Band className="hx-band-board" labelledBy="hx-results-title" bg={ghost && <span className="hx-ghost">{ghost}</span>}>
             <Reveal className="hx-head">
               <h2 id="hx-results-title">
-                The <em>results.</em>
+                {t("The")} <em>{t("results.")}</em>
               </h2>
               <p>
-                Newest first. Drag or swipe through. <Link href={`${st.base}/matches`}>All matches</Link>
+                {t("Newest first. Drag or swipe through.")} <Link href={`${st.base}/matches`}>{t("All matches")}</Link>
               </p>
             </Reveal>
-            <Rail label="Latest results">
+            <Rail label={t("Latest results")}>
               {recent.map((m) => {
                 const played = "result" in m ? m : null;
                 const home = m.venue === "H";
                 return (
                   <Link key={m.id} href={`${st.base}/matches/${m.id}`} className={`hx-result ${played ? `hx-${played.result}` : "hx-void"}`} draggable={false}>
                     <span className="hx-result-top">
-                      <span>{formatDate(m.date, { day: "numeric", month: "short" })}</span>
-                      <span className={m.competition === "League" ? undefined : "hx-cup"}>{m.competition}</span>
+                      <span>{formatDate(m.date, { day: "numeric", month: "short" }, lang)}</span>
+                      <span className={m.competition === "League" ? undefined : "hx-cup"}>{t(m.competition)}</span>
                     </span>
                     <span className="hx-result-teams">
                       {home ? crest(52) : theirs(m, 52)}
@@ -157,13 +160,13 @@ export default async function ClubHome({ params }: { params: Promise<{ club: str
                             {home ? played.ga : played.gf}
                           </>
                         ) : (
-                          <small>{m.status === "abandoned" ? "Abandoned" : "Called off"}</small>
+                          <small>{m.status === "abandoned" ? t("Abandoned") : t("Called off")}</small>
                         )}
                       </span>
                       {home ? theirs(m, 52) : crest(52)}
                     </span>
                     <span className="hx-result-name">{home ? `${club.shortName} vs ${m.opponent}` : `${m.opponent} vs ${club.shortName}`}</span>
-                    {played && <span className="hx-result-badge">{played.result === "W" ? "Won" : played.result === "D" ? "Drawn" : "Lost"}</span>}
+                    {played && <span className="hx-result-badge">{played.result === "W" ? t("Won") : played.result === "D" ? t("Drawn") : t("Lost")}</span>}
                   </Link>
                 );
               })}
@@ -174,20 +177,20 @@ export default async function ClubHome({ params }: { params: Promise<{ club: str
         <Band className="hx-band-numbers" labelledBy="hx-numbers-title">
           <Reveal className="hx-head">
             <h2 id="hx-numbers-title">
-              {seasonLabel(st.currentSeason)} in <em>numbers.</em>
+              {t("{season} in", { season: t(seasonLabel(st.currentSeason)) })} <em>{t("numbers.")}</em>
             </h2>
             <p>
-              Every competition. <Link href={`${st.base}/stats`}>All stats</Link>
+              {t("Every competition.")} <Link href={`${st.base}/stats`}>{t("All stats")}</Link>
             </p>
           </Reveal>
           <Reveal className="hx-numbers">
             {[
-              { label: "Played", value: s.p },
-              { label: "Won", value: s.w },
-              { label: "Scored", value: s.gf },
-              { label: "Conceded", value: s.ga },
-              { label: "Clean sheets", value: s.cleanSheets },
-              { label: "Win rate", value: Math.round(s.winPct), suffix: "%" },
+              { label: t("Played"), value: s.p },
+              { label: t("Won"), value: s.w },
+              { label: t("Scored"), value: s.gf },
+              { label: t("Conceded"), value: s.ga },
+              { label: t("Clean sheets"), value: s.cleanSheets },
+              { label: t("Win rate"), value: Math.round(s.winPct), suffix: "%" },
             ].map((n) => (
               <div key={n.label}>
                 <span className="hx-number">
@@ -199,8 +202,8 @@ export default async function ClubHome({ params }: { params: Promise<{ club: str
           </Reveal>
           <div className="hx-leaders">
             {[
-              { title: "Goals", rows: top("goals"), empty: "Nobody has scored yet." },
-              { title: "Assists", rows: top("assists"), empty: "No assists logged yet." },
+              { title: t("Goals"), rows: top("goals"), empty: t("Nobody has scored yet.") },
+              { title: t("Assists"), rows: top("assists"), empty: t("No assists logged yet.") },
             ].map((l, i) => (
               <Reveal key={l.title} className="hx-leader" delay={i * 0.08}>
                 <h3>{l.title}</h3>
@@ -227,7 +230,7 @@ export default async function ClubHome({ params }: { params: Promise<{ club: str
                   <p className="hx-empty">{l.empty}</p>
                 )}
                 <Link href={`${st.base}/stats/rankings`} className="hx-more">
-                  All rankings
+                  {t("All rankings")}
                 </Link>
               </Reveal>
             ))}
@@ -238,16 +241,16 @@ export default async function ClubHome({ params }: { params: Promise<{ club: str
           <Band className="hx-band-photo" labelledBy="hx-squad-title" bg={<Image src={stadium} alt="" fill sizes="100vw" className="hx-band-photo-img" />}>
             <Reveal className="hx-head">
               <h2 id="hx-squad-title">
-                The <em>squad.</em>
+                {t("The")} <em>{t("squad.")}</em>
               </h2>
               <p>
-                {squad.length} players. <Link href={`${st.base}/players`}>Everyone</Link>
+                {squad.length === 1 ? t("{n} player.", { n: 1 }) : t("{n} players.", { n: squad.length })} <Link href={`${st.base}/players`}>{t("Everyone")}</Link>
               </p>
             </Reveal>
-            <Rail label="Squad">
+            <Rail label={t("Squad")}>
               {squad.map((p) => (
                 <Link key={p.id} href={`${st.base}/players/${p.id}`} className="hx-player" draggable={false}>
-                  <Kit main={club.accent} trim={club.gold} number={p.number} logo={club.logo} className="hx-player-kit" />
+                  <Kit main={club.accent} trim={club.gold} number={p.number} logo={club.logo} className="hx-player-kit" t={t} />
                   <span className="hx-player-name">{p.name}</span>
                   <span className="hx-player-pos">{p.position}</span>
                 </Link>
@@ -259,10 +262,10 @@ export default async function ClubHome({ params }: { params: Promise<{ club: str
         <Band className="hx-band-halls" labelledBy="hx-halls-title">
           <Reveal className="hx-head">
             <h2 id="hx-halls-title">
-              Fame &amp; <em>shame.</em>
+              {t("Fame &")} <em>{t("shame.")}</em>
             </h2>
             <p>
-              Who leads each hall right now. <Link href={`${st.base}/halls`}>Both halls</Link>
+              {t("Who leads each hall right now.")} <Link href={`${st.base}/halls`}>{t("Both halls")}</Link>
             </p>
           </Reveal>
           <div className="hx-halls">
@@ -275,15 +278,15 @@ export default async function ClubHome({ params }: { params: Promise<{ club: str
                   <span className="hx-hall-icon">
                     <Icon name={award.icon} />
                   </span>
-                  <span className="hx-label">{hall}</span>
-                  <strong>{award.title}</strong>
+                  <span className="hx-label">{t(hall)}</span>
+                  <strong>{t(award.title)}</strong>
                   <span className="hx-hall-who">
                     {award.leaders[0] ? (
                       <>
                         {award.leaders[0].player.name} <span>{award.leaders[0].display}</span>
                       </>
                     ) : (
-                      "Vacant"
+                      t("Vacant")
                     )}
                   </span>
                 </Link>

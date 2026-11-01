@@ -6,10 +6,16 @@ import { Reveal } from "@/components/home/Motion";
 import { Page, PageHero } from "@/components/home/Page";
 import { Crest, GetStarted, TeamLogo } from "@/components/ui";
 import { loadClub } from "@/lib/club";
+import type { Lang, T } from "@/lib/i18n";
+import { getLang, getT } from "@/lib/i18n/server";
+import { homeVenue } from "@/lib/i18n/nl-matches";
 import { formatDate, seasonLabel, seasonOf, summarise, type PlayedMatch, type Stats } from "@/lib/stats";
 import type { Match } from "@/lib/types";
 
-export const metadata: Metadata = { title: "Matches" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("Matches") };
+}
 
 // Every match on the cold night: what's coming up, the last result as a scoreboard, then each season's results
 // as one long list you can run your eye down.
@@ -19,6 +25,7 @@ const WORD = { W: "Won", D: "Drawn", L: "Lost" } as const;
 export default async function MatchesPage({ params }: { params: Promise<{ club: string }> }) {
   const { data, st, admin } = await loadClub((await params).club);
   const { club } = data;
+  const [t, lang] = await Promise.all([getT(), getLang()]);
   const last = st.played.at(-1);
   const all = summarise(st.played);
   const crest = (size: number) => <Crest short={club.shortName} logo={club.logo} size={size} />;
@@ -31,21 +38,22 @@ export default async function MatchesPage({ params }: { params: Promise<{ club: 
   return (
     <Page accent={club.accent}>
       <PageHero
-        lead="Every"
-        accent="match."
+        lead={t("Every")}
+        accent={t("match.")}
         meta={
           st.played.length > 0 ? (
             <>
-              {all.p} played · {all.w} won · {all.d} drawn · {all.l} lost{st.seasons.length > 1 && " · all time"}
+              {t("{p} played · {w} won · {d} drawn · {l} lost", { p: all.p, w: all.w, d: all.d, l: all.l })}
+              {st.seasons.length > 1 && ` · ${t("all time")}`}
             </>
           ) : (
-            "No results yet"
+            t("No results yet")
           )
         }
       >
         {admin && (
           <Link href={`${st.base}/matches/new`} className="hx-btn hx-btn-primary">
-            Add a match
+            {t("Add a match")}
           </Link>
         )}
       </PageHero>
@@ -53,7 +61,7 @@ export default async function MatchesPage({ params }: { params: Promise<{ club: 
       <div className="hx-bands">
         {st.played.length === 0 && st.upcoming.length === 0 && (
           <div className="hx-wrap hx-start">
-            <GetStarted st={st} admin={admin} what="matches" />
+            <GetStarted st={st} admin={admin} what="matches" t={t} />
           </div>
         )}
 
@@ -61,7 +69,7 @@ export default async function MatchesPage({ params }: { params: Promise<{ club: 
           <Band className="hx-band-halls" labelledBy="mx-next-title">
             <Reveal className="hx-head">
               <h2 id="mx-next-title">
-                Coming <em>up.</em>
+                {t("Coming")} <em>{t("up.")}</em>
               </h2>
             </Reveal>
             <ol className="mx-fixtures">
@@ -71,25 +79,25 @@ export default async function MatchesPage({ params }: { params: Promise<{ club: 
                   <Reveal as="li" key={m.id} delay={Math.min(i, 6) * 0.05}>
                     <Link href={`${st.base}/matches/${m.id}`} className="mx-fixture">
                       <span className="mx-date">
-                        <small>{formatDate(m.date, { weekday: "short" })}</small>
-                        <b>{formatDate(m.date, { day: "numeric" })}</b>
-                        <small>{formatDate(m.date, { month: "short" })}</small>
+                        <small>{formatDate(m.date, { weekday: "short" }, lang)}</small>
+                        <b>{formatDate(m.date, { day: "numeric" }, lang)}</b>
+                        <small>{formatDate(m.date, { month: "short" }, lang)}</small>
                       </span>
                       <span className="mx-faceoff">
                         <span className="mx-side">
                           {home.crest}
                           <span>{home.name}</span>
                         </span>
-                        <span className="hx-vs">vs</span>
+                        <span className="hx-vs">{t("vs")}</span>
                         <span className="mx-side">
                           {away.crest}
                           <span>{away.name}</span>
                         </span>
                       </span>
                       <span className="mx-when">
-                        <b>{m.kickoff ?? "TBC"}</b>
+                        <b>{m.kickoff ?? t("TBC")}</b>
                         <span className={m.competition === "League" ? undefined : "hx-cup"}>
-                          {m.venue === "H" ? "Home" : "Away"} · {m.competition}
+                          {m.venue === "H" ? homeVenue(lang) : t("Away")} · {t(m.competition)}
                         </span>
                       </span>
                     </Link>
@@ -108,13 +116,13 @@ export default async function MatchesPage({ params }: { params: Promise<{ club: 
           >
             <Reveal className="hx-head">
               <h2 id="mx-last-title">
-                The last <em>one.</em>
+                {t("The last")} <em>{t("one.")}</em>
               </h2>
               <p>
-                {formatDate(last.date, { weekday: "long", day: "numeric", month: "long" })} · {last.competition}
+                {formatDate(last.date, { weekday: "long", day: "numeric", month: "long" }, lang)} · {t(last.competition)}
               </p>
             </Reveal>
-            <LastMatch st={st} m={last} sides={sides(last, 96)} />
+            <LastMatch st={st} m={last} sides={sides(last, 96)} t={t} />
           </Band>
         )}
 
@@ -122,12 +130,12 @@ export default async function MatchesPage({ params }: { params: Promise<{ club: 
           <Band className="hx-band-halls" labelledBy="mx-all-title">
             <Reveal className="hx-head">
               <h2 id="mx-all-title">
-                All <em>results.</em>
+                {t("All")} <em>{t("results.")}</em>
               </h2>
-              <p>Newest first, with our score first.</p>
+              <p>{t("Newest first, with our score first.")}</p>
             </Reveal>
             {[...st.seasons].reverse().map((season) => (
-              <SeasonResults key={season} st={st} season={season} />
+              <SeasonResults key={season} st={st} season={season} t={t} lang={lang} />
             ))}
           </Band>
         )}
@@ -139,23 +147,23 @@ export default async function MatchesPage({ params }: { params: Promise<{ club: 
 type Side = { name: string; crest: ReactNode };
 
 /** The most recent result as a scoreboard, then who scored, the man of the match and the cards. */
-function LastMatch({ st, m, sides }: { st: Stats; m: PlayedMatch; sides: { home: Side; away: Side } }) {
+function LastMatch({ st, m, sides, t }: { st: Stats; m: PlayedMatch; sides: { home: Side; away: Side }; t: T }) {
   const [hs, as] = m.venue === "H" ? [m.gf, m.ga] : [m.ga, m.gf];
   const unassigned = m.gf - m.goals.length;
   const events: { what: string; who: ReactNode }[] = [
     ...m.goals.map((g) => ({
-      what: g.minute !== undefined ? `${g.minute}′` : "Goal",
+      what: g.minute !== undefined ? `${g.minute}′` : t("Goal"),
       who: (
         <>
           {st.playerName(g.scorer)}
-          {g.penalty && <small> pen</small>}
-          {g.assist && <small> · assist {st.playerName(g.assist)}</small>}
+          {g.penalty && <small> {t("pen")}</small>}
+          {g.assist && <small> · {t("assist {name}", { name: st.playerName(g.assist) })}</small>}
         </>
       ),
     })),
-    ...(unassigned > 0 ? [{ what: "Goal", who: <small>{unassigned} without a scorer yet</small> }] : []),
-    ...(m.motm ? [{ what: "MOTM", who: st.playerName(m.motm) }] : []),
-    ...m.cards.map((c) => ({ what: c.type === "Y" ? "Yellow" : "Red", who: st.playerName(c.player) })),
+    ...(unassigned > 0 ? [{ what: t("Goal"), who: <small>{t("{n} without a scorer yet", { n: unassigned })}</small> }] : []),
+    ...(m.motm ? [{ what: t("MOTM"), who: st.playerName(m.motm) }] : []),
+    ...m.cards.map((c) => ({ what: c.type === "Y" ? t("Yellow") : t("Red"), who: st.playerName(c.player) })),
   ];
 
   return (
@@ -177,7 +185,7 @@ function LastMatch({ st, m, sides }: { st: Stats; m: PlayedMatch; sides: { home:
       </Reveal>
       <Reveal className="mx-last-foot" delay={0.1}>
         <p className="mx-verdict">
-          <em>{WORD[m.result]}.</em>
+          <em>{t(WORD[m.result])}.</em>
         </p>
         {events.length > 0 && (
           <ul className="mx-events">
@@ -190,7 +198,7 @@ function LastMatch({ st, m, sides }: { st: Stats; m: PlayedMatch; sides: { home:
           </ul>
         )}
         <Link href={`${st.base}/matches/${m.id}`} className="hx-btn hx-btn-primary">
-          Match details
+          {t("Match details")}
         </Link>
       </Reveal>
     </div>
@@ -198,7 +206,7 @@ function LastMatch({ st, m, sides }: { st: Stats; m: PlayedMatch; sides: { home:
 }
 
 /** One season's results, newest first, with abandoned and called-off matches in their place by date. */
-function SeasonResults({ st, season }: { st: Stats; season: string }) {
+function SeasonResults({ st, season, t, lang }: { st: Stats; season: string; t: T; lang: Lang }) {
   const list = st.inSeason(season);
   const s = summarise(list);
   const voided = st.voided.filter((m) => seasonOf(m.date) === season);
@@ -206,15 +214,21 @@ function SeasonResults({ st, season }: { st: Stats; season: string }) {
   if (!rows.length) return null;
 
   return (
-    <section className="mx-season" aria-label={seasonLabel(season)}>
+    <section className="mx-season" aria-label={t(seasonLabel(season))}>
       <Reveal className="mx-season-head">
-        <h3>{seasonLabel(season)}</h3>
+        <h3>{t(seasonLabel(season))}</h3>
         {s.p > 0 && (
           <p>
-            <span>{s.p} played</span>
-            <span className="hx-W">{s.w} W</span>
-            <span className="hx-D">{s.d} D</span>
-            <span className="hx-L">{s.l} L</span>
+            <span>{t("{n} played", { n: s.p })}</span>
+            <span className="hx-W">
+              {s.w} {t("W")}
+            </span>
+            <span className="hx-D">
+              {s.d} {t("D")}
+            </span>
+            <span className="hx-L">
+              {s.l} {t("L")}
+            </span>
             <span>
               {s.gf}–{s.ga}
             </span>
@@ -229,18 +243,18 @@ function SeasonResults({ st, season }: { st: Stats; season: string }) {
           return (
             <li key={m.id}>
               <Link href={`${st.base}/matches/${m.id}`} className={`mx-row ${played ? `hx-${played.result}` : "hx-void"}`}>
-                <span className="mx-result" aria-label={played ? WORD[played.result] : undefined}>
-                  {played ? played.result : "–"}
+                <span className="mx-result" aria-label={played ? t(WORD[played.result]) : undefined}>
+                  {played ? t(played.result) : "–"}
                 </span>
-                <span className="mx-row-date">{formatDate(m.date, { day: "numeric", month: "short" })}</span>
+                <span className="mx-row-date">{formatDate(m.date, { day: "numeric", month: "short" }, lang)}</span>
                 <span className="mx-row-team">
                   <TeamLogo code={m.opponentCode} name={m.opponent} size={28} />
                   <span>
                     {m.opponent}
                     <small>
-                      {home ? "Home" : "Away"}
-                      {m.competition !== "League" && <span className="hx-cup"> · {m.competition}</span>}
-                      <span className="mx-row-inline-date"> · {formatDate(m.date, { day: "numeric", month: "short" })}</span>
+                      {home ? homeVenue(lang) : t("Away")}
+                      {m.competition !== "League" && <span className="hx-cup"> · {t(m.competition)}</span>}
+                      <span className="mx-row-inline-date"> · {formatDate(m.date, { day: "numeric", month: "short" }, lang)}</span>
                     </small>
                   </span>
                 </span>
@@ -253,7 +267,7 @@ function SeasonResults({ st, season }: { st: Stats; season: string }) {
                       {played.ga}
                     </>
                   ) : (
-                    <small>{m.status === "abandoned" ? "Abandoned" : "Called off"}</small>
+                    <small>{m.status === "abandoned" ? t("Abandoned") : t("Called off")}</small>
                   )}
                 </span>
               </Link>

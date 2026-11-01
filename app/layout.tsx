@@ -3,6 +3,8 @@ import { config } from "@fortawesome/fontawesome-svg-core";
 import "@fortawesome/fontawesome-svg-core/styles.css";
 import { Bebas_Neue, DM_Sans, Geist, Instrument_Serif } from "next/font/google";
 import type { ReactNode } from "react";
+import { LangProvider } from "@/components/I18n";
+import { getLang } from "@/lib/i18n/server";
 import "./globals.css";
 
 // The stylesheet is imported above; stop Font Awesome injecting it again at runtime.
@@ -20,10 +22,13 @@ export const metadata: Metadata = {
   description: "Results, player stats, records, analysis and the halls of fame and shame for Sunday league clubs.",
 };
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default async function RootLayout({ children }: { children: ReactNode }) {
+  const lang = await getLang();
   return (
-    <html lang="en-GB" className={`${display.variable} ${body.variable} ${grotesk.variable} ${serif.variable}`}>
-      <body>{children}</body>
+    <html lang={lang === "nl" ? "nl" : "en-GB"} className={`${display.variable} ${body.variable} ${grotesk.variable} ${serif.variable}`}>
+      <body>
+        <LangProvider lang={lang}>{children}</LangProvider>
+      </body>
     </html>
   );
 }

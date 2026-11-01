@@ -5,9 +5,14 @@ import { Band } from "@/components/home/Band";
 import { CountUp, Reveal } from "@/components/home/Motion";
 import { Page, PageHero, SeasonLinks, StatsNav } from "@/components/home/Page";
 import { loadClub } from "@/lib/club";
+import type { T } from "@/lib/i18n";
+import { getLang, getT } from "@/lib/i18n/server";
 import { MINUTE_BUCKETS, byMonth, formatDate, formatMonth, goalsByMinute, groupSummary, partnerships, seasonLabel, summarise, type Summary } from "@/lib/stats";
 
-export const metadata: Metadata = { title: "Stats" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("Stats") };
+}
 
 /** How often each player id appears, most first, then by first appearance. */
 function tally(ids: (string | undefined)[]): { id: string; count: number }[] {
@@ -19,26 +24,26 @@ function tally(ids: (string | undefined)[]): { id: string; count: number }[] {
 // The season taken apart: the headline numbers, the form as a row of letters, when the goals come, where we do
 // well and who makes the difference.
 
-function SplitTable({ rows, label }: { rows: ({ name: string } & Summary)[]; label: string }) {
+function SplitTable({ rows, label, t }: { rows: ({ name: string } & Summary)[]; label: string; t: T }) {
   return (
     <div className="hx-table st-split">
       <table>
         <thead>
           <tr>
             <th>{label}</th>
-            <th className="num">P</th>
-            <th className="num st-wide">W</th>
-            <th className="num st-wide">D</th>
-            <th className="num st-wide">L</th>
-            <th className="num">Goals</th>
-            <th className="num">PPG</th>
-            <th className="num">Won</th>
+            <th className="num">{t("P")}</th>
+            <th className="num st-wide">{t("W")}</th>
+            <th className="num st-wide">{t("D")}</th>
+            <th className="num st-wide">{t("L")}</th>
+            <th className="num">{t("Goals")}</th>
+            <th className="num">{t("PPG")}</th>
+            <th className="num">{t("Won")}</th>
           </tr>
         </thead>
         <tbody>
           {rows.map((r) => (
             <tr key={r.name}>
-              <td>{r.name}</td>
+              <td>{t(r.name)}</td>
               <td className="num">{r.p}</td>
               <td className="num st-wide">{r.w}</td>
               <td className="num st-wide">{r.d}</td>
@@ -65,6 +70,8 @@ type Props = { params: Promise<{ club: string }>; searchParams: Promise<Record<s
 
 export default async function AnalysisPage({ params, searchParams }: Props) {
   const { data, st } = await loadClub((await params).club);
+  const t = await getT();
+  const lang = await getLang();
   const query = await searchParams;
   const season = st.resolveSeason(query.season);
   const ms = st.inSeason(season);
@@ -84,19 +91,19 @@ export default async function AnalysisPage({ params, searchParams }: Props) {
   const failedToScore = ms.filter((m) => m.gf === 0).length;
 
   const numbers: { label: string; value: number; shown?: string; suffix?: string; sub?: string }[] = [
-    { label: "Played", value: s.p, sub: `${s.w}W ${s.d}D ${s.l}L` },
-    { label: "Win rate", value: Math.round(s.winPct), suffix: "%" },
-    { label: "Points a game", value: s.ppg, shown: s.ppg.toFixed(2) },
-    { label: "Goal difference", value: s.gd, shown: s.gd > 0 ? `+${s.gd}` : String(s.gd) },
-    { label: "Scored a game", value: s.p ? s.gf / s.p : 0, shown: s.p ? (s.gf / s.p).toFixed(1) : "0", sub: `${s.gf} in all` },
-    { label: "Conceded a game", value: s.p ? s.ga / s.p : 0, shown: s.p ? (s.ga / s.p).toFixed(1) : "0", sub: `${s.ga} in all` },
-    { label: "Clean sheets", value: s.cleanSheets },
-    { label: "Blanks", value: failedToScore, sub: "games without a goal" },
+    { label: t("Played"), value: s.p, sub: t("{w}W {d}D {l}L", { w: s.w, d: s.d, l: s.l }) },
+    { label: t("Win rate"), value: Math.round(s.winPct), suffix: "%" },
+    { label: t("Points a game"), value: s.ppg, shown: s.ppg.toFixed(2) },
+    { label: t("Goal difference"), value: s.gd, shown: s.gd > 0 ? `+${s.gd}` : String(s.gd) },
+    { label: t("Scored a game"), value: s.p ? s.gf / s.p : 0, shown: s.p ? (s.gf / s.p).toFixed(1) : "0", sub: t("{n} in all", { n: s.gf }) },
+    { label: t("Conceded a game"), value: s.p ? s.ga / s.p : 0, shown: s.p ? (s.ga / s.p).toFixed(1) : "0", sub: t("{n} in all", { n: s.ga }) },
+    { label: t("Clean sheets"), value: s.cleanSheets },
+    { label: t("Blanks"), value: failedToScore, sub: t("games without a goal") },
   ];
 
   return (
     <Page accent={data.club.accent}>
-      <PageHero lead="The" accent="numbers." meta={`${seasonLabel(season)} · ${s.p} ${s.p === 1 ? "match" : "matches"}`}>
+      <PageHero lead={t("The")} accent={t("numbers.")} meta={`${t(seasonLabel(season))} · ${t(s.p === 1 ? "{n} match" : "{n} matches", { n: s.p })}`}>
         <StatsNav base={st.base} active="overview" />
         <SeasonLinks href={(x) => `${st.base}/stats?season=${x}`} seasons={st.seasons} active={season} />
       </PageHero>
@@ -104,13 +111,13 @@ export default async function AnalysisPage({ params, searchParams }: Props) {
       <div className="hx-bands">
         {ms.length === 0 ? (
           <div className="hx-wrap hx-start">
-            <p className="hx-empty">No matches played in this period.</p>
+            <p className="hx-empty">{t("No matches played in this period.")}</p>
           </div>
         ) : (
           <>
             <Band className="hx-band-numbers" labelledBy="st-numbers-title">
               <h2 id="st-numbers-title" className="sr-only">
-                In numbers
+                {t("In numbers")}
               </h2>
               <Reveal className="hx-numbers st-numbers">
                 {numbers.map((n) => (
@@ -123,12 +130,12 @@ export default async function AnalysisPage({ params, searchParams }: Props) {
               </Reveal>
 
               <Reveal className="st-form-wrap" delay={0.05}>
-                <h3 className="hx-label">Form, oldest first</h3>
+                <h3 className="hx-label">{t("Form, oldest first")}</h3>
                 <ol className="st-form">
                   {ms.map((m) => (
                     <li key={m.id}>
-                      <Link href={`${st.base}/matches/${m.id}`} className={`hx-${m.result}`} title={`${m.gf}–${m.ga} vs ${m.opponent}, ${formatDate(m.date)}`}>
-                        {m.result}
+                      <Link href={`${st.base}/matches/${m.id}`} className={`hx-${m.result}`} title={`${m.gf}–${m.ga} ${t("vs")} ${m.opponent}, ${formatDate(m.date, undefined, lang)}`}>
+                        {t(m.result)}
                       </Link>
                     </li>
                   ))}
@@ -139,34 +146,34 @@ export default async function AnalysisPage({ params, searchParams }: Props) {
             <Band className="hx-band-halls" labelledBy="st-when-title">
               <Reveal className="hx-head">
                 <h2 id="st-when-title">
-                  When it <em>happens.</em>
+                  {t("When it")} <em>{t("happens.")}</em>
                 </h2>
                 <p>
-                  {firstHalf} goals before half-time, {secondHalf} after. {penalties} from the spot.
+                  {t("Goals before half-time: {first}. After: {second}. From the spot: {pens}.", { first: firstHalf, second: secondHalf, pens: penalties })}
                 </p>
               </Reveal>
               <div className="st-charts">
                 <Reveal>
                   <BarChart
-                    title="Goals scored by month"
-                    data={months.map((m) => ({ label: formatMonth(m.month), value: m.gf, hint: `${formatMonth(m.month)} · ${m.p} played` }))}
+                    title={t("Goals scored by month")}
+                    data={months.map((m) => ({ label: formatMonth(m.month, lang), value: m.gf, hint: `${formatMonth(m.month, lang)} · ${t("{n} played", { n: m.p })}` }))}
                   />
                 </Reveal>
                 <Reveal delay={0.06}>
                   <BarChart
-                    title="Goals conceded by month"
+                    title={t("Goals conceded by month")}
                     tone="against"
-                    data={months.map((m) => ({ label: formatMonth(m.month), value: m.ga, hint: `${formatMonth(m.month)} · ${m.p} played` }))}
+                    data={months.map((m) => ({ label: formatMonth(m.month, lang), value: m.ga, hint: `${formatMonth(m.month, lang)} · ${t("{n} played", { n: m.p })}` }))}
                   />
                 </Reveal>
                 <Reveal>
-                  <BarChart title="When we score" data={MINUTE_BUCKETS.map((b, i) => ({ label: b, value: minutes[i], hint: `Minutes ${b}` }))} />
+                  <BarChart title={t("When we score")} data={MINUTE_BUCKETS.map((b, i) => ({ label: b, value: minutes[i], hint: t("Minutes {range}", { range: b }) }))} />
                 </Reveal>
                 <Reveal delay={0.06}>
                   <BarChart
-                    title="Points by month"
-                    data={months.map((m) => ({ label: formatMonth(m.month), value: m.pts, hint: `${formatMonth(m.month)} · ${m.w}W ${m.d}D ${m.l}L` }))}
-                    unit=" pts"
+                    title={t("Points by month")}
+                    data={months.map((m) => ({ label: formatMonth(m.month, lang), value: m.pts, hint: `${formatMonth(m.month, lang)} · ${t("{w}W {d}D {l}L", { w: m.w, d: m.d, l: m.l })}` }))}
+                    unit={t(" pts")}
                   />
                 </Reveal>
               </div>
@@ -175,15 +182,15 @@ export default async function AnalysisPage({ params, searchParams }: Props) {
             <Band className="hx-band-pitch" labelledBy="st-where-title">
               <Reveal className="hx-head">
                 <h2 id="st-where-title">
-                  Where we <em>win.</em>
+                  {t("Where we")} <em>{t("win.")}</em>
                 </h2>
               </Reveal>
               <div className="st-two">
                 <Reveal>
-                  <SplitTable rows={venues} label="Venue" />
+                  <SplitTable rows={venues} label={t("Venue")} t={t} />
                 </Reveal>
                 <Reveal delay={0.06}>
-                  <SplitTable rows={comps} label="Competition" />
+                  <SplitTable rows={comps} label={t("Competition")} t={t} />
                 </Reveal>
               </div>
             </Band>
@@ -191,14 +198,14 @@ export default async function AnalysisPage({ params, searchParams }: Props) {
             <Band className="hx-band-halls" labelledBy="st-armband-title">
               <Reveal className="hx-head">
                 <h2 id="st-armband-title">
-                  The armband and the <em>votes.</em>
+                  {t("The armband and the")} <em>{t("votes.")}</em>
                 </h2>
-                <p>Captains from the (C) in the voetbal.nl line-ups; man of the match from the team&apos;s vote there, or picked by hand.</p>
+                <p>{t("Captains from the (C) in the voetbal.nl line-ups; man of the match from the team's vote there, or picked by hand.")}</p>
               </Reveal>
               <div className="st-two">
                 {[
-                  { key: "captain", title: "Captains", label: "Matches with the armband", rows: captains, empty: "No captains from voetbal.nl yet." },
-                  { key: "motm", title: "Man of the match", label: "Times voted best on the pitch", rows: motms, empty: "No man of the match yet." },
+                  { key: "captain", title: t("Captains"), label: t("Matches with the armband"), rows: captains, empty: t("No captains from voetbal.nl yet.") },
+                  { key: "motm", title: t("Man of the match"), label: t("Times voted best on the pitch"), rows: motms, empty: t("No man of the match yet.") },
                 ].map((list, n) => (
                   <Reveal key={list.key} className="st-duos" delay={n * 0.06}>
                     <h3>{list.title}</h3>
@@ -226,14 +233,14 @@ export default async function AnalysisPage({ params, searchParams }: Props) {
             <Band className="hx-band-board" labelledBy="st-who-title">
               <Reveal className="hx-head">
                 <h2 id="st-who-title">
-                  Who makes the <em>difference.</em>
+                  {t("Who makes the")} <em>{t("difference.")}</em>
                 </h2>
-                <p>Small samples, so take it with a pinch of salt.</p>
+                <p>{t("Small samples, so take it with a pinch of salt.")}</p>
               </Reveal>
               <div className="st-two">
                 <Reveal className="st-duos">
-                  <h3>Best partnerships</h3>
-                  <p className="hx-label">Who set up whom</p>
+                  <h3>{t("Best partnerships")}</h3>
+                  <p className="hx-label">{t("Who set up whom")}</p>
                   {duos.length ? (
                     <ol>
                       {duos.map((d, i) => (
@@ -241,7 +248,7 @@ export default async function AnalysisPage({ params, searchParams }: Props) {
                           <span className="hx-rank">{i + 1}</span>
                           <span className="st-duo">
                             <Link href={`${st.base}/players/${d.assist}`}>{st.playerName(d.assist)}</Link>
-                            <span aria-label="to"> → </span>
+                            <span aria-label={t("to")}> → </span>
                             <Link href={`${st.base}/players/${d.scorer}`}>{st.playerName(d.scorer)}</Link>
                           </span>
                           <b>{d.count}</b>
@@ -249,22 +256,22 @@ export default async function AnalysisPage({ params, searchParams }: Props) {
                       ))}
                     </ol>
                   ) : (
-                    <p className="hx-empty">No assisted goals yet.</p>
+                    <p className="hx-empty">{t("No assisted goals yet.")}</p>
                   )}
                 </Reveal>
 
                 <Reveal className="st-impact" delay={0.06}>
-                  <h3>With and without</h3>
-                  <p className="hx-label">Points a game with each player in the squad and without them. The small numbers are games with and without.</p>
+                  <h3>{t("With and without")}</h3>
+                  <p className="hx-label">{t("Points a game with each player in the squad and without them. The small numbers are games with and without.")}</p>
                   {impact.length ? (
                     <div className="hx-table">
                       <table>
                         <thead>
                           <tr>
-                            <th>Player</th>
-                            <th className="num">With</th>
-                            <th className="num">Without</th>
-                            <th className="num">Diff</th>
+                            <th>{t("Player")}</th>
+                            <th className="num">{t("With")}</th>
+                            <th className="num">{t("Without")}</th>
+                            <th className="num">{t("Diff")}</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -289,7 +296,7 @@ export default async function AnalysisPage({ params, searchParams }: Props) {
                       </table>
                     </div>
                   ) : (
-                    <p className="hx-empty">Everyone has played every game, so there&apos;s nothing to compare.</p>
+                    <p className="hx-empty">{t("Everyone has played every game, so there's nothing to compare.")}</p>
                   )}
                 </Reveal>
               </div>

@@ -1,3 +1,5 @@
+import { getT } from "@/lib/i18n/server";
+
 interface Bar {
   label: string;
   value: number;
@@ -14,7 +16,8 @@ interface Props {
 }
 
 /** Single-series vertical bar chart. Value labels on the peak and on hover; table view underneath. */
-export function BarChart({ title, data, tone = "accent", unit = "", height = 160 }: Props) {
+export async function BarChart({ title, data, tone = "accent", unit = "", height = 160 }: Props) {
+  const t = await getT();
   const max = Math.max(1, ...data.map((d) => d.value));
   const peak = Math.max(...data.map((d) => d.value));
   return (
@@ -38,7 +41,7 @@ export function BarChart({ title, data, tone = "accent", unit = "", height = 160
         ))}
       </div>
       <details className="chart-table">
-        <summary>Show as table</summary>
+        <summary>{t("Show as table")}</summary>
         <table>
           <tbody>
             {data.map((d) => (

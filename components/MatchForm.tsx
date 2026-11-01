@@ -2,6 +2,8 @@
 
 import { useActionState, useState, type ReactNode } from "react";
 import { Notice, Submit } from "@/components/forms";
+import { useLang, useT } from "@/components/I18n";
+import { homeVenue } from "@/lib/i18n/nl-matches";
 import type { FormState, MatchPayload } from "@/lib/actions";
 import type { Match, Player } from "@/lib/types";
 
@@ -51,6 +53,8 @@ function fromMatch(m?: Match): MatchPayload {
 export function MatchForm({ action, players, match, opponents, competitions }: Props) {
   const [state, formAction] = useActionState(action, {});
   const [p, setP] = useState<MatchPayload>(() => fromMatch(match));
+  const t = useT();
+  const lang = useLang();
   const set = <K extends keyof MatchPayload>(key: K, value: MatchPayload[K]) => setP((prev) => ({ ...prev, [key]: value }));
 
   // Inactive players stay selectable if they're already in this match.
@@ -65,8 +69,8 @@ export function MatchForm({ action, players, match, opponents, competitions }: P
     <div className="repeat">
       {p[key].map((id, i) => (
         <div className="repeat-row" key={i}>
-          <PlayerSelect options={options} label="Player" value={id} onChange={(v) => set(key, p[key].map((x, j) => (j === i ? v : x)))} />
-          <button type="button" className="btn-link danger" onClick={() => set(key, p[key].filter((_, j) => j !== i))}>Remove</button>
+          <PlayerSelect options={options} label={t("Player")} value={id} onChange={(v) => set(key, p[key].map((x, j) => (j === i ? v : x)))} />
+          <button type="button" className="btn-link danger" onClick={() => set(key, p[key].filter((_, j) => j !== i))}>{t("Remove")}</button>
         </div>
       ))}
       <button type="button" className="btn-link" onClick={() => set(key, [...p[key], ""])}>+ {label}</button>
@@ -80,68 +84,68 @@ export function MatchForm({ action, players, match, opponents, competitions }: P
       <div className="card form">
         <div className="form-row">
           <label>
-            Date
+            {t("Date")}
             <input type="date" required value={p.date} onChange={(e) => set("date", e.target.value)} />
           </label>
           <label>
-            Opponent
+            {t("Opponent")}
             <input required maxLength={80} list="opponents" value={p.opponent} onChange={(e) => set("opponent", e.target.value)} />
             <datalist id="opponents">{opponents.map((o) => <option key={o} value={o} />)}</datalist>
           </label>
         </div>
         <div className="form-row">
           <label>
-            Venue
+            {t("Venue")}
             <select value={p.venue} onChange={(e) => set("venue", e.target.value as "H" | "A")}>
-              <option value="H">Home</option>
-              <option value="A">Away</option>
+              <option value="H">{homeVenue(lang)}</option>
+              <option value="A">{t("Away")}</option>
             </select>
           </label>
           <label>
-            Competition
+            {t("Competition")}
             <input maxLength={40} list="competitions" value={p.competition} onChange={(e) => set("competition", e.target.value)} />
             <datalist id="competitions">{["League", "Cup", "Friendly", ...competitions].filter((c, i, a) => a.indexOf(c) === i).map((c) => <option key={c} value={c} />)}</datalist>
           </label>
         </div>
         <label className="check">
-          <input type="checkbox" checked={p.played} onChange={(e) => set("played", e.target.checked)} /> Played (untick for an upcoming fixture)
+          <input type="checkbox" checked={p.played} onChange={(e) => set("played", e.target.checked)} /> {t("Played (untick for an upcoming fixture)")}
         </label>
       </div>
 
       {p.played && (
         <>
           <div className="card form">
-            <h2>Score</h2>
+            <h2>{t("Score")}</h2>
             <div className="score-entry">
               <div>
                 {match?.goalsFor !== undefined ? (
                   <>
                     <div className="score-num">{match.goalsFor}</div>
                     <div className="small muted">
-                      Scored, from voetbal.nl. {Math.min(p.goals.length, match.goalsFor)} of {match.goalsFor} have a scorer.
+                      {t("Scored, from voetbal.nl. {n} of {total} have a scorer.", { n: Math.min(p.goals.length, match.goalsFor), total: match.goalsFor })}
                     </div>
                   </>
                 ) : (
                   <>
                     <div className="score-num">{p.goals.length}</div>
-                    <div className="small muted">Scored (from the goals below)</div>
+                    <div className="small muted">{t("Scored (from the goals below)")}</div>
                   </>
                 )}
               </div>
               <span className="score-dash">–</span>
               <label>
                 <input type="number" min={0} max={99} required value={p.against ?? 0} onChange={(e) => set("against", e.target.value === "" ? null : Number(e.target.value))} className="score-input" />
-                <span className="small muted">Conceded</span>
+                <span className="small muted">{t("Conceded")}</span>
               </label>
             </div>
           </div>
 
           <div className="card form">
             <h2>
-              Squad <span className="small muted">{p.squad.length} picked</span>
+              {t("Squad")} <span className="small muted">{t("{n} picked", { n: p.squad.length })}</span>
             </h2>
             {pickable.length === 0 ? (
-              <p className="muted">Add players in Settings first.</p>
+              <p className="muted">{t("Add players in Settings first.")}</p>
             ) : (
               <div className="squad-picker">
                 {pickable.map((pl) => (
@@ -153,65 +157,65 @@ export function MatchForm({ action, players, match, opponents, competitions }: P
               </div>
             )}
             <div className="form-actions">
-              <button type="button" className="btn-link" onClick={() => set("squad", pickable.filter((pl) => pl.active).map((pl) => pl.id))}>Select all active</button>
-              <button type="button" className="btn-link" onClick={() => set("squad", [])}>Clear</button>
+              <button type="button" className="btn-link" onClick={() => set("squad", pickable.filter((pl) => pl.active).map((pl) => pl.id))}>{t("Select all active")}</button>
+              <button type="button" className="btn-link" onClick={() => set("squad", [])}>{t("Clear")}</button>
             </div>
           </div>
 
           <div className="card form">
-            <h2>Goals</h2>
+            <h2>{t("Goals")}</h2>
             <div className="repeat">
               {p.goals.map((g, i) => {
                 const update = (patch: Partial<MatchPayload["goals"][number]>) => set("goals", p.goals.map((x, j) => (j === i ? { ...x, ...patch } : x)));
                 return (
                   <div className="repeat-row" key={i}>
-                    <PlayerSelect options={options} label="Scorer" value={g.scorer} onChange={(v) => update({ scorer: v })} extra={<option value="og">Opponent own goal</option>} />
-                    <PlayerSelect options={options} label="Assist (none)" value={g.assist} onChange={(v) => update({ assist: v })} />
-                    <input type="number" min={0} max={130} placeholder="Min" aria-label="Minute" value={g.minute} onChange={(e) => update({ minute: e.target.value })} className="minute-input" />
+                    <PlayerSelect options={options} label={t("Scorer")} value={g.scorer} onChange={(v) => update({ scorer: v })} extra={<option value="og">{t("Opponent own goal")}</option>} />
+                    <PlayerSelect options={options} label={t("Assist (none)")} value={g.assist} onChange={(v) => update({ assist: v })} />
+                    <input type="number" min={0} max={130} placeholder={t("Min")} aria-label={t("Minute")} value={g.minute} onChange={(e) => update({ minute: e.target.value })} className="minute-input" />
                     <label className="check">
-                      <input type="checkbox" checked={g.penalty} onChange={(e) => update({ penalty: e.target.checked })} /> Pen
+                      <input type="checkbox" checked={g.penalty} onChange={(e) => update({ penalty: e.target.checked })} /> {t("Pen")}
                     </label>
-                    <button type="button" className="btn-link danger" onClick={() => set("goals", p.goals.filter((_, j) => j !== i))}>Remove</button>
+                    <button type="button" className="btn-link danger" onClick={() => set("goals", p.goals.filter((_, j) => j !== i))}>{t("Remove")}</button>
                   </div>
                 );
               })}
-              <button type="button" className="btn-link" onClick={() => set("goals", [...p.goals, { scorer: "", assist: "", minute: "", penalty: false }])}>+ Add goal</button>
+              <button type="button" className="btn-link" onClick={() => set("goals", [...p.goals, { scorer: "", assist: "", minute: "", penalty: false }])}>+ {t("Add goal")}</button>
             </div>
           </div>
 
           <div className="card form">
-            <h2>Cards</h2>
+            <h2>{t("Cards")}</h2>
             <div className="repeat">
               {p.cards.map((c, i) => (
                 <div className="repeat-row" key={i}>
-                  <PlayerSelect options={options} label="Player" value={c.player} onChange={(v) => set("cards", p.cards.map((x, j) => (j === i ? { ...x, player: v } : x)))} />
-                  <select value={c.type} onChange={(e) => set("cards", p.cards.map((x, j) => (j === i ? { ...x, type: e.target.value as "Y" | "R" } : x)))} aria-label="Card">
-                    <option value="Y">Yellow</option>
-                    <option value="R">Red</option>
+                  <PlayerSelect options={options} label={t("Player")} value={c.player} onChange={(v) => set("cards", p.cards.map((x, j) => (j === i ? { ...x, player: v } : x)))} />
+                  <select value={c.type} onChange={(e) => set("cards", p.cards.map((x, j) => (j === i ? { ...x, type: e.target.value as "Y" | "R" } : x)))} aria-label={t("Card")}>
+                    <option value="Y">{t("Yellow")}</option>
+                    <option value="R">{t("Red")}</option>
                   </select>
-                  <button type="button" className="btn-link danger" onClick={() => set("cards", p.cards.filter((_, j) => j !== i))}>Remove</button>
+                  <button type="button" className="btn-link danger" onClick={() => set("cards", p.cards.filter((_, j) => j !== i))}>{t("Remove")}</button>
                 </div>
               ))}
-              <button type="button" className="btn-link" onClick={() => set("cards", [...p.cards, { player: "", type: "Y" }])}>+ Add card</button>
+              <button type="button" className="btn-link" onClick={() => set("cards", [...p.cards, { player: "", type: "Y" }])}>+ {t("Add card")}</button>
             </div>
           </div>
 
           <div className="grid grid-2">
             <div className="card form">
-              <h2>Own goals</h2>
-              <p className="small muted">Ours, into our own net. These count towards goals conceded.</p>
-              {listEditor("ownGoals", "Add own goal")}
+              <h2>{t("Own goals")}</h2>
+              <p className="small muted">{t("Ours, into our own net. These count towards goals conceded.")}</p>
+              {listEditor("ownGoals", t("Add own goal"))}
             </div>
             <div className="card form">
-              <h2>Missed penalties</h2>
-              {listEditor("penaltiesMissed", "Add missed penalty")}
+              <h2>{t("Missed penalties")}</h2>
+              {listEditor("penaltiesMissed", t("Add missed penalty"))}
             </div>
           </div>
 
           <div className="card form">
             <label>
-              Man of the Match
-              <PlayerSelect options={options} label="None" value={p.motm} onChange={(v) => set("motm", v)} />
+              {t("Man of the Match")}
+              <PlayerSelect options={options} label={t("None")} value={p.motm} onChange={(v) => set("motm", v)} />
             </label>
           </div>
         </>
@@ -219,14 +223,14 @@ export function MatchForm({ action, players, match, opponents, competitions }: P
 
       <div className="card form">
         <label>
-          Notes
-          <textarea rows={3} maxLength={1000} value={p.notes} onChange={(e) => set("notes", e.target.value)} placeholder="Anything worth remembering" />
+          {t("Notes")}
+          <textarea rows={3} maxLength={1000} value={p.notes} onChange={(e) => set("notes", e.target.value)} placeholder={t("Anything worth remembering")} />
         </label>
       </div>
 
       <Notice state={state} />
       <div className="form-actions">
-        <Submit>{match ? "Save match" : "Add match"}</Submit>
+        <Submit>{match ? t("Save match") : t("Add match")}</Submit>
       </div>
     </form>
   );

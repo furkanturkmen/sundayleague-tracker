@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useState } from "react";
 import { Notice, Submit } from "@/components/forms";
+import { useT } from "@/components/I18n";
 import type { FormState } from "@/lib/actions";
 import { FORMATIONS, formationSlots, MAX_BENCH, playsSlot, suggestLineup } from "@/lib/lineup";
 import type { Player } from "@/lib/types";
@@ -29,6 +30,7 @@ export function LineupForm({
   image: string;
 }) {
   const [state, formAction] = useActionState(action, {});
+  const t = useT();
   const [formation, setFormation] = useState(initial.formation);
   const [starters, setStarters] = useState(initial.starters);
   const [bench, setBench] = useState(initial.bench);
@@ -83,7 +85,7 @@ export function LineupForm({
     <div className="lineup-layout">
       <form action={formAction} className="card form">
         <label>
-          Formation
+          {t("Formation")}
           <select name="formation" value={formation} onChange={(e) => fit(e.target.value)}>
             {Object.keys(FORMATIONS).map((f) => (
               <option key={f} value={f}>{f}</option>
@@ -93,21 +95,21 @@ export function LineupForm({
 
         <fieldset>
           <legend>
-            Starting eleven{" "}
+            {t("Starting eleven")}{" "}
             <button type="button" className="btn-link small" onClick={() => fit(formation)}>
-              Suggest from positions
+              {t("Suggest from positions")}
             </button>
           </legend>
           <ul className="lineup-slots">
             {slots.map((s, i) => (
               <li key={`${formation}-${i}`}>
                 <span className="chip">{s.pos}</span>
-                <select name={`slot${i}`} value={starters[i] ?? ""} onChange={(e) => pick(i, e.target.value)} aria-label={`${s.pos}, spot ${i + 1}`}>
-                  <option value="">Empty</option>
+                <select name={`slot${i}`} value={starters[i] ?? ""} onChange={(e) => pick(i, e.target.value)} aria-label={t("{pos}, spot {n}", { pos: s.pos, n: i + 1 })}>
+                  <option value="">{t("Empty")}</option>
                   {/* Whoever lists this spot (or its line) as a position, extra ones included, before everyone else. */}
                   {[
-                    { label: `Plays ${s.pos}`, players: options.filter((p) => playsSlot(p, s.pos)) },
-                    { label: "Others", players: options.filter((p) => !playsSlot(p, s.pos)) },
+                    { label: t("Plays {pos}", { pos: s.pos }), players: options.filter((p) => playsSlot(p, s.pos)) },
+                    { label: t("Others"), players: options.filter((p) => !playsSlot(p, s.pos)) },
                   ].map(
                     (g) =>
                       g.players.length > 0 && (
@@ -124,7 +126,7 @@ export function LineupForm({
 
         <fieldset>
           <legend>
-            Bench <span className="muted small">(up to {MAX_BENCH})</span>
+            {t("Bench")} <span className="muted small">{t("(up to {n})", { n: MAX_BENCH })}</span>
           </legend>
           <div className="lineup-bench">
             {options
@@ -147,16 +149,16 @@ export function LineupForm({
 
         <Notice state={state} />
         <div className="form-actions">
-          <Submit>Save line-up</Submit>
+          <Submit>{t("Save line-up")}</Submit>
         </div>
       </form>
 
       <div className="card lineup-preview">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={shown} width={1080} height={1350} alt="Line-up graphic" style={{ opacity: loading ? 0.6 : 1, transition: "opacity 150ms" }} />
+        <img src={shown} width={1080} height={1350} alt={t("Line-up graphic")} style={{ opacity: loading ? 0.6 : 1, transition: "opacity 150ms" }} />
         <div className="form-actions">
           <ShareGraphic src={`${image}?${query}`} />
-          <span className="small muted">{loading ? "Updating…" : "Save to keep this line-up."}</span>
+          <span className="small muted">{loading ? t("Updating…") : t("Save to keep this line-up.")}</span>
         </div>
       </div>
     </div>

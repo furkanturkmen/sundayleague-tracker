@@ -3,7 +3,9 @@
 import { AnimatePresence, LayoutGroup, motion, useReducedMotion } from "motion/react";
 import Link from "next/link";
 import { useState } from "react";
+import { useT } from "@/components/I18n";
 import { Kit } from "@/components/Kit";
+import type { T } from "@/lib/i18n";
 import type { PositionGroup } from "@/lib/types";
 
 export interface SquadRow {
@@ -36,7 +38,8 @@ const LINES: { group: PositionGroup; label: string; plural: string }[] = [
 ];
 
 type SortKey = "apps" | "goals" | "assists" | "motm" | "captain" | "cleanSheets" | "winPct" | "cards";
-const COLUMNS: { key: SortKey; label: string; title: string; value: (r: SquadRow) => number; show?: (r: SquadRow) => string }[] = [
+// Labels and titles are English keys, translated where they're shown.
+const COLUMNS: { key: SortKey; label: string; title: string; value: (r: SquadRow) => number; show?: (r: SquadRow, t: T) => string }[] = [
   { key: "apps", label: "Apps", title: "Appearances", value: (r) => r.apps },
   { key: "goals", label: "Goals", title: "Goals", value: (r) => r.goals },
   { key: "assists", label: "Assists", title: "Assists", value: (r) => r.assists },
@@ -44,7 +47,7 @@ const COLUMNS: { key: SortKey; label: string; title: string; value: (r: SquadRow
   { key: "captain", label: "Captain", title: "Matches as captain", value: (r) => r.captain },
   { key: "cleanSheets", label: "Clean sheets", title: "Clean sheets (keepers and defenders)", value: (r) => r.cleanSheets },
   { key: "winPct", label: "Win %", title: "Win rate when playing", value: (r) => r.winPct, show: (r) => (r.apps ? `${Math.round(r.winPct)}%` : "–") },
-  { key: "cards", label: "Cards", title: "Yellow and red cards", value: (r) => r.yellows + r.reds * 2, show: (r) => (r.yellows + r.reds ? `${r.yellows}Y ${r.reds}R` : "0") },
+  { key: "cards", label: "Cards", title: "Yellow and red cards", value: (r) => r.yellows + r.reds * 2, show: (r, t) => (r.yellows + r.reds ? t("{y}Y {r}R", { y: r.yellows, r: r.reds }) : "0") },
 ];
 
 const EASE = [0.22, 1, 0.36, 1] as const;
@@ -55,6 +58,7 @@ const EASE = [0.22, 1, 0.36, 1] as const;
  */
 export function SquadBoard({ rows, kit, initialSort }: { rows: SquadRow[]; kit: { main: string; trim: string; logo: string | null }; initialSort?: string }) {
   const reduce = useReducedMotion();
+  const t = useT();
   const startSort = COLUMNS.find((c) => c.key === initialSort)?.key;
   const [view, setView] = useState<"squad" | "stats">(startSort ? "stats" : "squad");
   const [line, setLine] = useState<PositionGroup | "ALL">("ALL");
@@ -69,19 +73,19 @@ export function SquadBoard({ rows, kit, initialSort }: { rows: SquadRow[]; kit: 
   return (
     <div className="sq">
       <div className="sq-controls">
-        <div className="sq-tabs" role="tablist" aria-label="View">
+        <div className="sq-tabs" role="tablist" aria-label={t("View")}>
           {(["squad", "stats"] as const).map((v) => (
             <button key={v} type="button" role="tab" aria-selected={view === v} className={view === v ? "on" : undefined} onClick={() => setView(v)}>
-              {v === "squad" ? "Squad" : "Stats"}
+              {v === "squad" ? t("Squad") : t("Stats")}
             </button>
           ))}
         </div>
-        <div className="sq-filter" role="group" aria-label="Line">
-          {[{ group: "ALL" as const, label: "All" }, ...LINES].map((l) => {
+        <div className="sq-filter" role="group" aria-label={t("Line")}>
+          {[{ group: "ALL" as const, label: t("All") }, ...LINES].map((l) => {
             const n = l.group === "ALL" ? rows.length : rows.filter((r) => inLine(r, l.group)).length;
             return (
               <button key={l.group} type="button" aria-pressed={line === l.group} className={line === l.group ? "on" : undefined} onClick={() => setLine(l.group)} disabled={n === 0}>
-                {l.label}
+                {t(l.label)}
                 <span>{n}</span>
               </button>
             );
@@ -95,9 +99,9 @@ export function SquadBoard({ rows, kit, initialSort }: { rows: SquadRow[]; kit: 
             const players = visible.filter((r) => r.group === l.group || line === l.group);
             if (!players.length) return null;
             return (
-              <motion.section key={l.group} layout={layout} className="sq-line" aria-label={l.plural} transition={{ duration: 0.5, ease: EASE }}>
+              <motion.section key={l.group} layout={layout} className="sq-line" aria-label={t(l.plural)} transition={{ duration: 0.5, ease: EASE }}>
                 <h2>
-                  {l.plural} <span>{players.length}</span>
+                  {t(l.plural)} <span>{players.length}</span>
                 </h2>
                 <ul>
                   <AnimatePresence initial={false}>
@@ -111,28 +115,28 @@ export function SquadBoard({ rows, kit, initialSort }: { rows: SquadRow[]; kit: 
                         transition={{ duration: 0.5, ease: EASE, delay: Math.min(i, 8) * 0.03 }}
                       >
                         <Link href={r.href} className={`sq-player${r.apps ? "" : " sq-unused"}`}>
-                          <Kit main={kit.main} trim={kit.trim} number={r.number} logo={kit.logo} className="sq-kit" />
+                          <Kit main={kit.main} trim={kit.trim} number={r.number} logo={kit.logo} className="sq-kit" t={t} />
                           <span className="sq-name">{r.name}</span>
                           <span className="sq-pos" title={r.positionName}>
                             {r.position}
-                            {r.group !== l.group && <> · also {l.label}</>}
+                            {r.group !== l.group && <> · {t("also {line}", { line: t(l.label) })}</>}
                             {r.nickname && <> · “{r.nickname}”</>}
                           </span>
                           <span className="sq-mini">
                             {r.apps ? (
                               <>
                                 <span>
-                                  <b>{r.apps}</b> {r.apps === 1 ? "app" : "apps"}
+                                  <b>{r.apps}</b> {r.apps === 1 ? t("app") : t("apps")}
                                 </span>
                                 <span>
-                                  <b>{r.goals}</b> {r.goals === 1 ? "goal" : "goals"}
+                                  <b>{r.goals}</b> {r.goals === 1 ? t("goal") : t("goals")}
                                 </span>
                                 <span>
-                                  <b>{Math.round(r.winPct)}%</b> won
+                                  <b>{Math.round(r.winPct)}%</b> {t("won")}
                                 </span>
                               </>
                             ) : (
-                              <span>Yet to play</span>
+                              <span>{t("Yet to play")}</span>
                             )}
                           </span>
                         </Link>
@@ -149,11 +153,11 @@ export function SquadBoard({ rows, kit, initialSort }: { rows: SquadRow[]; kit: 
           <table>
             <thead>
               <tr>
-                <th>Player</th>
+                <th>{t("Player")}</th>
                 {COLUMNS.map((c) => (
-                  <th key={c.key} className="num" title={c.title} aria-sort={sort === c.key ? "descending" : undefined}>
+                  <th key={c.key} className="num" title={t(c.title)} aria-sort={sort === c.key ? "descending" : undefined}>
                     <button type="button" className={sort === c.key ? "on" : undefined} onClick={() => setSort(c.key)}>
-                      {c.label}
+                      {t(c.label)}
                     </button>
                   </th>
                 ))}
@@ -173,7 +177,7 @@ export function SquadBoard({ rows, kit, initialSort }: { rows: SquadRow[]; kit: 
                   </td>
                   {COLUMNS.map((c) => (
                     <td key={c.key} className={`num${sort === c.key ? " on" : ""}`}>
-                      {c.show ? c.show(r) : c.value(r)}
+                      {c.show ? c.show(r, t) : c.value(r)}
                     </td>
                   ))}
                 </motion.tr>
@@ -184,11 +188,11 @@ export function SquadBoard({ rows, kit, initialSort }: { rows: SquadRow[]; kit: 
           {/* On a phone: one row per player with the stat you sorted by, big, on the right. */}
           <div className="sq-sort-phone">
             <label>
-              Sort by
+              {t("Sort by")}
               <select value={sort} onChange={(e) => setSort(e.target.value as SortKey)}>
                 {COLUMNS.map((c) => (
                   <option key={c.key} value={c.key}>
-                    {c.title}
+                    {t(c.title)}
                   </option>
                 ))}
               </select>
@@ -202,10 +206,10 @@ export function SquadBoard({ rows, kit, initialSort }: { rows: SquadRow[]; kit: 
                   <span className="sq-list-who">
                     {r.name}
                     <small>
-                      {r.position} · {r.apps} {r.apps === 1 ? "app" : "apps"}
+                      {r.position} · {r.apps} {r.apps === 1 ? t("app") : t("apps")}
                     </small>
                   </span>
-                  <b>{col.show ? col.show(r) : col.value(r)}</b>
+                  <b>{col.show ? col.show(r, t) : col.value(r)}</b>
                 </Link>
               </motion.li>
             ))}

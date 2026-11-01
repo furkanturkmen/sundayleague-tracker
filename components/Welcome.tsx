@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useT } from "@/components/I18n";
 import { Progress, StepTitle } from "@/components/Onboarding";
 import { RecoveryCode } from "@/components/RecoveryCode";
 import { Crest } from "@/components/ui";
@@ -52,6 +53,7 @@ const SYNC_PARTS = ["Fixtures", "Results", "League table", "Line-ups"];
 
 /** Runs the first voetbal.nl sync as soon as the screen opens, then moves on to the squad. */
 function SyncStep({ slug }: { slug: string }) {
+  const t = useT();
   const router = useRouter();
   const [error, setError] = useState("");
   const [tick, setTick] = useState(0);
@@ -61,7 +63,7 @@ function SyncStep({ slug }: { slug: string }) {
     if (started.current) return;
     started.current = true;
     // The sync is one request; the list fills in as a rough sense of progress and completes when it returns.
-    const timer = setInterval(() => setTick((t) => Math.min(t + 1, SYNC_PARTS.length - 1)), 2500);
+    const timer = setInterval(() => setTick((n) => Math.min(n + 1, SYNC_PARTS.length - 1)), 2500);
     syncVoetbal(slug).then((res) => {
       clearInterval(timer);
       if (res.error) return setError(res.error);
@@ -73,25 +75,25 @@ function SyncStep({ slug }: { slug: string }) {
 
   return (
     <div className="onb-step">
-      <StepTitle kicker="Setting up" title="Pulling in your season">
-        Reading your matches from voetbal.nl. This takes about half a minute.
+      <StepTitle kicker={t("Setting up")} title={t("Pulling in your season")}>
+        {t("Reading your matches from voetbal.nl. This takes about half a minute.")}
       </StepTitle>
       <ul className="onb-sync">
         {SYNC_PARTS.map((part, i) => (
           <li key={part} className={i < tick ? "is-done" : i === tick && !error ? "is-busy" : undefined}>
             <span className="onb-sync-dot" aria-hidden="true" />
-            {part}
+            {t(part)}
           </li>
         ))}
       </ul>
       {error && (
         <>
           <p className="notice notice-error" role="alert">
-            {error} You can try again later from Settings.
+            {t(error)} {t("You can try again later from Settings.")}
           </p>
           <div className="onb-actions">
             <button type="button" className="btn btn-lg" onClick={() => router.replace(`/start/${slug}?step=squad`)}>
-              Continue without it
+              {t("Continue without it")}
             </button>
           </div>
         </>
@@ -101,6 +103,7 @@ function SyncStep({ slug }: { slug: string }) {
 }
 
 function SquadStep({ slug, linked, counts, suggestions, syncError, hiddenNote }: Props) {
+  const t = useT();
   const router = useRouter();
   const [picked, setPicked] = useState(() => new Set(suggestions.map((s) => s.name)));
   const [extra, setExtra] = useState("");
@@ -131,19 +134,25 @@ function SquadStep({ slug, linked, counts, suggestions, syncError, hiddenNote }:
     <div className="onb-step">
       {linked && !syncError && counts.matches > 0 && (
         <p className="onb-synced">
-          ✓ {counts.matches} matches{counts.results ? `, ${counts.results} results` : ""}
-          {counts.table ? " and the league table" : ""} are in.
+          ✓{" "}
+          {counts.table
+            ? counts.results
+              ? t("{matches} matches, {results} results and the league table are in.", { matches: counts.matches, results: counts.results })
+              : t("{matches} matches and the league table are in.", { matches: counts.matches })
+            : counts.results
+              ? t("{matches} matches and {results} results are in.", { matches: counts.matches, results: counts.results })
+              : t("{matches} matches are in.", { matches: counts.matches })}
         </p>
       )}
-      <StepTitle kicker="Your squad" title="Who plays for you?">
+      <StepTitle kicker={t("Your squad")} title={t("Who plays for you?")}>
         {suggestions.length
-          ? "These names come from your line-ups on voetbal.nl. Untick anyone who isn't in the squad, like a guest player."
-          : "Add the players now, or later from Settings. Numbers, positions and photos come later."}
+          ? t("These names come from your line-ups on voetbal.nl. Untick anyone who isn't in the squad, like a guest player.")
+          : t("Add the players now, or later from Settings. Numbers, positions and photos come later.")}
       </StepTitle>
 
       {hiddenNote && (
         <p className="notice notice-warn">
-          {hiddenNote} <a href={`/c/${slug}/settings/voetbal`}>voetbal.nl settings</a>
+          {hiddenNote} <a href={`/c/${slug}/settings/voetbal`}>{t("voetbal.nl settings")}</a>
         </p>
       )}
 
@@ -165,32 +174,32 @@ function SquadStep({ slug, linked, counts, suggestions, syncError, hiddenNote }:
           </div>
           <div className="onb-chip-tools small">
             <button type="button" className="btn-link" onClick={() => setPicked(new Set(suggestions.map((s) => s.name)))}>
-              Select all
+              {t("Select all")}
             </button>
             <button type="button" className="btn-link" onClick={() => setPicked(new Set())}>
-              Clear
+              {t("Clear")}
             </button>
           </div>
         </>
       )}
 
       <label className="form onb-extra">
-        <span>{suggestions.length ? "Anyone missing?" : "Player names"}</span>
+        <span>{suggestions.length ? t("Anyone missing?") : t("Player names")}</span>
         <textarea
           rows={suggestions.length ? 3 : 6}
           value={extra}
-          placeholder={"One name per line, or paste them from the team chat\nBurak Yilmaz\nDaan de Vries"}
+          placeholder={`${t("One name per line, or paste them from the team chat")}\nBurak Yilmaz\nDaan de Vries`}
           onChange={(e) => setExtra(e.target.value)}
         />
       </label>
 
-      {error && <p className="notice notice-error" role="alert">{error}</p>}
+      {error && <p className="notice notice-error" role="alert">{t(error)}</p>}
       <div className="onb-actions">
         <button type="button" className="btn btn-lg" disabled={!total || busy} onClick={save}>
-          {busy ? "Adding…" : total ? `Add ${total} ${total === 1 ? "player" : "players"}` : "Add players"}
+          {busy ? t("Adding…") : total ? (total === 1 ? t("Add 1 player") : t("Add {n} players", { n: total })) : t("Add players")}
         </button>
         <button type="button" className="btn-link" onClick={() => router.push(`/start/${slug}?step=done`)}>
-          {counts.squad ? "Done here" : "Skip for now"}
+          {counts.squad ? t("Done here") : t("Skip for now")}
         </button>
       </div>
     </div>
@@ -198,18 +207,19 @@ function SquadStep({ slug, linked, counts, suggestions, syncError, hiddenNote }:
 }
 
 function DoneStep({ slug, club, url, nextMatch, hasRecovery }: Props) {
+  const t = useT();
   const [copied, setCopied] = useState(false);
   const base = `/c/${slug}`;
   const full = `https://${url}`;
-  const share = `${club.name} now has its own page: results, stats and the table. ${full}`;
+  const share = `${t("{club} now has its own page: results, stats and the table.", { club: club.name })} ${full}`;
 
   return (
     <div className="onb-step">
       <div className="onb-live">
         <Crest short={club.shortName} logo={club.logo} size={72} />
       </div>
-      <StepTitle kicker="All set" title={`${club.name} is live`}>
-        Share the link in the team chat. Everyone can follow along; only you can change things.
+      <StepTitle kicker={t("All set")} title={t("{club} is live", { club: club.name })}>
+        {t("Share the link in the team chat. Everyone can follow along; only you can change things.")}
       </StepTitle>
 
       <div className="onb-share">
@@ -227,36 +237,36 @@ function DoneStep({ slug, club, url, nextMatch, hasRecovery }: Props) {
             }
           }}
         >
-          {copied ? "Copied" : "Copy"}
+          {copied ? t("Copied") : t("Copy")}
         </button>
       </div>
       <a className="btn btn-secondary onb-whatsapp" href={`https://wa.me/?text=${encodeURIComponent(share)}`} target="_blank" rel="noreferrer">
-        Share on WhatsApp
+        {t("Share on WhatsApp")}
       </a>
 
-      <h2 className="onb-next-title">Keep the keys</h2>
-      <p className="onb-recovery-note">If the admin password ever gets lost, this code resets it from the sign-in page.</p>
+      <h2 className="onb-next-title">{t("Keep the keys")}</h2>
+      <p className="onb-recovery-note">{t("If the admin password ever gets lost, this code resets it from the sign-in page.")}</p>
       <RecoveryCode slug={slug} isSet={hasRecovery} />
 
-      <h2 className="onb-next-title">Next up</h2>
+      <h2 className="onb-next-title">{t("Next up")}</h2>
       <ul className="onb-next">
         <li>
           <Link href={`${base}/settings/squad`}>
-            <strong>Shirt numbers, positions and photos</strong>
-            <span>They make the line-up graphic look like the real thing.</span>
+            <strong>{t("Shirt numbers, positions and photos")}</strong>
+            <span>{t("They make the line-up graphic look like the real thing.")}</span>
           </Link>
         </li>
         <li>
           <Link href={`${base}/settings/access#coach-login`}>
-            <strong>Give the coach a login</strong>
-            <span>A separate password that can only set line-ups.</span>
+            <strong>{t("Give the coach a login")}</strong>
+            <span>{t("A separate password that can only set line-ups.")}</span>
           </Link>
         </li>
         {nextMatch && (
           <li>
             <Link href={`${base}/matches/${nextMatch.id}`}>
-              <strong>Matchday post for {nextMatch.opponent}</strong>
-              <span>{nextMatch.date}: Instagram graphics, ready to post.</span>
+              <strong>{t("Matchday post for {opponent}", { opponent: nextMatch.opponent })}</strong>
+              <span>{t("{date}: Instagram graphics, ready to post.", { date: nextMatch.date })}</span>
             </Link>
           </li>
         )}
@@ -264,7 +274,7 @@ function DoneStep({ slug, club, url, nextMatch, hasRecovery }: Props) {
 
       <div className="onb-actions">
         <Link href={base} className="btn btn-lg">
-          Go to {club.name}
+          {t("Go to {club}", { club: club.name })}
         </Link>
       </div>
     </div>
