@@ -27,7 +27,7 @@ export default async function VoetbalSettingsPage({ params }: { params: Promise<
   const email = await voetbalLoginEmail(club.id);
   const siteAccount = voetbalConfigured();
   const canSync = Boolean(email) || siteAccount;
-  const hidden = hiddenPlayersNote(Math.max(0, ...data.matches.map((m) => m.lineupHidden ?? 0)), Boolean(email));
+  const hidden = hiddenPlayersNote(Math.max(0, ...data.matches.map((m) => m.lineupHidden ?? 0)));
 
   return (
     <Page accent={club.accent}>
@@ -78,9 +78,8 @@ export default async function VoetbalSettingsPage({ params }: { params: Promise<
           <section className="ce-group" aria-labelledby="ve-login">
             <h3 id="ve-login" className="ve-h">voetbal.nl login</h3>
             <p className="ce-note">
-              voetbal.nl only shows team pages to people who are logged in, and players with a private profile only to their own team. So use the
-              login of someone in the team, or line-ups miss those players. The password is stored encrypted and only used to read your team&apos;s
-              pages; nobody can see it here again.
+              voetbal.nl only shows team pages to people who are logged in. Any voetbal.nl account works; without one, the site&apos;s own is used.
+              The password is stored encrypted and only used to read your team&apos;s pages; nobody can see it here again.
             </p>
             <LoginForm
               save={saveVoetbalLogin.bind(null, slug)}

@@ -63,13 +63,15 @@ export function LineupForm({
     };
   }, [image, query, shown]);
 
-  function changeFormation(next: string) {
-    // Re-fit the current eleven to the new shape, keeping them ahead of everyone else.
-    const current = starters.map((id) => (id ? byId.get(id) : undefined)).filter((p) => p !== undefined);
-    const { starters: fitted } = suggestLineup(next, current);
-    setFormation(next);
-    setStarters(fitted);
-    setBench((b) => b.filter((id) => !fitted.includes(id)));
+  // Fill the spots from everyone's own positions. Whoever is picked now goes first, then the bench, then the rest of
+  // the active squad, so between equal fits the current choice stays.
+  function fit(shape: string) {
+    const picked = [...starters.filter((id): id is string => Boolean(id)), ...bench];
+    const pool = [...picked, ...options.map((p) => p.id).filter((id) => !picked.includes(id))].map((id) => byId.get(id)!).filter(Boolean);
+    const next = suggestLineup(shape, pool);
+    setFormation(shape);
+    setStarters(next.starters);
+    setBench(next.bench.filter((id) => picked.includes(id)));
   }
 
   function pick(slot: number, id: string) {
@@ -82,7 +84,7 @@ export function LineupForm({
       <form action={formAction} className="card form">
         <label>
           Formation
-          <select name="formation" value={formation} onChange={(e) => changeFormation(e.target.value)}>
+          <select name="formation" value={formation} onChange={(e) => fit(e.target.value)}>
             {Object.keys(FORMATIONS).map((f) => (
               <option key={f} value={f}>{f}</option>
             ))}
@@ -90,14 +92,19 @@ export function LineupForm({
         </label>
 
         <fieldset>
-          <legend>Starting eleven</legend>
+          <legend>
+            Starting eleven{" "}
+            <button type="button" className="btn-link small" onClick={() => fit(formation)}>
+              Suggest from positions
+            </button>
+          </legend>
           <ul className="lineup-slots">
             {slots.map((s, i) => (
               <li key={`${formation}-${i}`}>
                 <span className="chip">{s.pos}</span>
                 <select name={`slot${i}`} value={starters[i] ?? ""} onChange={(e) => pick(i, e.target.value)} aria-label={`${s.pos}, spot ${i + 1}`}>
                   <option value="">Empty</option>
-                  {/* Whoever plays this spot or one next to it, extra positions included, before everyone else. */}
+                  {/* Whoever lists this spot (or its line) as a position, extra ones included, before everyone else. */}
                   {[
                     { label: `Plays ${s.pos}`, players: options.filter((p) => playsSlot(p, s.pos)) },
                     { label: "Others", players: options.filter((p) => !playsSlot(p, s.pos)) },

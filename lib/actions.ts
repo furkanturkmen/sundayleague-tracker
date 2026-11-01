@@ -7,7 +7,7 @@ import { getClubAuth } from "@/lib/club";
 import { db } from "@/lib/db";
 import { FORMATIONS, formationSlots, MAX_BENCH } from "@/lib/lineup";
 import { POSITIONS, type Position } from "@/lib/types";
-import { canSync, connectLogin, hiddenPlayersNote, linkLineup, previewTeam, removeLogin, syncClub, voetbalConfigured, voetbalLoginEmail, type TeamPreview } from "@/lib/voetbal";
+import { canSync, connectLogin, hiddenPlayersNote, linkLineup, previewTeam, removeLogin, syncClub, voetbalConfigured, type TeamPreview } from "@/lib/voetbal";
 import { parseTeamId, sameName } from "@/lib/voetbal-parse";
 
 export interface FormState {
@@ -326,7 +326,7 @@ export async function syncVoetbal(slug: string): Promise<FormState> {
       s.lineups && `${s.lineups} ${s.lineups === 1 ? "line-up" : "line-ups"}`,
       s.table && "league table",
     ].filter(Boolean);
-    const hidden = hiddenPlayersNote(s.hidden, Boolean(await voetbalLoginEmail(club.id)));
+    const hidden = hiddenPlayersNote(s.hidden);
     return { ok: `Synced from voetbal.nl: ${parts.join(", ") || "nothing new"}.${hidden ? ` ${hidden}` : ""}` };
   } catch (err) {
     refresh(slug);

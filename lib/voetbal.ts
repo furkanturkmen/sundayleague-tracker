@@ -305,13 +305,12 @@ export async function syncClub(clubId: string): Promise<SyncSummary> {
 
     // Line-ups: one page per match, so only recent results and ones we haven't got yet. Abandoned matches have
     // a line-up too: who played still goes into each player's record, even though the match counts for nothing.
-    // With the club's own login, line-ups that had hidden players are read again: a team member sees them.
     // Matches read before captains and Player of the Match were kept are read once more for those.
     const since = new Date(Date.now() - LINEUP_DAYS * 86_400_000).toISOString().slice(0, 10);
     const needLineup = await sql<{ id: string; external_id: string; venue: "H" | "A" }[]>`
       select id, external_id, venue from matches
       where club_id = ${clubId} and external_id is not null and (goals_against is not null or status = 'abandoned')
-        and (lineup is null or not details_read or date >= ${since} or (lineup_hidden > 0 and ${account.key !== "site"}))
+        and (lineup is null or not details_read or date >= ${since})
       order by date desc limit ${MAX_LINEUPS}`;
     for (const m of needLineup) {
       const html = await page(`/wedstrijd/${m.external_id}/uitslag`);
@@ -345,12 +344,10 @@ export async function syncClub(clubId: string): Promise<SyncSummary> {
  * What to say when voetbal.nl hid players from the line-ups: a private profile shows only to the player's own
  * team, so the fix is a login of someone in it. Null when nobody was hidden.
  */
-export function hiddenPlayersNote(hidden: number, ownLogin: boolean): string | null {
+export function hiddenPlayersNote(hidden: number): string | null {
   if (hidden <= 0) return null;
-  const who = `voetbal.nl hid up to ${hidden} ${hidden === 1 ? "player" : "players"} per match in your line-ups, because their profile is private.`;
-  return ownLogin
-    ? `${who} The connected login isn't part of this team on voetbal.nl, so it can't see them. Use the login of someone in the team, or add them by hand.`
-    : `${who} voetbal.nl only shows them to their own team: connect your own voetbal.nl login in Settings and sync again, or add them by hand.`;
+  const n = `${hidden} ${hidden === 1 ? "player" : "players"}`;
+  return `voetbal.nl shows up to ${n} per match in your line-ups as "Afgeschermd": their profile is private, so the name isn't given. Add them to the squad by hand, and to those matches from each match's Edit page.`;
 }
 
 /** Puts squad players named in a voetbal.nl line-up into that match's squad. Never removes anyone. */
