@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Page } from "@/components/home/Page";
 import { LoginForm, SyncNow, TeamLink } from "@/components/VoetbalEditor";
 import { removeVoetbalLogin, saveVoetbalLink, saveVoetbalLogin, syncVoetbal } from "@/lib/actions";
-import { voetbalConfigured, voetbalLoginEmail } from "@/lib/voetbal";
+import { hiddenPlayersNote, voetbalConfigured, voetbalLoginEmail } from "@/lib/voetbal";
 import { loadSettings, SettingsHero } from "../shared";
 
 export const metadata: Metadata = { title: "voetbal.nl · Settings" };
@@ -27,6 +27,7 @@ export default async function VoetbalSettingsPage({ params }: { params: Promise<
   const email = await voetbalLoginEmail(club.id);
   const siteAccount = voetbalConfigured();
   const canSync = Boolean(email) || siteAccount;
+  const hidden = hiddenPlayersNote(Math.max(0, ...data.matches.map((m) => m.lineupHidden ?? 0)), Boolean(email));
 
   return (
     <Page accent={club.accent}>
@@ -54,6 +55,7 @@ export default async function VoetbalSettingsPage({ params }: { params: Promise<
                   </div>
                 </dl>
                 {vnl.error && <p className="notice notice-error">Last sync failed: {vnl.error}</p>}
+                {hidden && <p className="notice notice-warn">{hidden}</p>}
                 {canSync && <SyncNow sync={syncVoetbal.bind(null, slug)} />}
               </>
             ) : (
@@ -76,8 +78,9 @@ export default async function VoetbalSettingsPage({ params }: { params: Promise<
           <section className="ce-group" aria-labelledby="ve-login">
             <h3 id="ve-login" className="ve-h">voetbal.nl login</h3>
             <p className="ce-note">
-              voetbal.nl only shows team pages to people who are logged in. Use an account made for the team, not your personal one. The password is
-              stored encrypted and only used to read your team&apos;s pages; nobody can see it here again.
+              voetbal.nl only shows team pages to people who are logged in, and players with a private profile only to their own team. So use the
+              login of someone in the team, or line-ups miss those players. The password is stored encrypted and only used to read your team&apos;s
+              pages; nobody can see it here again.
             </p>
             <LoginForm
               save={saveVoetbalLogin.bind(null, slug)}

@@ -18,6 +18,8 @@ interface Props {
   syncError: string | null;
   counts: { matches: number; results: number; table: boolean; squad: number };
   suggestions: { name: string; games: number }[];
+  /** Set when voetbal.nl hid players with a private profile from the line-ups. */
+  hiddenNote: string | null;
   /** The club's public address without the scheme, e.g. "example.com/c/afc-dws-2". */
   url: string;
   nextMatch: { id: string; opponent: string; date: string } | null;
@@ -96,7 +98,7 @@ function SyncStep({ slug }: { slug: string }) {
   );
 }
 
-function SquadStep({ slug, linked, counts, suggestions, syncError }: Props) {
+function SquadStep({ slug, linked, counts, suggestions, syncError, hiddenNote }: Props) {
   const router = useRouter();
   const [picked, setPicked] = useState(() => new Set(suggestions.map((s) => s.name)));
   const [extra, setExtra] = useState("");
@@ -136,6 +138,12 @@ function SquadStep({ slug, linked, counts, suggestions, syncError }: Props) {
           ? "These names come from your line-ups on voetbal.nl. Untick anyone who isn't in the squad, like a guest player."
           : "Add the players now, or later from Settings. Numbers, positions and photos come later."}
       </StepTitle>
+
+      {hiddenNote && (
+        <p className="notice notice-warn">
+          {hiddenNote} <a href={`/c/${slug}/settings/voetbal`}>voetbal.nl settings</a>
+        </p>
+      )}
 
       {suggestions.length > 0 && (
         <>

@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { Welcome, type WelcomeStep } from "@/components/Welcome";
 import { loadClub } from "@/lib/club";
 import { formatDate } from "@/lib/stats";
+import { hiddenPlayersNote, voetbalLoginEmail } from "@/lib/voetbal";
 import { sameName } from "@/lib/voetbal-parse";
 
 export const metadata: Metadata = { title: "Welcome" };
@@ -38,6 +39,7 @@ export default async function StartPage({ params, searchParams }: Props) {
       syncError={club.voetbal?.error ?? null}
       counts={{ matches: data.matches.length, results: st.played.length, table: data.standings.length > 0, squad: players.length }}
       suggestions={suggestions}
+      hiddenNote={hiddenPlayersNote(Math.max(0, ...data.matches.map((m) => m.lineupHidden ?? 0)), Boolean(await voetbalLoginEmail(club.id)))}
       url={`${host}${st.base}`}
       nextMatch={next ? { id: next.id, opponent: next.opponent, date: formatDate(next.date, { weekday: "short", day: "numeric", month: "short" }) } : null}
     />

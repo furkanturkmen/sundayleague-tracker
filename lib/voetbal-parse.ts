@@ -132,20 +132,26 @@ export function parseStandings(html: string): StandingRow[] {
   return rows;
 }
 
-/**
- * Both line-ups from a match page, home side first. Players who keep their voetbal.nl profile private
- * show as "Afgeschermd" and are left out.
- */
-export function parseLineups(html: string): [string[], string[]] {
+export interface LineupSide {
+  names: string[];
+  /** Players shown as "Afgeschermd": a private profile, which voetbal.nl only shows to their own team. */
+  hidden: number;
+}
+
+/** Both line-ups from a match page, home side first. Hidden players are counted, not named. */
+export function parseLineups(html: string): [LineupSide, LineupSide] {
   const $ = cheerio.load(html);
   const sides = $(".TeamMembers-teamWrapper")
     .toArray()
-    .map((wrap) =>
-      $(wrap)
+    .map((wrap) => {
+      const all = $(wrap)
         .find(".TeamMembers-name")
         .toArray()
         .map((el) => clean($(el).text()).replace(/\s*\((C|K)\)$/i, ""))
-        .filter((n) => n && !/^afgeschermd/i.test(n)),
-    );
-  return [sides[0] ?? [], sides[1] ?? []];
+        .filter(Boolean);
+      const names = all.filter((n) => !/^afgeschermd/i.test(n));
+      return { names, hidden: all.length - names.length };
+    });
+  const empty = { names: [], hidden: 0 };
+  return [sides[0] ?? empty, sides[1] ?? empty];
 }

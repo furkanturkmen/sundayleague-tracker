@@ -140,6 +140,8 @@ export interface Match {
   externalId?: string;
   /** Names on our side of the voetbal.nl line-up. */
   lineup?: string[];
+  /** Players voetbal.nl hid in that line-up because their profile is private. */
+  lineupHidden?: number;
   /** Set on the line-up page for the graphic: a formation key from lib/formations, starters per slot, bench. */
   formation?: string;
   starters?: (string | null)[];

@@ -179,13 +179,14 @@ export const loadClubData = cache(async (slug: string): Promise<ClubData | undef
       opponent_code: string | null;
       status: MatchStatus | null;
       lineup: string[] | null;
+      lineup_hidden: number;
       formation: string | null;
       starters: (string | null)[] | null;
       bench: string[] | null;
       motm: string | null;
       notes: string | null;
     }[]>`
-      select id, date, opponent, venue, competition, goals_for, goals_against, kickoff, external_id, opponent_code, status, lineup,
+      select id, date, opponent, venue, competition, goals_for, goals_against, kickoff, external_id, opponent_code, status, lineup, lineup_hidden,
         formation, starters, bench, motm, notes
       from matches where club_id = ${id} order by date, created_at`,
     sql<{ match_id: string; player_id: string }[]>`
@@ -233,6 +234,7 @@ export const loadClubData = cache(async (slug: string): Promise<ClubData | undef
       opponentCode: m.opponent_code ?? undefined,
       status: m.status ?? undefined,
       lineup: m.lineup ?? undefined,
+      lineupHidden: m.lineup_hidden,
       formation: m.formation ?? undefined,
       starters: m.starters ?? undefined,
       bench: m.bench ?? undefined,
