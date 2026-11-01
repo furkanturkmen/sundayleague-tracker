@@ -43,6 +43,8 @@ export default async function PlayersPage({ params, searchParams }: Props) {
       name: s.player.name,
       nickname: s.player.nickname,
       number: s.player.number,
+      photo: s.player.photo,
+      photoCutout: s.player.photoCutout,
       position: s.player.position,
       positionName: t(POSITION_NAMES[s.player.position]),
       group: positionGroup(s.player.position),

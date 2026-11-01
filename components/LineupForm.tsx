@@ -36,7 +36,7 @@ export function LineupForm({
   const [bench, setBench] = useState(initial.bench);
   // What the picks look like as preview params, and the last image that finished loading (kept on screen meanwhile).
   const query = `f=${encodeURIComponent(formation)}&s=${starters.map((id) => id ?? "").join(",")}&b=${bench.join(",")}`;
-  const [shown, setShown] = useState(`${image}?${query}`);
+  const [shown, setShown] = useState(`${image}&${query}`);
   const [loading, setLoading] = useState(false);
   const slots = formationSlots(formation);
   const byId = new Map(players.map((p) => [p.id, p]));
@@ -45,7 +45,7 @@ export function LineupForm({
   const options = players.filter((p) => p.active || chosen.has(p.id) || bench.includes(p.id));
 
   useEffect(() => {
-    const next = `${image}?${query}`;
+    const next = `${image}&${query}`;
     if (next === shown) return;
     // Wait for a pause in the clicking, then load the new render off-screen and swap it in.
     let cancelled = false;
@@ -157,7 +157,7 @@ export function LineupForm({
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={shown} width={1080} height={1350} alt={t("Line-up graphic")} style={{ opacity: loading ? 0.6 : 1, transition: "opacity 150ms" }} />
         <div className="form-actions">
-          <ShareGraphic src={`${image}?${query}`} />
+          <ShareGraphic src={`${image}&${query}`} />
           <span className="small muted">{loading ? t("Updating…") : t("Save to keep this line-up.")}</span>
         </div>
       </div>

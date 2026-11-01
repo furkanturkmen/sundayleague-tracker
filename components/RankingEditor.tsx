@@ -58,12 +58,12 @@ export function RankingEditor({
   const rest = players.filter((p) => p.active && !order.includes(p.id));
 
   const query = `t=${encodeURIComponent(title)}&a=${encodeURIComponent(accentText)}&p=${order.join(",")}`;
-  const [shown, setShown] = useState(`${image}?${query}`);
+  const [shown, setShown] = useState(`${image}&${query}`);
   const [loading, setLoading] = useState(false);
   const saved = title === initial.title && accentText === initial.accentText && order.join() === initial.players.join();
 
   useEffect(() => {
-    const next = `${image}?${query}`;
+    const next = `${image}&${query}`;
     if (next === shown) return;
     // Wait for a pause, then load the new render off-screen and swap it in.
     let cancelled = false;
@@ -185,7 +185,7 @@ export function RankingEditor({
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={shown} width={1080} height={1350} alt={t("Ranking graphic")} style={{ opacity: loading ? 0.6 : 1, transition: "opacity 150ms" }} />
         <div className="form-actions">
-          <ShareGraphic src={`${image}?${query}`} />
+          <ShareGraphic src={`${image}&${query}`} />
           <span className="small muted">{loading ? t("Updating…") : order.length > 20 ? t("The graphic shows the top 20.") : t("Post 1080×1350, story 1080×1920.")}</span>
         </div>
       </div>

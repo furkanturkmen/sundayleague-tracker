@@ -9,7 +9,7 @@ import { Reveal } from "@/components/home/Motion";
 import { Page, Section } from "@/components/home/Page";
 import { Crest, TeamLogo } from "@/components/ui";
 import { deleteMatch } from "@/lib/actions";
-import { loadClub } from "@/lib/club";
+import { graphicSrc, loadClub } from "@/lib/club";
 import type { T } from "@/lib/i18n";
 import { getLang, getT } from "@/lib/i18n/server";
 import { homeVenue } from "@/lib/i18n/nl-matches";
@@ -215,7 +215,7 @@ export default async function MatchPage({ params }: Props) {
           </div>
         )}
 
-        {(admin || coach) && !fixture.status && <Graphics base={`${st.base}/matches/${id}`} played={Boolean(m)} t={t} />}
+        {(admin || coach) && !fixture.status && <Graphics base={`${st.base}/matches/${id}`} src={(key) => graphicSrc(`${st.base}/matches/${id}/graphics/${key}`, data)} played={Boolean(m)} t={t} />}
 
         <nav className="md-pager" aria-label={t("Other matches")}>
           {prev ? (
@@ -263,7 +263,7 @@ function PlayerName({ base, id, name, t }: { base: string; id: string; name: str
 }
 
 /** Instagram posts for this match: matchday before it, the result after, and the line-up either way. */
-function Graphics({ base, played, t }: { base: string; played: boolean; t: T }) {
+function Graphics({ base, src, played, t }: { base: string; src: (key: string) => string; played: boolean; t: T }) {
   const posts = [
     played ? { key: "result", label: t("Result") } : { key: "matchday", label: t("Matchday") },
     { key: "lineup", label: t("Line-up"), edit: `${base}/lineup` },
@@ -273,15 +273,15 @@ function Graphics({ base, played, t }: { base: string; played: boolean; t: T }) 
       <div className="md-posts">
         {posts.map((g) => (
           <figure key={g.key}>
-            <a href={`${base}/graphics/${g.key}`} target="_blank" rel="noreferrer">
+            <a href={src(g.key)} target="_blank" rel="noreferrer">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={`${base}/graphics/${g.key}`} width={1080} height={1350} alt={t("{label} graphic", { label: g.label })} loading="lazy" />
+              <img src={src(g.key)} width={1080} height={1350} alt={t("{label} graphic", { label: g.label })} loading="lazy" />
             </a>
             <figcaption>
               <strong>{g.label}</strong>
               {g.edit && <Link href={g.edit}>{t("Edit")}</Link>}
             </figcaption>
-            <ShareGraphic src={`${base}/graphics/${g.key}`} className="gx-share-compact" />
+            <ShareGraphic src={src(g.key)} className="gx-share-compact" />
           </figure>
         ))}
       </div>

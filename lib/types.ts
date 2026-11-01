@@ -102,6 +102,8 @@ export interface Player {
   extraPositions: Position[];
   /** URL of the uploaded photo, or null. */
   photo: string | null;
+  /** The photo is a PNG, so it can be a cut-out with no background. A JPEG always has one and is shown framed in a circle. */
+  photoCutout: boolean;
 }
 
 export type Venue = "H" | "A";

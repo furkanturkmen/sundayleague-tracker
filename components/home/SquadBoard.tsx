@@ -14,6 +14,8 @@ export interface SquadRow {
   name: string;
   nickname: string | null;
   number: number | null;
+  photo: string | null;
+  photoCutout: boolean;
   position: string;
   positionName: string;
   group: PositionGroup;
@@ -115,7 +117,12 @@ export function SquadBoard({ rows, kit, initialSort }: { rows: SquadRow[]; kit: 
                         transition={{ duration: 0.5, ease: EASE, delay: Math.min(i, 8) * 0.03 }}
                       >
                         <Link href={r.href} className={`sq-player${r.apps ? "" : " sq-unused"}`}>
-                          <Kit main={kit.main} trim={kit.trim} number={r.number} logo={kit.logo} className="sq-kit" t={t} />
+                          {r.photo ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={r.photo} alt="" loading="lazy" className={r.photoCutout ? "sq-kit sq-cutout" : "sq-kit sq-portrait"} />
+                          ) : (
+                            <Kit main={kit.main} trim={kit.trim} number={r.number} logo={kit.logo} className="sq-kit" t={t} />
+                          )}
                           <span className="sq-name">{r.name}</span>
                           <span className="sq-pos" title={r.positionName}>
                             {r.position}

@@ -6,7 +6,7 @@ import { Submit } from "@/components/forms";
 import { Reveal } from "@/components/home/Motion";
 import { Page, PageHero } from "@/components/home/Page";
 import { deleteRanking, saveRanking } from "@/lib/actions";
-import { loadClub } from "@/lib/club";
+import { graphicSrc, loadClub } from "@/lib/club";
 import { dateLocale } from "@/lib/i18n";
 import { getLang, getT } from "@/lib/i18n/server";
 import { getRanking } from "@/lib/rankings";
@@ -27,7 +27,7 @@ export default async function RankingPage({ params }: Props) {
   const { data, st, admin, coach } = await loadClub(slug);
   const ranking = getRanking(data, st, id);
   if (!ranking) notFound();
-  const image = `${st.base}/stats/rankings/${id}/graphic`;
+  const image = graphicSrc(`${st.base}/stats/rankings/${id}/graphic`, data);
   const editable = !ranking.auto && (admin || coach);
   const t = await getT();
   const lang = await getLang();

@@ -572,6 +572,14 @@ main.container:has(> :is(.ph, .hx):first-child) { max-width: none; padding: 0; o
   filter: drop-shadow(0 30px 60px rgb(0 0 0 / 0.7)) drop-shadow(0 0 70px color-mix(in srgb, var(--ph-bright) 30%, transparent));
 }
 
+/* A photo instead of the shirt: a cut-out stands in the same place; a JPEG is a framed circle in the light. */
+.ph-cutout { max-width: 62%; object-fit: contain; object-position: bottom; }
+.ph-portrait {
+  position: absolute; z-index: -1; left: 53%; top: 66%; width: min(40vh, 360px); aspect-ratio: 1; transform: translate(-50%, -50%);
+  border-radius: 50%; object-fit: cover; border: 6px solid var(--ph-bright);
+  box-shadow: 0 30px 60px rgb(0 0 0 / 0.7), 0 0 80px color-mix(in srgb, var(--ph-bright) 35%, transparent);
+}
+
 .ph-top { grid-area: top; display: flex; justify-content: space-between; align-items: center; }
 .ph-nav { display: inline-flex; align-items: center; gap: 14px; color: #fff; text-decoration: none; font-weight: 500; font-size: 24px; letter-spacing: -0.03em; }
 .ph-nav:hover { color: #fff; }
@@ -676,6 +684,7 @@ main.container:has(> :is(.ph, .hx):first-child) { max-width: none; padding: 0; o
 @media (max-width: 1000px) {
   .ph { grid-template-columns: minmax(0, 1fr) 260px; }
   .ph-kit { height: 78%; bottom: -10%; transform: translateX(-62%); }
+  .ph-portrait { width: min(34vh, 280px); left: 50%; }
 }
 @media (max-width: 720px) {
   /* Phone: the shirt behind the name, the loud tile, then the matches as a sideways strip. */
@@ -684,6 +693,8 @@ main.container:has(> :is(.ph, .hx):first-child) { max-width: none; padding: 0; o
   .ph-id { margin-top: 4px; min-height: 330px; align-content: start; }
   .ph-name { font-size: clamp(48px, 15vw, 68px); }
   .ph-kit { left: auto; right: -30%; top: 190px; bottom: auto; height: 380px; transform: none; opacity: 0.9; }
+  .ph-cutout { right: -12%; max-width: 75%; }
+  .ph-portrait { left: auto; right: -50px; top: 180px; width: 200px; transform: none; opacity: 0.6; }
   .ph-nav-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
   .ph-bg::after { background: linear-gradient(rgb(0 0 0 / 0.42), rgb(0 0 0 / 0.42)), radial-gradient(60% 40% at 70% 30%, color-mix(in srgb, var(--ph-bright) 34%, transparent), transparent 75%), linear-gradient(180deg, rgb(3 5 9 / 0.55), rgb(3 5 9 / 0.75) 60%, rgb(3 5 9 / 0.92)); }
   .ph-feature { width: 100%; }
@@ -1133,6 +1144,8 @@ h2 > .ranking-accent { font-family: inherit; letter-spacing: inherit; line-heigh
 .sq-player::before { content: ""; position: absolute; z-index: -1; left: 10%; right: 10%; top: 140px; height: 48px; border-radius: 50%;
   background: radial-gradient(closest-side, color-mix(in srgb, var(--hx-bright) 40%, transparent), transparent); filter: blur(6px); transition: transform 500ms var(--hx-ease), opacity 300ms ease; }
 .sq-kit { width: 100%; max-width: 168px; height: 180px; filter: drop-shadow(0 20px 24px rgb(0 0 0 / 0.6)); transition: transform 500ms var(--hx-ease); }
+.sq-cutout { object-fit: contain; object-position: bottom; }
+.sq-portrait { width: 150px; height: 150px; margin: 15px 0; border-radius: 50%; object-fit: cover; border: 3px solid var(--hx-bright); }
 .sq-player:hover .sq-kit, .sq-player:focus-visible .sq-kit { transform: translateY(-10px) rotate(-3deg) scale(1.04); }
 .sq-player:hover::before { transform: scale(1.2); }
 .sq-line ul:has(.sq-player:hover) .sq-player:not(:hover) { opacity: 0.45; }
@@ -1176,6 +1189,7 @@ h2 > .ranking-accent { font-family: inherit; letter-spacing: inherit; line-heigh
   .sq-line + .sq-line { margin-top: 64px; }
   .sq-line ul { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px 12px; }
   .sq-kit { height: 150px; }
+  .sq-portrait { width: 124px; height: 124px; margin: 13px 0; }
   .sq-player::before { top: 116px; }
   .sq-mini { gap: 8px; }
   /* the table gives way to a list with the sorted stat on the right */

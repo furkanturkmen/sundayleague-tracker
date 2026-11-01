@@ -4,7 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import { LineupForm } from "@/components/LineupForm";
 import { Page, PageHero } from "@/components/home/Page";
 import { saveLineup } from "@/lib/actions";
-import { loadClub } from "@/lib/club";
+import { graphicSrc, loadClub } from "@/lib/club";
 import { matchLineup } from "@/lib/lineup";
 import { getLang, getT } from "@/lib/i18n/server";
 import { formatDate } from "@/lib/stats";
@@ -56,7 +56,7 @@ export default async function LineupPage({ params }: { params: Promise<{ club: s
           action={saveLineup.bind(null, slug, id)}
           players={data.players}
           initial={matchLineup(match, data.players)}
-          image={`${st.base}/matches/${id}/graphics/lineup`}
+          image={graphicSrc(`${st.base}/matches/${id}/graphics/lineup`, data)}
         />
       </div>
     </Page>

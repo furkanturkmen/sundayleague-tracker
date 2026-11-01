@@ -1,4 +1,5 @@
 import "server-only";
+import { createHash } from "node:crypto";
 import { notFound, redirect } from "next/navigation";
 import { connection } from "next/server";
 import { cache } from "react";
@@ -127,6 +128,15 @@ export async function getClubAuth(
   );
 }
 
+/**
+ * A graphic's address with a version made from everything it can draw (club, squad and photos, matches, rankings).
+ * The address changes when any of that does, so a browser never shows a graphic it kept from before a new photo.
+ */
+export function graphicSrc(path: string, data: ClubData): string {
+  const v = createHash("sha1").update(JSON.stringify(data)).digest("base64url").slice(0, 10);
+  return `${path}?v=${v}`;
+}
+
 /** Whether the current visitor is signed in as an admin of this club. */
 export const isAdmin = cache(async (slug: string): Promise<boolean> => {
   const row = await clubRow(slug);
@@ -178,8 +188,9 @@ export const loadClubData = cache(async (slug: string): Promise<ClubData | undef
   const id = row.id;
 
   const [playerRows, matchRows, squadRows, goalRows, eventRows, momentRows, standingRows, rankingRows] = await Promise.all([
-    sql<{ id: string; name: string; number: number | null; position: Position; nickname: string | null; bio: string | null; active: boolean; display_name: string | null; extra_positions: Position[]; has_photo: boolean; photo_version: number }[]>`
-      select id, name, number, position, nickname, bio, active, display_name, extra_positions, photo is not null as has_photo, photo_version
+    sql<{ id: string; name: string; number: number | null; position: Position; nickname: string | null; bio: string | null; active: boolean; display_name: string | null; extra_positions: Position[]; has_photo: boolean; photo_png: boolean; photo_version: number }[]>`
+      select id, name, number, position, nickname, bio, active, display_name, extra_positions, photo is not null as has_photo,
+        coalesce(photo like 'data:image/png%', false) as photo_png, photo_version
       from players where club_id = ${id} order by number nulls last, name`,
     sql<{
       id: string;
@@ -230,11 +241,12 @@ export const loadClubData = cache(async (slug: string): Promise<ClubData | undef
   const goals = byMatch(goalRows);
   const events = byMatch(eventRows);
 
-  const players: Player[] = playerRows.map(({ display_name, extra_positions, has_photo, photo_version, ...p }) => ({
+  const players: Player[] = playerRows.map(({ display_name, extra_positions, has_photo, photo_png, photo_version, ...p }) => ({
     ...p,
     displayName: display_name,
     extraPositions: extra_positions ?? [],
     photo: photoUrl(row.slug, p.id, has_photo, photo_version),
+    photoCutout: photo_png,
   }));
   const playerNamed = (name: string | null) => (name ? players.find((p) => sameName(p.name, name))?.id : undefined);
   const matches: Match[] = matchRows.map((m) => {
