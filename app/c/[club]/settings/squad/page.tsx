@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import { AddLineupPlayer } from "@/components/forms";
+import { AddAllLineupPlayers, AddLineupPlayer } from "@/components/forms";
 import { Page, Section } from "@/components/home/Page";
 import { SquadEditor } from "@/components/SquadEditor";
 import { Empty } from "@/components/ui";
-import { addLineupPlayer, deletePlayer, savePlayer } from "@/lib/actions";
+import { addLineupPlayer, addLineupPlayers, deletePlayer, savePlayer } from "@/lib/actions";
 import { sameName } from "@/lib/voetbal-parse";
 import { loadSettings, SettingsHero } from "../shared";
 
@@ -32,6 +32,7 @@ export default async function SquadSettingsPage({ params }: Props) {
         </div>
         {suggestions.length > 0 && (
           <Section id="se-suggest" lead="Seen on" accent="voetbal.nl." note="In line-ups there, not in your squad yet. Players with a private profile aren't listed." small>
+            <AddAllLineupPlayers action={addLineupPlayers.bind(null, slug)} names={suggestions.map(([name]) => name)} />
             <ul className="squad-list">
               {suggestions.map(([name, count]) => (
                 <AddLineupPlayer key={name} action={addLineupPlayer.bind(null, slug)} name={name} matches={count} />

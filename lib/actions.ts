@@ -367,6 +367,11 @@ export async function addPlayers(slug: string, names: string[]): Promise<FormSta
   return { ok: `${added.length} ${added.length === 1 ? "player" : "players"} added.` };
 }
 
+/** Settings' "Add all": every name seen in the line-ups, as a form. */
+export async function addLineupPlayers(slug: string, _: FormState, f: FormData): Promise<FormState> {
+  return addPlayers(slug, f.getAll("name").map(String));
+}
+
 // ---------- players ----------
 
 export async function savePlayer(slug: string, _: FormState, f: FormData): Promise<FormState> {

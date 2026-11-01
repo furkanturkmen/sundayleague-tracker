@@ -180,6 +180,19 @@ export function AddLineupPlayer({ action, name, matches }: { action: Action; nam
   );
 }
 
+/** One button for every line-up name at once. */
+export function AddAllLineupPlayers({ action, names }: { action: Action; names: string[] }) {
+  const [state, formAction] = useActionState(action, {});
+  return (
+    <form action={formAction} className="squad-add-all">
+      {names.map((n) => (
+        <input key={n} type="hidden" name="name" value={n} />
+      ))}
+      <Submit pending="Adding…">Add all {names.length}</Submit>
+      {state.error && <Notice state={state} />}
+    </form>
+  );
+}
 
 /** Submit button that asks before doing something destructive. */
 export function ConfirmSubmit({ children, message, className = "btn btn-danger" }: { children: ReactNode; message: string; className?: string }) {

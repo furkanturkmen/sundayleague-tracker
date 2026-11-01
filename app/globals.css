@@ -407,6 +407,7 @@ fieldset p { margin: 0; }
 /* settings */
 .settings-nav { margin-bottom: 4px; }
 .squad-list { list-style: none; margin: 16px 0 0; padding: 0; border-top: 1px solid var(--line); }
+.squad-add-all { margin-top: 12px; }
 .squad-row { border-bottom: 1px solid var(--line); padding: 10px 0; }
 .squad-row-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .section-sub { margin: 24px 0 4px; }
