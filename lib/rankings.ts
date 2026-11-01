@@ -25,6 +25,7 @@ const AUTO: { id: string; title: string; graphic: [string, string]; stat: (s: Pl
   { id: "goals", title: "Top scorers", graphic: ["TOP", "SCORERS"], stat: (s) => s.goals },
   { id: "assists", title: "Most assists", graphic: ["MEESTE", "ASSISTS"], stat: (s) => s.assists },
   { id: "motm", title: "Man of the match", graphic: ["MAN OF", "THE MATCH"], stat: (s) => s.motm },
+  { id: "captain", title: "Most often captain", graphic: ["VAAKST", "AANVOERDER"], stat: (s) => s.captain },
 ];
 
 export const AUTO_RANKINGS = AUTO.map((a) => a.id);

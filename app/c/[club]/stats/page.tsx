@@ -9,6 +9,13 @@ import { MINUTE_BUCKETS, byMonth, formatDate, formatMonth, goalsByMinute, groupS
 
 export const metadata: Metadata = { title: "Stats" };
 
+/** How often each player id appears, most first, then by first appearance. */
+function tally(ids: (string | undefined)[]): { id: string; count: number }[] {
+  const counts = new Map<string, number>();
+  for (const id of ids) if (id) counts.set(id, (counts.get(id) ?? 0) + 1);
+  return [...counts].map(([id, count]) => ({ id, count })).sort((a, b) => b.count - a.count);
+}
+
 // The season taken apart: the headline numbers, the form as a row of letters, when the goals come, where we do
 // well and who makes the difference.
 
@@ -68,6 +75,8 @@ export default async function AnalysisPage({ params, searchParams }: Props) {
   const comps = groupSummary(ms, (m) => m.competition);
   const duos = partnerships(ms).slice(0, 8);
   const impact = st.withWithout(ms);
+  const captains = tally(ms.map((m) => m.captain));
+  const motms = tally(ms.map((m) => m.motm));
   const goals = ms.flatMap((m) => m.goals);
   const firstHalf = goals.filter((g) => g.minute !== undefined && g.minute <= 45).length;
   const secondHalf = goals.filter((g) => g.minute !== undefined && g.minute > 45).length;
@@ -176,6 +185,41 @@ export default async function AnalysisPage({ params, searchParams }: Props) {
                 <Reveal delay={0.06}>
                   <SplitTable rows={comps} label="Competition" />
                 </Reveal>
+              </div>
+            </Band>
+
+            <Band className="hx-band-halls" labelledBy="st-armband-title">
+              <Reveal className="hx-head">
+                <h2 id="st-armband-title">
+                  The armband and the <em>votes.</em>
+                </h2>
+                <p>Captains from the (C) in the voetbal.nl line-ups; man of the match from the team&apos;s vote there, or picked by hand.</p>
+              </Reveal>
+              <div className="st-two">
+                {[
+                  { key: "captain", title: "Captains", label: "Matches with the armband", rows: captains, empty: "No captains from voetbal.nl yet." },
+                  { key: "motm", title: "Man of the match", label: "Times voted best on the pitch", rows: motms, empty: "No man of the match yet." },
+                ].map((list, n) => (
+                  <Reveal key={list.key} className="st-duos" delay={n * 0.06}>
+                    <h3>{list.title}</h3>
+                    <p className="hx-label">{list.label}</p>
+                    {list.rows.length ? (
+                      <ol>
+                        {list.rows.slice(0, 8).map((r, i) => (
+                          <li key={r.id}>
+                            <span className="hx-rank">{i + 1}</span>
+                            <span className="st-duo">
+                              <Link href={`${st.base}/players/${r.id}`}>{st.playerName(r.id)}</Link>
+                            </span>
+                            <b>{r.count}</b>
+                          </li>
+                        ))}
+                      </ol>
+                    ) : (
+                      <p className="hx-empty">{list.empty}</p>
+                    )}
+                  </Reveal>
+                ))}
               </div>
             </Band>
 
