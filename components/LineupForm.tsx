@@ -3,7 +3,7 @@
 import { useActionState, useEffect, useState } from "react";
 import { Notice, Submit } from "@/components/forms";
 import type { FormState } from "@/lib/actions";
-import { FORMATIONS, formationSlots, MAX_BENCH, playerFit, suggestLineup } from "@/lib/lineup";
+import { FORMATIONS, formationSlots, MAX_BENCH, playsSlot, suggestLineup } from "@/lib/lineup";
 import type { Player } from "@/lib/types";
 import { ShareGraphic } from "@/components/ShareGraphic";
 
@@ -99,8 +99,8 @@ export function LineupForm({
                   <option value="">Empty</option>
                   {/* Whoever plays this spot or one next to it, extra positions included, before everyone else. */}
                   {[
-                    { label: `Plays ${s.pos}`, players: options.filter((p) => playerFit(p, s.pos) >= 2) },
-                    { label: "Others", players: options.filter((p) => playerFit(p, s.pos) < 2) },
+                    { label: `Plays ${s.pos}`, players: options.filter((p) => playsSlot(p, s.pos)) },
+                    { label: "Others", players: options.filter((p) => !playsSlot(p, s.pos)) },
                   ].map(
                     (g) =>
                       g.players.length > 0 && (
