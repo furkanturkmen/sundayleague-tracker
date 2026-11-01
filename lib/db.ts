@@ -54,6 +54,8 @@ create index if not exists players_club_idx on players(club_id);
 alter table players add column if not exists display_name text;
 alter table players add column if not exists photo text;
 alter table players add column if not exists photo_version int not null default 0;
+-- Just the head from the photo (hair, face, neck) on a transparent background, to sit on the shirt. Shares photo_version.
+alter table players add column if not exists photo_head text;
 -- Up to two other positions a player can fill, for the line-up suggestion and the squad lists.
 alter table players add column if not exists extra_positions text[] not null default '{}';
 -- Specific positions (LB, CDM, ST, ...) on top of the original four lines.

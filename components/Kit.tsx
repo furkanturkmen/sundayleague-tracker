@@ -3,14 +3,20 @@ import { makeT, type T } from "@/lib/i18n";
 
 /**
  * A lit, striped club shirt with the number on it: the stand-in for a player photo. Stripes in the two club
- * colours, then a highlight down the chest and shade towards the sides and sleeves so it reads as fabric.
+ * colours, then a highlight down the chest and shade towards the sides and sleeves so it reads as fabric. With a
+ * `head` (cut from the player's photo) they wear it: the head sits in the collar and the picture grows upwards to
+ * make room, so the shirt keeps its place at the bottom.
  */
+// How far the picture reaches above the shirt when there's a head on it, in shirt units.
+const HEAD_ROOM = 150;
+
 // Used on server and client pages, so t() comes in as a prop (English without it).
 export function Kit({
   main,
   trim,
   number,
   logo,
+  head,
   className,
   t = makeT("en"),
 }: {
@@ -18,13 +24,19 @@ export function Kit({
   trim: string;
   number: number | null;
   logo?: string | null;
+  head?: string | null;
   className?: string;
   t?: T;
 }) {
   const id = useId().replace(/:/g, "");
   const shirt = "M128 40 L168 22 Q200 44 232 22 L272 40 L352 86 L326 166 L284 150 L284 400 Q200 414 116 400 L116 150 L74 166 L48 86 Z";
   return (
-    <svg viewBox="0 0 400 430" className={className} role="img" aria-label={number != null ? t("Shirt number {n}", { n: number }) : t("Club shirt")}>
+    <svg
+      viewBox={head ? `0 ${-HEAD_ROOM} 400 ${430 + HEAD_ROOM}` : "0 0 400 430"}
+      className={head ? `${className ?? ""} kit-head` : className}
+      role="img"
+      aria-label={number != null ? t("Shirt number {n}", { n: number }) : t("Club shirt")}
+    >
       <defs>
         <pattern id={`${id}-stripes`} width="56" height="10" patternUnits="userSpaceOnUse" x="4">
           <rect width="28" height="10" fill={main} />
@@ -45,6 +57,9 @@ export function Kit({
           <path d={shirt} />
         </clipPath>
       </defs>
+      {/* Behind the shirt, so the neck runs down into it and the chin sits just above the collar. headOut makes every
+          head the same size around the face (a face is about 100 across here). */}
+      {head && <image href={head} x="80" y={-HEAD_ROOM} width="240" height={HEAD_ROOM + 96} preserveAspectRatio="xMidYMax meet" />}
       <g clipPath={`url(#${id}-clip)`}>
         <rect width="400" height="430" fill={`url(#${id}-stripes)`} />
         <rect width="400" height="430" fill={`url(#${id}-shade)`} />

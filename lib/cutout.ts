@@ -86,13 +86,8 @@ const smoothstep = (a: number, b: number, x: number) => {
   return t * t * (3 - 2 * t);
 };
 
-/**
- * The person in the picture on a transparent background, cropped to them, as a PNG data URL no bigger than maxPx.
- * Null when there's nobody clear enough to cut out; the caller keeps the photo as it was. A picture that is
- * already see-through comes back unchanged.
- */
-export async function cutOut(src: string, maxPx: number): Promise<string | null> {
-  const img = await loadImage(src);
+/** The photo drawn at no more than maxPx on a side. */
+function drawn(img: HTMLImageElement, maxPx: number) {
   const scale = Math.min(1, maxPx / Math.max(img.naturalWidth, img.naturalHeight));
   const w = Math.max(1, Math.round(img.naturalWidth * scale));
   const h = Math.max(1, Math.round(img.naturalHeight * scale));
@@ -101,33 +96,26 @@ export async function cutOut(src: string, maxPx: number): Promise<string | null>
   canvas.height = h;
   const ctx = canvas.getContext("2d", { willReadFrequently: true })!;
   ctx.drawImage(img, 0, 0, w, h);
-  if (hasTransparency(ctx, w, h)) return canvas.toDataURL("image/png");
+  return { canvas, ctx, w, h };
+}
 
+/** The model's confidence per pixel for each class: background, hair, body skin, face skin, clothes, other. */
+async function segment(canvas: HTMLCanvasElement) {
   const result = (await loadSegmenter()).segment(canvas);
-  const background = result.confidenceMasks?.[0];
-  if (!background) return null;
-  const mw = background.width;
-  const mh = background.height;
-  const bg = background.getAsFloat32Array();
+  const masks = result.confidenceMasks ?? [];
+  const out = { w: masks[0]?.width ?? 0, h: masks[0]?.height ?? 0, masks: masks.map((m) => m.getAsFloat32Array()) };
   result.close();
+  return out;
+}
 
-  // The mask as alpha: soft only across the uncertain band, so edges are clean but not jagged.
+/** Cuts the canvas down to the alpha in `fg` (mask-sized, 0 to 1). */
+function applyAlpha(ctx: CanvasRenderingContext2D, w: number, h: number, fg: Float32Array, mw: number, mh: number) {
   const mask = document.createElement("canvas");
   mask.width = mw;
   mask.height = mh;
   const mctx = mask.getContext("2d")!;
   const alpha = mctx.createImageData(mw, mh);
-  const fg = new Float32Array(bg.length);
-  for (let i = 0; i < bg.length; i++) fg[i] = smoothstep(0.3, 0.7, 1 - bg[i]);
-  const keep = largestShape(fg, mw, mh);
-  let kept = 0;
-  for (let i = 0; i < fg.length; i++) {
-    const a = keep[i] ? fg[i] : 0;
-    alpha.data[i * 4 + 3] = Math.round(a * 255);
-    if (a > 0.5) kept++;
-  }
-  // Under 4% of the picture is too little to be a player (a crest, a landscape, a dark photo).
-  if (kept < bg.length * 0.04) return null;
+  for (let i = 0; i < fg.length; i++) alpha.data[i * 4 + 3] = Math.round(fg[i] * 255);
   mctx.putImageData(alpha, 0, 0);
   ctx.globalCompositeOperation = "destination-in";
   ctx.imageSmoothingQuality = "high";
@@ -136,6 +124,32 @@ export async function cutOut(src: string, maxPx: number): Promise<string | null>
   ctx.drawImage(mask, 0, 0, w, h);
   ctx.filter = "none";
   ctx.globalCompositeOperation = "source-over";
+}
+
+/**
+ * The person in the picture on a transparent background, cropped to them, as a PNG data URL no bigger than maxPx.
+ * Null when there's nobody clear enough to cut out; the caller keeps the photo as it was. A picture that is
+ * already see-through comes back unchanged.
+ */
+export async function cutOut(src: string, maxPx: number): Promise<string | null> {
+  const { canvas, ctx, w, h } = drawn(await loadImage(src), maxPx);
+  if (hasTransparency(ctx, w, h)) return canvas.toDataURL("image/png");
+
+  const { w: mw, h: mh, masks } = await segment(canvas);
+  const bg = masks[0];
+  if (!bg) return null;
+  // The mask as alpha: soft only across the uncertain band, so edges are clean but not jagged.
+  const fg = new Float32Array(bg.length);
+  for (let i = 0; i < bg.length; i++) fg[i] = smoothstep(0.3, 0.7, 1 - bg[i]);
+  const keep = largestShape(fg, mw, mh);
+  let kept = 0;
+  for (let i = 0; i < fg.length; i++) {
+    if (!keep[i]) fg[i] = 0;
+    if (fg[i] > 0.5) kept++;
+  }
+  // Under 4% of the picture is too little to be a player (a crest, a landscape, a dark photo).
+  if (kept < bg.length * 0.04) return null;
+  applyAlpha(ctx, w, h, fg, mw, mh);
 
   // Crop to the person, with a little air at the top and sides. The bottom stays where the photo ends.
   const data = ctx.getImageData(0, 0, w, h).data;
@@ -157,5 +171,78 @@ export async function cutOut(src: string, maxPx: number): Promise<string | null>
   out.width = cw;
   out.height = ch;
   out.getContext("2d")!.drawImage(canvas, cx, cy, cw, ch, 0, 0, cw, ch);
+  return out.toDataURL("image/png");
+}
+
+// The head picture is HEAD_WIDTH face widths across and ends NECK face heights below the chin.
+const HEAD_WIDTH = 2.4;
+const NECK = 0.6;
+
+/**
+ * Just the head (hair, face and the neck under it) on a transparent background, to sit in the collar of the shirt.
+ * Always the same number of face widths across, centred on the face, and ending the same way below the chin, so
+ * every player's head comes out the same size and in the same place on the shirt. Null when no face is found.
+ * Works on a photo with its background and on one already cut out.
+ */
+export async function headOut(src: string, maxPx: number): Promise<string | null> {
+  const { canvas, ctx, w, h } = drawn(await loadImage(src), maxPx);
+  // A cut-out is see-through; the model reads a person on grey better than on black.
+  const flat = document.createElement("canvas");
+  flat.width = w;
+  flat.height = h;
+  const fctx = flat.getContext("2d")!;
+  fctx.fillStyle = "#808080";
+  fctx.fillRect(0, 0, w, h);
+  fctx.drawImage(canvas, 0, 0);
+
+  const { w: mw, h: mh, masks } = await segment(flat);
+  const [, hair, body, face] = masks;
+  if (!face) return null;
+  const fg = new Float32Array(face.length);
+  // A tighter edge than the full cut-out: a light background left round a face shows up as a halo on the dark pages.
+  for (let i = 0; i < fg.length; i++) fg[i] = smoothstep(0.5, 0.9, hair[i] + face[i]);
+  const keep = largestShape(fg, mw, mh);
+
+  // The face's box sets the size and place of everything else.
+  let fx0 = mw, fx1 = -1, fy0 = mh, fy1 = -1, facePx = 0;
+  for (let i = 0; i < fg.length; i++)
+    if (keep[i] && face[i] > 0.5) {
+      const x = i % mw, y = (i - x) / mw;
+      if (x < fx0) fx0 = x;
+      if (x > fx1) fx1 = x;
+      if (y < fy0) fy0 = y;
+      if (y > fy1) fy1 = y;
+      facePx++;
+    }
+  if (facePx < fg.length * 0.004) return null;
+  const fw = fx1 - fx0 + 1, fh = fy1 - fy0 + 1;
+  const neckEnd = Math.min(mh, Math.round(fy1 + fh * NECK));
+
+  // The head, plus the skin straight under the chin as the neck (not the shoulders or a hand off to the side).
+  // A close-up photo (or a cut-out of one) cuts the head off at its edges; fade those so it doesn't end in a straight line.
+  const edge = Math.max(2, Math.round(Math.min(mw, mh) * 0.05));
+  let top = mh;
+  for (let i = 0; i < fg.length; i++) {
+    const x = i % mw, y = (i - x) / mw;
+    let a = keep[i] ? fg[i] : 0;
+    if (y > fy0 + fh / 2 && x > fx0 + fw * 0.1 && x < fx1 - fw * 0.1) a = Math.max(a, smoothstep(0.3, 0.7, body[i] + face[i]));
+    if (y >= neckEnd) a = 0;
+    a *= Math.min(1, (x + 0.5) / edge, (mw - x - 0.5) / edge, (y + 0.5) / edge);
+    fg[i] = a;
+    if (a > 0.15 && y < top) top = y;
+  }
+  applyAlpha(ctx, w, h, fg, mw, mh);
+
+  // Mask to picture coordinates, then the fixed frame around the face.
+  const sx = w / mw, sy = h / mh;
+  const cw = Math.round(fw * sx * HEAD_WIDTH);
+  const cx = Math.round(((fx0 + fx1 + 1) / 2) * sx - cw / 2);
+  const cy = Math.max(0, Math.round((top - fh * 0.04) * sy));
+  const ch = Math.round(neckEnd * sy) - cy;
+  if (cw < 8 || ch < 8) return null;
+  const out = document.createElement("canvas");
+  out.width = cw;
+  out.height = ch;
+  out.getContext("2d")!.drawImage(canvas, -cx, -cy);
   return out.toDataURL("image/png");
 }

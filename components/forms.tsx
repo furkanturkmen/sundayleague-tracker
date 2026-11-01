@@ -4,7 +4,7 @@ import { useActionState, useRef, useState, type ReactNode } from "react";
 import { useFormStatus } from "react-dom";
 import { useT } from "@/components/I18n";
 import type { FormState } from "@/lib/actions";
-import { cutOut } from "@/lib/cutout";
+import { cutOut, headOut } from "@/lib/cutout";
 
 type Action = (state: FormState, f: FormData) => Promise<FormState>;
 
@@ -67,7 +67,8 @@ export async function shrinkImage(file: File, maxPx: number): Promise<string> {
 
 /**
  * File picker that sends a shrunk data URL in `name`, "remove" to clear the saved image, or nothing to keep it.
- * With `cutout`, a photo of a person has its background removed first, so they stand free like the shirt.
+ * With `cutout`, a photo of a person has its background removed first, so they stand free like the shirt, and their
+ * head goes in `<name>Head` to wear the shirt (empty when there's no face to find).
  */
 export function ImageField({
   name,
@@ -87,6 +88,7 @@ export function ImageField({
   onChange?: (preview: string | null) => void;
 }) {
   const [value, setValue] = useState("");
+  const [head, setHead] = useState("");
   const [has, setHas] = useState(Boolean(initial));
   const [error, setError] = useState("");
   const [note, setNote] = useState("");
@@ -98,6 +100,7 @@ export function ImageField({
     <div className="logo-field">
       <span className="logo-field-label">{label}</span>
       <input type="hidden" name={name} value={value} />
+      {cutout && <input type="hidden" name={`${name}Head`} value={head} />}
       <div className="logo-field-actions">
         <input
           ref={input}
@@ -108,6 +111,7 @@ export function ImageField({
             if (!file) return;
             setError("");
             setNote("");
+            setHead("");
             if (file.size > 5_000_000) {
               setError(t("That file is over 5 MB. Pick a smaller one."));
               return;
@@ -122,9 +126,10 @@ export function ImageField({
             if (cutout) {
               setBusy(true);
               try {
-                const cut = await cutOut(data, maxPx);
+                const [cut, face] = await Promise.all([cutOut(data, maxPx), headOut(data, maxPx)]);
                 if (cut) data = cut;
                 else setNote(t("No person found to cut out, so the photo is kept as it is."));
+                setHead(face ?? "");
               } catch {
                 setNote(t("Couldn't cut out the background (no connection?), so the photo is kept as it is."));
               }
@@ -170,7 +175,7 @@ export const PHOTO_PX = 480;
 /** English, as a translation key: show it with t(PHOTO_HINT). */
 export const PHOTO_HINT = "For the line-up graphic. A cut-out on a transparent background (PNG) looks best; a normal photo works too.";
 /** A player's photo has its background cut out on upload. */
-export const PLAYER_PHOTO_HINT = "For the player pages and the graphics. The background is cut out for you, so they stand like the shirt.";
+export const PLAYER_PHOTO_HINT = "For the player pages and the graphics. It's cut out for you: their head goes on the shirt, and they stand free in the graphics.";
 
 export function initials(name: string) {
   const all = name.replace(/[^A-Za-z0-9 ]/g, " ").split(/\s+/).filter(Boolean);

@@ -90,7 +90,7 @@ export async function getClubLogo(slug: string): Promise<{ type: string; body: B
 }
 
 /** A player's photo, or the coach's for "coach", decoded for the photos route. */
-export async function getPhoto(slug: string, who: string): Promise<{ type: string; body: Buffer } | undefined> {
+export async function getPhoto(slug: string, who: string, head = false): Promise<{ type: string; body: Buffer } | undefined> {
   const sql = await db();
   if (who === "coach") {
     const [row] = await sql<{ photo: string | null }[]>`select coach_photo as photo from clubs where slug = ${slug}`;
@@ -98,7 +98,7 @@ export async function getPhoto(slug: string, who: string): Promise<{ type: strin
   }
   if (!/^[0-9a-f-]{36}$/i.test(who)) return undefined;
   const [row] = await sql<{ photo: string | null }[]>`
-    select p.photo from players p join clubs c on c.id = p.club_id where c.slug = ${slug} and p.id = ${who}`;
+    select ${head ? sql`p.photo_head` : sql`p.photo`} as photo from players p join clubs c on c.id = p.club_id where c.slug = ${slug} and p.id = ${who}`;
   return decodeDataUrl(row?.photo);
 }
 
@@ -188,9 +188,9 @@ export const loadClubData = cache(async (slug: string): Promise<ClubData | undef
   const id = row.id;
 
   const [playerRows, matchRows, squadRows, goalRows, eventRows, momentRows, standingRows, rankingRows] = await Promise.all([
-    sql<{ id: string; name: string; number: number | null; position: Position; nickname: string | null; bio: string | null; active: boolean; display_name: string | null; extra_positions: Position[]; has_photo: boolean; photo_png: boolean; photo_version: number }[]>`
+    sql<{ id: string; name: string; number: number | null; position: Position; nickname: string | null; bio: string | null; active: boolean; display_name: string | null; extra_positions: Position[]; has_photo: boolean; photo_png: boolean; has_head: boolean; photo_version: number }[]>`
       select id, name, number, position, nickname, bio, active, display_name, extra_positions, photo is not null as has_photo,
-        coalesce(photo like 'data:image/png%', false) as photo_png, photo_version
+        coalesce(photo like 'data:image/png%', false) as photo_png, photo_head is not null as has_head, photo_version
       from players where club_id = ${id} order by number nulls last, name`,
     sql<{
       id: string;
@@ -241,12 +241,13 @@ export const loadClubData = cache(async (slug: string): Promise<ClubData | undef
   const goals = byMatch(goalRows);
   const events = byMatch(eventRows);
 
-  const players: Player[] = playerRows.map(({ display_name, extra_positions, has_photo, photo_png, photo_version, ...p }) => ({
+  const players: Player[] = playerRows.map(({ display_name, extra_positions, has_photo, photo_png, has_head, photo_version, ...p }) => ({
     ...p,
     displayName: display_name,
     extraPositions: extra_positions ?? [],
     photo: photoUrl(row.slug, p.id, has_photo, photo_version),
     photoCutout: photo_png,
+    head: has_head ? `/c/${row.slug}/photos/${p.id}?head&v=${photo_version}` : null,
   }));
   const playerNamed = (name: string | null) => (name ? players.find((p) => sameName(p.name, name))?.id : undefined);
   const matches: Match[] = matchRows.map((m) => {

@@ -5,15 +5,25 @@ import { useState } from "react";
 import { useT } from "@/components/I18n";
 import { PHOTO_PX } from "@/components/forms";
 import type { FormState } from "@/lib/actions";
-import { cutOut } from "@/lib/cutout";
+import { cutOut, headOut } from "@/lib/cutout";
 
-type Photo = { id: string; name: string; url: string };
+/** `cut`: the photo is already a cut-out and only needs its head. */
+type Photo = { id: string; name: string; url: string; cut: boolean };
 
 /**
- * Photos saved before cut-outs existed, or brought in from voetbal.nl, still have their background. This cuts them
- * out one by one in the browser and saves each. Ones with nobody clear in them are left as they are.
+ * Photos saved before cut-outs existed, or brought in from voetbal.nl, still have their background, and none has
+ * a head for the shirt yet. This cuts them out one by one in the browser and saves each. Ones with nobody clear in
+ * them are left as they are.
  */
-export function CutOutPhotos({ photos, save, done }: { photos: Photo[]; save: (id: string, photo: string) => Promise<FormState>; done: () => Promise<void> }) {
+export function CutOutPhotos({
+  photos,
+  save,
+  done,
+}: {
+  photos: Photo[];
+  save: (id: string, photo: string | null, head: string | null) => Promise<FormState>;
+  done: () => Promise<void>;
+}) {
   const t = useT();
   const router = useRouter();
   const [at, setAt] = useState<number | null>(null);
@@ -28,12 +38,12 @@ export function CutOutPhotos({ photos, save, done }: { photos: Photo[]; save: (i
       setAt(i);
       const p = photos[i];
       try {
-        const png = await cutOut(p.url, PHOTO_PX);
-        if (!png) {
+        const [png, head] = await Promise.all([p.cut ? null : cutOut(p.url, PHOTO_PX), headOut(p.url, PHOTO_PX)]);
+        if (!png && !head) {
           kept.push(p.name);
           continue;
         }
-        const res = await save(p.id, png);
+        const res = await save(p.id, png, head);
         if (res.error) kept.push(p.name);
         else cut++;
       } catch {
@@ -61,8 +71,8 @@ export function CutOutPhotos({ photos, save, done }: { photos: Photo[]; save: (i
       ) : (
         <>
           <p>
-            {t(photos.length === 1 ? "{n} photo still has its background." : "{n} photos still have their background.", { n: photos.length })}{" "}
-            {t("Cut them out so the players stand like the shirt on their pages and in the graphics.")}
+            {t(photos.length === 1 ? "{n} photo isn't cut out yet." : "{n} photos aren't cut out yet.", { n: photos.length })}{" "}
+            {t("Cut them out so the players wear the shirt on their pages, and stand free in the graphics.")}
           </p>
           <button type="button" className="btn" onClick={run}>
             {t("Cut out photos")}

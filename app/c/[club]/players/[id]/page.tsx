@@ -60,8 +60,11 @@ export default async function PlayerPage({ params }: Props) {
         <div className="ph-bg" aria-hidden="true">
           <Image src={stadium} alt="" fill sizes="(max-width: 720px) 100vw, 1120px" placeholder="blur" priority className="ph-photo" />
         </div>
-        {/* Their photo where the shirt would be: a cut-out stands like the shirt does, a JPEG sits in a circle. */}
-        {player.photo ? (
+        {/* Their head on the shirt. Without one, their photo where the shirt would be: a cut-out stands like the shirt
+            does, a JPEG sits in a circle. */}
+        {player.head ? (
+          <Kit main={data.club.accent} trim={data.club.gold} number={player.number} logo={data.club.logo} head={player.head} className="ph-kit" t={t} />
+        ) : player.photo ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={player.photo} alt={player.name} className={player.photoCutout ? "ph-kit ph-cutout" : "ph-portrait"} />
         ) : (

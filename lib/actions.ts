@@ -439,6 +439,9 @@ export async function savePlayer(slug: string, _: FormState, f: FormData): Promi
   const extra = [...new Set(f.getAll("extra").map(String))].filter((p): p is Position => POSITIONS.includes(p as Position) && p !== position).slice(0, 2);
   const photo = await photoField(f, "photo");
   if ("error" in photo) return photo;
+  // The head cut from a new photo, made in the browser alongside it. A new photo without one has no head.
+  const headValue = String(f.get("photoHead") ?? "");
+  const head = photo.photo && validHead(headValue) ? headValue : null;
 
   const sql = await db();
   if (id) {
@@ -448,23 +451,31 @@ export async function savePlayer(slug: string, _: FormState, f: FormData): Promi
         display_name = ${displayName}, extra_positions = ${extra}
       where id = ${id} and club_id = ${club.id}`;
     if (photo.photo !== undefined)
-      await sql`update players set photo = ${photo.photo}, photo_version = photo_version + 1 where id = ${id} and club_id = ${club.id}`;
+      await sql`update players set photo = ${photo.photo}, photo_head = ${head}, photo_version = photo_version + 1 where id = ${id} and club_id = ${club.id}`;
   } else {
     await sql`
-      insert into players (club_id, name, number, position, nickname, bio, display_name, extra_positions, photo)
-      values (${club.id}, ${name}, ${number}, ${position}, ${nickname}, ${bio}, ${displayName}, ${extra}, ${photo.photo ?? null})`;
+      insert into players (club_id, name, number, position, nickname, bio, display_name, extra_positions, photo, photo_head)
+      values (${club.id}, ${name}, ${number}, ${position}, ${nickname}, ${bio}, ${displayName}, ${extra}, ${photo.photo ?? null}, ${head})`;
   }
   refresh(slug);
   return { ok: await msg(id ? "{name} updated." : "{name} added to the squad.", { name }) };
 }
 
-/** One player's photo replaced by its cut-out, from the "cut out existing photos" button in settings. */
-export async function setPlayerPhoto(slug: string, id: string, photo: string): Promise<FormState> {
+/** A cut-out (or a head) is always a PNG, so it can be see-through. */
+const validHead = (v: string) => v.length <= PHOTO_MAX && v.startsWith("data:image/png;") && PHOTO.test(v);
+
+/**
+ * One player's photo replaced by its cut-out, and its head saved, from the "cut out photos" button in settings.
+ * A null photo keeps the one there.
+ */
+export async function setPlayerPhoto(slug: string, id: string, photo: string | null, head: string | null): Promise<FormState> {
   const club = await requireAdmin(slug);
   if (!UUID.test(id)) return { error: await msg("Unknown player.") };
-  if (photo.length > PHOTO_MAX || !photo.startsWith("data:image/png;") || !PHOTO.test(photo)) return { error: await msg("That photo couldn't be used. Try a PNG or JPG.") };
+  if ((photo !== null && !validHead(photo)) || (head !== null && !validHead(head))) return { error: await msg("That photo couldn't be used. Try a PNG or JPG.") };
   const sql = await db();
-  await sql`update players set photo = ${photo}, photo_version = photo_version + 1 where id = ${id} and club_id = ${club.id}`;
+  await sql`
+    update players set photo = coalesce(${photo}, photo), photo_head = ${head}, photo_version = photo_version + 1
+    where id = ${id} and club_id = ${club.id} and photo is not null`;
   return { ok: "" };
 }
 

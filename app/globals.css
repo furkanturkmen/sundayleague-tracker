@@ -1059,6 +1059,8 @@ h2 > .ranking-accent { font-family: inherit; letter-spacing: inherit; line-heigh
   background: radial-gradient(closest-side, color-mix(in srgb, var(--hx-bright) 40%, transparent), transparent); filter: blur(6px); transition: opacity 400ms ease, transform 500ms var(--hx-ease); }
 .hx-player:hover { color: #fff; }
 .hx-rail-track:has(.hx-player:hover) .hx-player:not(:hover) { opacity: 0.4; }
+.hx-player-kit.kit-head { height: 270px; margin-top: -70px; }
+.hx-rail-track:has(.kit-head) { padding-top: 86px; }
 .hx-player-kit { width: 100%; height: 200px; filter: drop-shadow(0 22px 26px rgb(0 0 0 / 0.6)); transition: transform 500ms var(--hx-ease); }
 .hx-player:hover .hx-player-kit { transform: translateY(-12px) rotate(-3deg) scale(1.05); }
 .hx-player:hover::before { transform: scale(1.15); }
@@ -1165,6 +1167,10 @@ h2 > .ranking-accent { font-family: inherit; letter-spacing: inherit; line-heigh
 .sq-pos { font-size: 14px; color: var(--hx-ink-3); }
 .sq-mini { display: flex; justify-content: center; gap: 12px; margin-top: 8px; font-size: 12px; color: var(--hx-ink-3); }
 .sq-mini b { font-size: 14px; font-weight: 600; color: #fff; font-variant-numeric: tabular-nums; }
+/* A head on the shirt reaches up into the gap above, so the shirts stay in line and the lines make room for it. */
+.sq-kit.kit-head { height: 243px; margin-top: -63px; }
+.sq-line ul:has(.kit-head) { row-gap: 96px; }
+.sq-line:has(.kit-head) h2 { margin-bottom: 84px; }
 .sq-unused .sq-kit { filter: grayscale(0.7) brightness(0.65) drop-shadow(0 20px 24px rgb(0 0 0 / 0.6)); }
 .sq-unused::before { opacity: 0.3; }
 
@@ -1201,6 +1207,9 @@ h2 > .ranking-accent { font-family: inherit; letter-spacing: inherit; line-heigh
   .sq-line + .sq-line { margin-top: 64px; }
   .sq-line ul { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px 12px; }
   .sq-kit { height: 150px; }
+  .sq-kit.kit-head { height: 202px; margin-top: -52px; }
+  .sq-line ul:has(.kit-head) { row-gap: 80px; }
+  .sq-line:has(.kit-head) h2 { margin-bottom: 72px; }
   .sq-portrait { width: 124px; height: 124px; margin: 13px 0; }
   .sq-player::before { top: 116px; }
   .sq-mini { gap: 8px; }
