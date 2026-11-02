@@ -239,7 +239,18 @@ export async function syncClub(clubId: string): Promise<SyncSummary> {
       }
       if (!header.name) header = parseTeamHeader(html);
       const schedule = parseSchedule(html);
-      if (schedule.length && s.path.includes("/programma/")) listed.add(s.cup ? "Cup" : "League");
+      // The page shows the first weeks only; "Toon volledig programma" loads the rest of the season from here. If
+      // that fails the sync goes on with what it has, but nothing is removed for missing from a partial list.
+      let complete = true;
+      if (html.includes("data-load-more")) {
+        try {
+          const more = JSON.parse(await page(`/team/ajax/${teamId}/${s.path.slice(base.length + 1)}`)) as { html?: string };
+          if (more.html) schedule.push(...parseSchedule(more.html));
+        } catch {
+          complete = false;
+        }
+      }
+      if (complete && schedule.length && s.path.includes("/programma/")) listed.add(s.cup ? "Cup" : "League");
       for (const r of schedule) {
         const ours = r.us ?? (header.name && (sameName(r.home, header.name) ? "home" : sameName(r.away, header.name) ? "away" : null));
         if (ours) rows.set(r.id, { ...r, us: ours, cup: s.cup });

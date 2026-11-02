@@ -72,7 +72,10 @@ export function parseTeamHeader(html: string): { name: string | null; league: st
 export function parseSchedule(html: string): ScheduleRow[] {
   const $ = cheerio.load(html);
   const rows: ScheduleRow[] = [];
-  $(".ScheduleResults-content .table").each((_, table) => {
+  // A whole page has its tables in .ScheduleResults-content; the rest of the list ("Toon volledig programma") comes
+  // as the bare tables.
+  const page = $(".ScheduleResults-content .table");
+  (page.length ? page : $(".table-wrapper > .table")).each((_, table) => {
     const date = parseDutchDate($(table).find(".header .title").first().text());
     if (!date) return;
     $(table)
