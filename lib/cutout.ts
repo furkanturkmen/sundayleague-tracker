@@ -14,6 +14,7 @@ let segmenter: Promise<ImageSegmenter> | null = null;
 
 function loadSegmenter() {
   segmenter ??= (async () => {
+    quietInfoNotes();
     const { FilesetResolver, ImageSegmenter } = await import("@mediapipe/tasks-vision");
     const files = await FilesetResolver.forVisionTasks(WASM);
     return ImageSegmenter.createFromOptions(files, {
@@ -31,19 +32,21 @@ function loadSegmenter() {
 }
 
 // The runtime logs its start-up notes ("INFO: Created TensorFlow Lite XNNPACK delegate…") through console.error,
-// which the Next.js dev overlay shows as an error. Those notes are dropped; real errors still get through.
-async function segment(canvas: HTMLCanvasElement) {
-  const s = await loadSegmenter();
+// which the Next.js dev overlay shows as an error. It keeps hold of console.error from when it loads, so the
+// filter goes in before that, once, and stays. Only those notes are dropped; real errors still get through.
+let quiet = false;
+function quietInfoNotes() {
+  if (quiet) return;
+  quiet = true;
   const error = console.error;
   console.error = (...args: unknown[]) => {
     if (typeof args[0] === "string" && args[0].startsWith("INFO:")) return;
     error(...args);
   };
-  try {
-    return s.segment(canvas);
-  } finally {
-    console.error = error;
-  }
+}
+
+async function segment(canvas: HTMLCanvasElement) {
+  return (await loadSegmenter()).segment(canvas);
 }
 
 async function loadImage(src: string): Promise<HTMLImageElement> {
