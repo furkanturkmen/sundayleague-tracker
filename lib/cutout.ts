@@ -30,6 +30,22 @@ function loadSegmenter() {
   return segmenter;
 }
 
+// The runtime logs its start-up notes ("INFO: Created TensorFlow Lite XNNPACK delegate…") through console.error,
+// which the Next.js dev overlay shows as an error. Those notes are dropped; real errors still get through.
+async function segment(canvas: HTMLCanvasElement) {
+  const s = await loadSegmenter();
+  const error = console.error;
+  console.error = (...args: unknown[]) => {
+    if (typeof args[0] === "string" && args[0].startsWith("INFO:")) return;
+    error(...args);
+  };
+  try {
+    return s.segment(canvas);
+  } finally {
+    console.error = error;
+  }
+}
+
 async function loadImage(src: string): Promise<HTMLImageElement> {
   const img = new Image();
   img.crossOrigin = "anonymous";
@@ -103,7 +119,7 @@ export async function cutOut(src: string, maxPx: number): Promise<string | null>
   ctx.drawImage(img, 0, 0, w, h);
   if (hasTransparency(ctx, w, h)) return canvas.toDataURL("image/png");
 
-  const result = (await loadSegmenter()).segment(canvas);
+  const result = await segment(canvas);
   const background = result.confidenceMasks?.[0];
   if (!background) return null;
   const mw = background.width;
