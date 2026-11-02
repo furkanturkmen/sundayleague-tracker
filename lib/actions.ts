@@ -368,6 +368,7 @@ export async function syncVoetbal(slug: string): Promise<FormState> {
     const parts = [
       s.added && t(s.added === 1 ? "{n} new match" : "{n} new matches", { n: s.added }),
       s.updated && t("{n} updated", { n: s.updated }),
+      s.removed && t(s.removed === 1 ? "{n} match removed" : "{n} matches removed", { n: s.removed }),
       s.lineups && t(s.lineups === 1 ? "{n} line-up" : "{n} line-ups", { n: s.lineups }),
       s.photos && t(s.photos === 1 ? "{n} photo" : "{n} photos", { n: s.photos }),
       s.table && t("league table"),

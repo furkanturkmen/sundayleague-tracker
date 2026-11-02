@@ -61,6 +61,8 @@ export const NL_MESSAGES: Record<string, string> = {
   "{n} new match": "{n} nieuwe wedstrijd",
   "{n} new matches": "{n} nieuwe wedstrijden",
   "{n} updated": "{n} bijgewerkt",
+  "{n} match removed": "{n} wedstrijd verwijderd",
+  "{n} matches removed": "{n} wedstrijden verwijderd",
   "{n} line-up": "{n} opstelling",
   "{n} line-ups": "{n} opstellingen",
   "{n} photo": "{n} foto",

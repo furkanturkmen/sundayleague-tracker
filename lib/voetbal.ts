@@ -197,6 +197,8 @@ export interface SyncSummary {
   hidden: number;
   /** Squad players who got their voetbal.nl profile photo. */
   photos: number;
+  /** Upcoming matches gone from voetbal.nl (a team left the league, a fixture was struck), removed here too. */
+  removed: number;
 }
 
 const running = new Set<string>();
@@ -223,6 +225,8 @@ export async function syncClub(clubId: string): Promise<SyncSummary> {
       { path: `${base}/uitslagen/beker`, cup: true },
     ];
     const rows = new Map<string, ScheduleRow & { cup: boolean }>();
+    // The fixture lists that were read and had matches on them, so only those are checked for removed fixtures.
+    const listed = new Set<"League" | "Cup">();
     let header: { name: string | null; league: string | null } = { name: null, league: null };
     for (const s of sources) {
       let html: string;
@@ -234,7 +238,9 @@ export async function syncClub(clubId: string): Promise<SyncSummary> {
         throw err;
       }
       if (!header.name) header = parseTeamHeader(html);
-      for (const r of parseSchedule(html)) {
+      const schedule = parseSchedule(html);
+      if (schedule.length && s.path.includes("/programma/")) listed.add(s.cup ? "Cup" : "League");
+      for (const r of schedule) {
         const ours = r.us ?? (header.name && (sameName(r.home, header.name) ? "home" : sameName(r.away, header.name) ? "away" : null));
         if (ours) rows.set(r.id, { ...r, us: ours, cup: s.cup });
       }
@@ -250,7 +256,7 @@ export async function syncClub(clubId: string): Promise<SyncSummary> {
       // no cup this season
     }
 
-    const summary: SyncSummary = { added: 0, updated: 0, results: 0, lineups: 0, table: table.length, hidden: 0, photos: 0 };
+    const summary: SyncSummary = { added: 0, updated: 0, results: 0, lineups: 0, table: table.length, hidden: 0, photos: 0, removed: 0 };
     const players = await sql<{ id: string; name: string }[]>`select id, name from players where club_id = ${clubId}`;
 
     await sql.begin(async (tx) => {
@@ -282,6 +288,18 @@ export async function syncClub(clubId: string): Promise<SyncSummary> {
           summary.added++;
         }
         if (r.score) summary.results++;
+      }
+
+      // A fixture that's no longer on voetbal.nl (the opponent left the league, the match was struck) goes here too.
+      // Only upcoming ones without a result, and only from a fixture list that was read, so a page that failed to
+      // load or a match already played and logged is never lost.
+      if (listed.size) {
+        const gone = await tx`
+          delete from matches
+          where club_id = ${clubId} and external_id is not null and not (external_id = any(${[...rows.keys()]}))
+            and competition = any(${[...listed]}) and date >= current_date
+            and goals_for is null and goals_against is null and status is null`;
+        summary.removed = gone.count;
       }
 
       await tx`delete from standings where club_id = ${clubId}`;
