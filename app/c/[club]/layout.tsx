@@ -7,7 +7,7 @@ import { RememberClub } from "@/components/RecentClubs";
 import { Crest } from "@/components/ui";
 import { logout } from "@/lib/actions";
 import { loadClubOpen } from "@/lib/club";
-import { inkFor } from "@/lib/color";
+import { brighten, inkFor } from "@/lib/color";
 import { getT } from "@/lib/i18n/server";
 
 type Props = { children: ReactNode; params: Promise<{ club: string }> };
@@ -28,7 +28,8 @@ export default async function ClubLayout({ children, params }: Props) {
   const { data, st, admin, coach, squad, canView } = await loadClubOpen(slug);
   const t = await getT();
   const { club } = data;
-  const theme = { "--accent": club.accent, "--gold": club.gold, "--accent-ink": inkFor(club.accent) } as CSSProperties;
+  // --hx-bright here too, for the header and footer, which sit outside the page's .hx.
+  const theme = { "--accent": club.accent, "--gold": club.gold, "--accent-ink": inkFor(club.accent), "--hx-bright": brighten(club.accent) } as CSSProperties;
 
   return (
     <div className="club-theme" style={theme}>
