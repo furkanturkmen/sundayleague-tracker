@@ -35,7 +35,7 @@ interface ClubRow {
   squad_password_hash: string | null;
 }
 
-const logoUrl = (slug: string, hasLogo: boolean, version: number) => (hasLogo ? `/c/${slug}/logo?v=${version}&bg=0` : null);
+const logoUrl = (slug: string, hasLogo: boolean, version: number) => (hasLogo ? `/c/${slug}/logo?v=${version}&bg=1` : null);
 /** Player photos by id, and the coach's as "coach". */
 const photoUrl = (slug: string, who: string, has: boolean, version: number) => (has ? `/c/${slug}/photos/${who}?v=${version}` : null);
 

@@ -58,7 +58,8 @@ export function Kit({
       <path d="M168 22 Q200 44 232 22 Q226 54 200 58 Q174 54 168 22 Z" fill={trim} stroke="#fff" strokeOpacity="0.5" strokeWidth="3" />
       <path d={shirt} fill="none" stroke="#fff" strokeOpacity="0.16" strokeWidth="2" />
       {/* crest on the left chest, like a real home shirt */}
-      {logo && <image href={logo} x="228" y="92" width="44" height="44" preserveAspectRatio="xMidYMid meet" />}
+      {/* as tall as a square crest; a wide one gets the extra width rather than shrinking */}
+      {logo && <image href={logo} x="217" y="92" width="66" height="44" preserveAspectRatio="xMidYMid meet" />}
       {number != null && (
         <text
           x="200"

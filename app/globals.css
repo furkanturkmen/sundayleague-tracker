@@ -1029,8 +1029,10 @@ h2 > .ranking-accent { font-family: inherit; letter-spacing: inherit; line-heigh
 .hx-result.hx-void { opacity: 0.6; }
 .hx-result-top { display: flex; justify-content: space-between; font-size: 14px; color: var(--hx-ink-2); }
 .hx-cup { color: var(--hx-D); }
-.hx-result-teams { display: grid; grid-template-columns: 44px 1fr 44px; align-items: center; gap: 8px; }
-.hx-result-teams .crest, .hx-result-teams .team-logo { width: 44px !important; height: 44px !important; object-fit: contain; justify-self: center; transition: transform 400ms var(--hx-ease); }
+.hx-result-teams { display: grid; grid-template-columns: minmax(44px, auto) 1fr minmax(44px, auto); align-items: center; gap: 8px; }
+/* a wide crest takes a little more width, a square one keeps its 44px; the cards are narrow, so no more than the
+   score leaves room for */
+.hx-result-teams .crest, .hx-result-teams .team-logo { width: auto !important; max-width: 52px !important; height: 44px !important; object-fit: contain; justify-self: center; transition: transform 400ms var(--hx-ease); }
 .hx-result:hover .crest, .hx-result:hover .team-logo { transform: scale(1.1); }
 .hx-result-score { display: flex; justify-content: center; gap: 6px; font-size: 56px; font-weight: 300; letter-spacing: -0.06em; line-height: 1; font-variant-numeric: tabular-nums; }
 .hx-result-score i { font-style: normal; color: var(--hx-ink-3); }

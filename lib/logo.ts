@@ -3,8 +3,8 @@ import sharp from "sharp";
 // Club crests often come as a JPEG or PNG on a white (or other flat) square, which shows as a box on the dark pages.
 // This lifts that background off: it fills in from the edges through every pixel close to the edge colour, so white
 // inside the crest (enclosed by its outline) stays, softens the cut so the edge isn't jagged, and trims the empty
-// border so every crest fills its spot the same. Crests that already have transparency, or that aren't on a flat
-// colour (a photo), are left as they are.
+// border so every crest fills its spot the same. Crests that already have transparency are only trimmed (some come
+// with a wide empty margin); ones that aren't on a flat colour (a photo) are left as they are.
 
 const NEAR = 40; // colour distance still counted as background
 const EDGE = 90; // up to this distance an edge pixel is part background, for a soft cut
@@ -24,7 +24,10 @@ export async function clearBackground(input: Buffer, type: string): Promise<{ bo
     for (let y = 1; y < h - 1; y++) edge.push(y * w, y * w + w - 1);
     let clear = 0;
     for (const i of edge) if (data[px(i) + 3] < 128) clear++;
-    if (clear > edge.length * 0.3) return original;
+    if (clear > edge.length * 0.3) {
+      const trimmed = await sharp(input).trim({ threshold: 1 }).png().toBuffer();
+      return { body: Uint8Array.from(trimmed), type: "image/png" };
+    }
     const bg = [0, 1, 2].map((c) => median(edge.map((i) => data[px(i) + c])));
     const dist = (i: number) => {
       const p = px(i);

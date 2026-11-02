@@ -22,9 +22,12 @@ export function Crest({ short, logo, size = 44 }: { short: string; logo?: string
   );
 }
 
-/** An opponent's crest from voetbal.nl, or a neutral disc with their initial for matches logged by hand. */
+/**
+ * An opponent's crest from voetbal.nl, or a neutral disc with their initial for matches logged by hand. The spot is
+ * wider than tall, so a wide crest (three circles side by side) is as tall as a square one instead of shrunk to fit.
+ */
 export function TeamLogo({ code, name, size = 22 }: { code?: string | null; name: string; size?: number }) {
-  if (code) return <img src={`/logos/${code}?bg=0`} alt="" width={size} height={size} className="team-logo" loading="lazy" />;
+  if (code) return <img src={`/logos/${code}?bg=1`} alt="" width={Math.round(size * 1.5)} height={size} className="team-logo" loading="lazy" />;
   return (
     <span className="team-logo team-logo-blank" style={{ width: size, height: size, fontSize: size * 0.45 }} aria-hidden="true">
       {name.replace(/^(afc|asv|avv|sv|vv|rksv|sc|fc)\s+/i, "").charAt(0).toUpperCase()}
