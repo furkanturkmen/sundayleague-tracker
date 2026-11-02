@@ -41,6 +41,8 @@ export function Rail({ children, label, className }: { children: ReactNode; labe
       <div
         ref={ref}
         className="hx-rail-track"
+        data-more-before={edges.start ? undefined : ""}
+        data-more-after={edges.end ? undefined : ""}
         role="region"
         aria-label={label}
         tabIndex={0}

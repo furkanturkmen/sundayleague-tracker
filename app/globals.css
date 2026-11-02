@@ -979,7 +979,8 @@ h2 > .ranking-accent { font-family: inherit; letter-spacing: inherit; line-heigh
    colour (orange, red) is as deep as a dark one (navy). */
 .hx-band-pitch { background: radial-gradient(80% 60% at 50% 45%, color-mix(in srgb, var(--accent) 16%, var(--night)), color-mix(in srgb, var(--accent) 6%, var(--night)) 70%, var(--night)); }
 .hx-pitch { position: absolute; inset: 6% 2%; width: 96%; height: 88%; color: color-mix(in srgb, var(--accent) 6%, rgb(255 255 255 / 0.06));
-  -webkit-mask-image: radial-gradient(60% 60% at 50% 50%, #000 40%, transparent); mask-image: radial-gradient(60% 60% at 50% 50%, #000 40%, transparent); }
+  /* gone well before its outer lines, so the touchlines never show as a straight edge */
+  -webkit-mask-image: radial-gradient(55% 55% at 50% 50%, #000 30%, transparent 88%); mask-image: radial-gradient(55% 55% at 50% 50%, #000 30%, transparent 88%); }
 .hx-band-pitch .hx-table tbody tr:not(.is-us) td { background: none; }
 
 /* results: true black, the latest score ghosted huge behind the scoreboard */
@@ -1011,9 +1012,18 @@ h2 > .ranking-accent { font-family: inherit; letter-spacing: inherit; line-heigh
 .hx-rail-arrows button:last-child:hover:not(:disabled) { transform: translateX(4px); }
 .hx-rail-arrows button:active:not(:disabled) { transform: scale(0.92); }
 .hx-rail-arrows button:disabled { opacity: 0.3; cursor: default; }
+/* The track reaches out past the column on every side, so the shirts' shadows and glows aren't cut off by its
+   edges (a scrolling box clips whatever spills out of it); the cards still line up with the column. */
 .hx-rail-track { display: grid; grid-auto-flow: column; grid-auto-columns: 280px; gap: 0; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none;
-  padding: 16px 0 24px; cursor: grab; outline-offset: 4px; }
+  margin: -24px -48px -32px; padding: 40px 48px 56px; scroll-padding-inline: 48px; cursor: grab; outline-offset: 4px; }
 .hx-rail-track::-webkit-scrollbar { display: none; }
+/* The spill-over room fades out at the sides, and where there's more to scroll to the row fades out over its last
+   stretch too, instead of stopping on a hard line through a card. */
+.hx-rail-track { --fade-before: 48px; --fade-after: 48px;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 var(--fade-before), #000 calc(100% - var(--fade-after)), transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 var(--fade-before), #000 calc(100% - var(--fade-after)), transparent); }
+.hx-rail-track[data-more-before] { --fade-before: 144px; }
+.hx-rail-track[data-more-after] { --fade-after: 144px; }
 .hx-rail-track[data-dragging] { cursor: grabbing; scroll-snap-type: none; user-select: none; }
 .hx-rail-track[data-dragging] > * { pointer-events: none; }
 .hx-rail-track img { -webkit-user-drag: none; }
@@ -1111,6 +1121,9 @@ h2 > .ranking-accent { font-family: inherit; letter-spacing: inherit; line-heigh
   .hx-head { margin-bottom: 32px; }
   .hx-rail-arrows { display: none; }
   .hx-rail-track { grid-auto-columns: 78%; }
+  .hx-rail-track { margin-inline: -16px; padding-inline: 16px; scroll-padding-inline: 16px; --fade-before: 16px; --fade-after: 16px; }
+  .hx-rail-track[data-more-before] { --fade-before: 56px; }
+  .hx-rail-track[data-more-after] { --fade-after: 56px; }
   .hx-rail-track:has(.hx-player) { grid-auto-columns: 46%; }
   .hx-result { padding-inline: 20px; }
   .hx-table table { font-size: 16px; }
