@@ -7,7 +7,7 @@ import { PHOTO_PX } from "@/components/forms";
 import type { FormState } from "@/lib/actions";
 import { cutOut, headOut } from "@/lib/cutout";
 
-/** `cut`: the photo is already a cut-out and only needs its head. */
+/** `cut`: the photo is already a cut-out and only needs its head (again, when the head cutter has changed). */
 type Photo = { id: string; name: string; url: string; cut: boolean };
 
 /**
@@ -40,6 +40,8 @@ export function CutOutPhotos({
       try {
         const [png, head] = await Promise.all([p.cut ? null : cutOut(p.url, PHOTO_PX), headOut(p.url, PHOTO_PX)]);
         if (!png && !head) {
+          // Marked as tried, so it isn't offered again.
+          await save(p.id, null, null);
           kept.push(p.name);
           continue;
         }

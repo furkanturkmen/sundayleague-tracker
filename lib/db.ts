@@ -56,6 +56,8 @@ alter table players add column if not exists photo text;
 alter table players add column if not exists photo_version int not null default 0;
 -- Just the head from the photo (hair, face, neck) on a transparent background, to sit on the shirt. Shares photo_version.
 alter table players add column if not exists photo_head text;
+-- Which version of the head cutter made photo_head (HEAD_VERSION in lib/types.ts); older ones are made again.
+alter table players add column if not exists head_version int not null default 0;
 -- Up to two other positions a player can fill, for the line-up suggestion and the squad lists.
 alter table players add column if not exists extra_positions text[] not null default '{}';
 -- Specific positions (LB, CDM, ST, ...) on top of the original four lines.

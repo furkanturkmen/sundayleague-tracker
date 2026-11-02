@@ -7,7 +7,7 @@ import { hasSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { analyse, type Stats } from "@/lib/stats";
 import { sameName } from "@/lib/voetbal-parse";
-import type { Card, Club, ClubData, Goal, Match, MatchStatus, Moment, Player, Position, Ranking, Standing, Venue } from "@/lib/types";
+import { HEAD_VERSION, type Card, type Club, type ClubData, type Goal, type Match, type MatchStatus, type Moment, type Player, type Position, type Ranking, type Standing, type Venue } from "@/lib/types";
 
 interface ClubRow {
   id: string;
@@ -188,9 +188,10 @@ export const loadClubData = cache(async (slug: string): Promise<ClubData | undef
   const id = row.id;
 
   const [playerRows, matchRows, squadRows, goalRows, eventRows, momentRows, standingRows, rankingRows] = await Promise.all([
-    sql<{ id: string; name: string; number: number | null; position: Position; nickname: string | null; bio: string | null; active: boolean; display_name: string | null; extra_positions: Position[]; has_photo: boolean; photo_png: boolean; has_head: boolean; photo_version: number }[]>`
+    sql<{ id: string; name: string; number: number | null; position: Position; nickname: string | null; bio: string | null; active: boolean; display_name: string | null; extra_positions: Position[]; has_photo: boolean; photo_png: boolean; has_head: boolean; head_checked: boolean; photo_version: number }[]>`
       select id, name, number, position, nickname, bio, active, display_name, extra_positions, photo is not null as has_photo,
-        coalesce(photo like 'data:image/png%', false) as photo_png, photo_head is not null as has_head, photo_version
+        coalesce(photo like 'data:image/png%', false) as photo_png, photo_head is not null and head_version >= ${HEAD_VERSION} as has_head,
+        head_version >= ${HEAD_VERSION} as head_checked, photo_version
       from players where club_id = ${id} order by number nulls last, name`,
     sql<{
       id: string;
@@ -241,13 +242,14 @@ export const loadClubData = cache(async (slug: string): Promise<ClubData | undef
   const goals = byMatch(goalRows);
   const events = byMatch(eventRows);
 
-  const players: Player[] = playerRows.map(({ display_name, extra_positions, has_photo, photo_png, has_head, photo_version, ...p }) => ({
+  const players: Player[] = playerRows.map(({ display_name, extra_positions, has_photo, photo_png, has_head, head_checked, photo_version, ...p }) => ({
     ...p,
     displayName: display_name,
     extraPositions: extra_positions ?? [],
     photo: photoUrl(row.slug, p.id, has_photo, photo_version),
     photoCutout: photo_png,
     head: has_head ? `/c/${row.slug}/photos/${p.id}?head&v=${photo_version}` : null,
+    headChecked: head_checked,
   }));
   const playerNamed = (name: string | null) => (name ? players.find((p) => sameName(p.name, name))?.id : undefined);
   const matches: Match[] = matchRows.map((m) => {

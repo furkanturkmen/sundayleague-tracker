@@ -174,9 +174,10 @@ export async function cutOut(src: string, maxPx: number): Promise<string | null>
   return out.toDataURL("image/png");
 }
 
-// The head picture is HEAD_WIDTH face widths across and ends NECK face heights below the chin.
+// The head picture is HEAD_WIDTH face widths across and ends NECK face widths below the chin (widths, as a beard
+// makes a face look longer than it is).
 const HEAD_WIDTH = 2.4;
-const NECK = 0.6;
+const NECK = 0.75;
 
 /**
  * Just the head (hair, face and the neck under it) on a transparent background, to sit in the collar of the shirt.
@@ -215,8 +216,31 @@ export async function headOut(src: string, maxPx: number): Promise<string | null
       facePx++;
     }
   if (facePx < fg.length * 0.004) return null;
-  const fw = fx1 - fx0 + 1, fh = fy1 - fy0 + 1;
-  const neckEnd = Math.min(mh, Math.round(fy1 + fh * NECK));
+  const fw = fx1 - fx0 + 1;
+  // The chin is the bottom of the head straight under the face: a beard counts as hair, not face, and hangs lower.
+  for (let i = 0; i < fg.length; i++) {
+    const x = i % mw, y = (i - x) / mw;
+    if (keep[i] && fg[i] > 0.5 && y > fy1 && x > fx0 + fw * 0.3 && x < fx1 - fw * 0.3) fy1 = y;
+  }
+  const fh = fy1 - fy0 + 1;
+  const sx = w / mw, sy = h / mh;
+  // A face this small (a full-length photo from far off) would be a blur once it's on the shirt.
+  if (fw * sx < 40) return null;
+
+  // The skin colour, from the middle of the face, for the neck below.
+  const px = ctx.getImageData(0, 0, w, h).data;
+  let r = 0, g = 0, b = 0, n = 0;
+  for (let i = 0; i < fg.length; i++)
+    if (keep[i] && face[i] > 0.85) {
+      const x = i % mw, y = (i - x) / mw;
+      const j = (Math.min(h - 1, Math.round(y * sy)) * w + Math.min(w - 1, Math.round(x * sx))) * 4;
+      r += px[j];
+      g += px[j + 1];
+      b += px[j + 2];
+      n++;
+    }
+  // Can run past the bottom of the photo (a close crop that ends at the chin); the drawn neck fills that in.
+  const neckEnd = Math.round(fy1 + fw * NECK);
 
   // The head, plus the skin straight under the chin as the neck (not the shoulders or a hand off to the side).
   // A close-up photo (or a cut-out of one) cuts the head off at its edges; fade those so it doesn't end in a straight line.
@@ -227,14 +251,13 @@ export async function headOut(src: string, maxPx: number): Promise<string | null
     let a = keep[i] ? fg[i] : 0;
     if (y > fy0 + fh / 2 && x > fx0 + fw * 0.1 && x < fx1 - fw * 0.1) a = Math.max(a, smoothstep(0.3, 0.7, body[i] + face[i]));
     if (y >= neckEnd) a = 0;
-    a *= Math.min(1, (x + 0.5) / edge, (mw - x - 0.5) / edge, (y + 0.5) / edge);
+    a *= Math.min(1, (x + 0.5) / edge, (mw - x - 0.5) / edge, (y + 0.5) / edge, (mh - y - 0.5) / edge);
     fg[i] = a;
     if (a > 0.15 && y < top) top = y;
   }
   applyAlpha(ctx, w, h, fg, mw, mh);
 
   // Mask to picture coordinates, then the fixed frame around the face.
-  const sx = w / mw, sy = h / mh;
   const cw = Math.round(fw * sx * HEAD_WIDTH);
   const cx = Math.round(((fx0 + fx1 + 1) / 2) * sx - cw / 2);
   const cy = Math.max(0, Math.round((top - fh * 0.04) * sy));
@@ -243,6 +266,45 @@ export async function headOut(src: string, maxPx: number): Promise<string | null
   const out = document.createElement("canvas");
   out.width = cw;
   out.height = ch;
-  out.getContext("2d")!.drawImage(canvas, -cx, -cy);
+  const octx = out.getContext("2d")!;
+  octx.drawImage(canvas, -cx, -cy);
+
+  // A neck under the head, in their skin colour, so the head doesn't float above the collar when the photo shows
+  // none (a beard, a high collar, a crop at the chin). It goes behind, so a real neck in the photo stays on top.
+  // Shaded under the chin and down the sides so it reads as round.
+  if (n) {
+    const neck = document.createElement("canvas");
+    neck.width = cw;
+    neck.height = ch;
+    const nctx = neck.getContext("2d")!;
+    const mid = cw / 2;
+    const half = fw * sx * 0.25;
+    const nTop = (fy1 - fh * 0.35) * sy - cy, chin = fy1 * sy - cy;
+    nctx.fillStyle = `rgb(${r / n} ${g / n} ${b / n})`;
+    nctx.beginPath();
+    nctx.moveTo(mid - half, nTop);
+    nctx.lineTo(mid + half, nTop);
+    nctx.lineTo(mid + half * 1.15, ch);
+    nctx.lineTo(mid - half * 1.15, ch);
+    nctx.closePath();
+    nctx.fill();
+    nctx.globalCompositeOperation = "source-atop";
+    const under = nctx.createLinearGradient(0, chin, 0, ch);
+    under.addColorStop(0, "rgb(0 0 0 / 0.55)");
+    under.addColorStop(0.5, "rgb(0 0 0 / 0.15)");
+    under.addColorStop(1, "rgb(0 0 0 / 0.3)");
+    nctx.fillStyle = under;
+    nctx.fillRect(0, chin, cw, ch - chin);
+    const sides = nctx.createLinearGradient(mid - half * 1.15, 0, mid + half * 1.15, 0);
+    sides.addColorStop(0, "rgb(0 0 0 / 0.4)");
+    sides.addColorStop(0.3, "rgb(0 0 0 / 0)");
+    sides.addColorStop(0.7, "rgb(0 0 0 / 0)");
+    sides.addColorStop(1, "rgb(0 0 0 / 0.4)");
+    nctx.fillStyle = sides;
+    nctx.fillRect(0, nTop, cw, ch - nTop);
+    octx.globalCompositeOperation = "destination-over";
+    octx.filter = "blur(0.6px)";
+    octx.drawImage(neck, 0, 0);
+  }
   return out.toDataURL("image/png");
 }

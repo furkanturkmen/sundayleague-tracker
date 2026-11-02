@@ -57,9 +57,20 @@ export function Kit({
           <path d={shirt} />
         </clipPath>
       </defs>
-      {/* Behind the shirt, so the neck runs down into it and the chin sits just above the collar. headOut makes every
-          head the same size around the face (a face is about 100 across here). */}
-      {head && <image href={head} x="80" y={-HEAD_ROOM} width="240" height={HEAD_ROOM + 96} preserveAspectRatio="xMidYMax meet" />}
+      {/* Behind the shirt, so the neck runs down into the collar. headOut makes every head the same size around the
+          face (a face is 80 across here, about a third of the shoulders), and it's dimmed a little to sit in the
+          floodlit night rather than a bright photo booth. */}
+      {head && (
+        <image
+          href={head}
+          x="104"
+          y={-HEAD_ROOM}
+          width="192"
+          height={HEAD_ROOM + 64}
+          preserveAspectRatio="xMidYMax meet"
+          style={{ filter: "brightness(0.9) saturate(0.92)" }}
+        />
+      )}
       <g clipPath={`url(#${id}-clip)`}>
         <rect width="400" height="430" fill={`url(#${id}-stripes)`} />
         <rect width="400" height="430" fill={`url(#${id}-shade)`} />

@@ -34,7 +34,7 @@ export default async function SquadSettingsPage({ params }: Props) {
       <div className="hx-wrap hx-body hx-form-page">
         <div>
           <CutOutPhotos
-            photos={players.filter((p) => p.photo && !(p.photoCutout && p.head)).map((p) => ({ id: p.id, name: p.name, url: p.photo!, cut: p.photoCutout }))}
+            photos={players.filter((p) => p.photo && !p.headChecked).map((p) => ({ id: p.id, name: p.name, url: p.photo!, cut: p.photoCutout }))}
             save={setPlayerPhoto.bind(null, slug)}
             done={photosChanged.bind(null, slug)}
           />

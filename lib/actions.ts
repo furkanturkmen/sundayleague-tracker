@@ -8,7 +8,7 @@ import type { Vars } from "@/lib/i18n";
 import { getT } from "@/lib/i18n/server";
 import { db } from "@/lib/db";
 import { FORMATIONS, formationSlots, MAX_BENCH } from "@/lib/lineup";
-import { POSITIONS, type Position } from "@/lib/types";
+import { HEAD_VERSION, POSITIONS, type Position } from "@/lib/types";
 import { canSync, connectLogin, fillPhotos, hiddenPlayersNote, linkLineup, previewTeam, removeLogin, syncClub, voetbalConfigured, type TeamPreview } from "@/lib/voetbal";
 import { parseTeamId, sameName } from "@/lib/voetbal-parse";
 
@@ -451,11 +451,13 @@ export async function savePlayer(slug: string, _: FormState, f: FormData): Promi
         display_name = ${displayName}, extra_positions = ${extra}
       where id = ${id} and club_id = ${club.id}`;
     if (photo.photo !== undefined)
-      await sql`update players set photo = ${photo.photo}, photo_head = ${head}, photo_version = photo_version + 1 where id = ${id} and club_id = ${club.id}`;
+      await sql`
+        update players set photo = ${photo.photo}, photo_head = ${head}, head_version = ${HEAD_VERSION}, photo_version = photo_version + 1
+        where id = ${id} and club_id = ${club.id}`;
   } else {
     await sql`
-      insert into players (club_id, name, number, position, nickname, bio, display_name, extra_positions, photo, photo_head)
-      values (${club.id}, ${name}, ${number}, ${position}, ${nickname}, ${bio}, ${displayName}, ${extra}, ${photo.photo ?? null}, ${head})`;
+      insert into players (club_id, name, number, position, nickname, bio, display_name, extra_positions, photo, photo_head, head_version)
+      values (${club.id}, ${name}, ${number}, ${position}, ${nickname}, ${bio}, ${displayName}, ${extra}, ${photo.photo ?? null}, ${head}, ${HEAD_VERSION})`;
   }
   refresh(slug);
   return { ok: await msg(id ? "{name} updated." : "{name} added to the squad.", { name }) };
@@ -466,7 +468,7 @@ const validHead = (v: string) => v.length <= PHOTO_MAX && v.startsWith("data:ima
 
 /**
  * One player's photo replaced by its cut-out, and its head saved, from the "cut out photos" button in settings.
- * A null photo keeps the one there.
+ * A null photo keeps the one there; a null head means none was found, so it isn't offered again.
  */
 export async function setPlayerPhoto(slug: string, id: string, photo: string | null, head: string | null): Promise<FormState> {
   const club = await requireAdmin(slug);
@@ -474,7 +476,7 @@ export async function setPlayerPhoto(slug: string, id: string, photo: string | n
   if ((photo !== null && !validHead(photo)) || (head !== null && !validHead(head))) return { error: await msg("That photo couldn't be used. Try a PNG or JPG.") };
   const sql = await db();
   await sql`
-    update players set photo = coalesce(${photo}, photo), photo_head = ${head}, photo_version = photo_version + 1
+    update players set photo = coalesce(${photo}, photo), photo_head = ${head}, head_version = ${HEAD_VERSION}, photo_version = photo_version + 1
     where id = ${id} and club_id = ${club.id} and photo is not null`;
   return { ok: "" };
 }

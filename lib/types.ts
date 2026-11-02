@@ -106,7 +106,15 @@ export interface Player {
   photoCutout: boolean;
   /** URL of the head cut from the photo, to wear the shirt, or null. */
   head: string | null;
+  /** The photo has been through the current head cutter (it may have found no head). */
+  headChecked: boolean;
 }
+
+/**
+ * Raised when the head cutter changes, so heads made by an older one stop showing and settings offers to make
+ * them again.
+ */
+export const HEAD_VERSION = 2;
 
 export type Venue = "H" | "A";
 
