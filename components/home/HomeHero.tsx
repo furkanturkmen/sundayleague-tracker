@@ -144,7 +144,8 @@ function countdown(f: HeroFixture, now: number | null, t: T, lang: Lang) {
         ? { lead: t("Matchday"), accent: t("tomorrow.") }
         : days < 7
           ? { lead: t("Matchday on"), accent: `${weekday}.` }
-          : { lead: t("Matchday in"), accent: t("{n} days.", { n: days }) };
+          : // Further out it counts whole days to kick-off, as the clock beside it does, rather than calendar days.
+            { lead: t("Matchday in"), accent: t("{n} days.", { n: f.at !== null && ms > 0 ? Math.floor(ms / 86_400_000) : days }) };
   if (f.at === null || ms <= 0) return { ...head, clock: null };
   const s = Math.floor(ms / 1000);
   return {
