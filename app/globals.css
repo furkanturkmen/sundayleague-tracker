@@ -787,7 +787,7 @@ h2 > .ranking-accent { font-family: inherit; letter-spacing: inherit; line-heigh
   --hx-ink-2: color-mix(in srgb, var(--night-ink) 72%, transparent);
   --hx-ink-3: color-mix(in srgb, var(--night-ink) 56%, transparent);
   --hx-line: rgb(255 255 255 / 0.08);
-  --hx-beam: color-mix(in srgb, var(--hx-bright) 24%, transparent);
+  --hx-beam: color-mix(in srgb, var(--hx-bright) 16%, transparent);
   --hx-ease: cubic-bezier(0.22, 1, 0.36, 1);
   --hx-W: #6fe8a6; --hx-D: #f4d27a; --hx-L: #ff93a3;
   position: relative; isolation: isolate; color: #fff; background: var(--hx-ground);
@@ -950,9 +950,10 @@ h2 > .ranking-accent { font-family: inherit; letter-spacing: inherit; line-heigh
 .hx-table tbody tr:not(.is-us):hover td { color: #fff; }
 .hx-table tbody:hover tr:not(:hover):not(.is-us) { opacity: 0.6; }
 .hx-table tr.is-us td { color: #fff; font-weight: 600; background: var(--hx-beam); }
-/* the beam fades in over the first cell and out over the last, the same at both ends */
-.hx-table tr.is-us td:first-child { background: linear-gradient(90deg, transparent, var(--hx-beam)); }
-.hx-table tr.is-us td:last-child { background: linear-gradient(90deg, var(--hx-beam), transparent); }
+/* the beam fades in at the start of the first cell and out at the end of the last, so the rank and the points
+   still sit in it, the same at both ends */
+.hx-table tr.is-us td:first-child { background: linear-gradient(90deg, transparent, var(--hx-beam) 70%); }
+.hx-table tr.is-us td:last-child { background: linear-gradient(90deg, var(--hx-beam) 30%, transparent); }
 .hx-team-cell { display: flex; align-items: center; gap: 14px; min-width: 0; }
 .hx-team-cell .team-logo { flex: none; }
 .hx-team-cell > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -973,8 +974,10 @@ h2 > .ranking-accent { font-family: inherit; letter-spacing: inherit; line-heigh
 .hx-band-bg { position: absolute; inset: 0; z-index: -1; pointer-events: none; }
 .hx-band-dim { position: absolute; inset: 0; z-index: 2; background: #000; pointer-events: none; }
 
-/* standings: a deep navy pitch with its lines drawn faintly */
-.hx-band-pitch { background: radial-gradient(120% 90% at 50% 0%, color-mix(in srgb, var(--accent) 35%, var(--night)), color-mix(in srgb, var(--accent) 14%, var(--night)) 60%, var(--night)); }
+/* standings: a deep pitch in the club colour with its lines drawn faintly. The light sits behind the table, not at
+   the top, so the band starts as dark as the hero ends and never shows an edge; and it stays low, so a bright
+   colour (orange, red) is as deep as a dark one (navy). */
+.hx-band-pitch { background: radial-gradient(80% 60% at 50% 45%, color-mix(in srgb, var(--accent) 16%, var(--night)), color-mix(in srgb, var(--accent) 6%, var(--night)) 70%, var(--night)); }
 .hx-pitch { position: absolute; inset: 6% 2%; width: 96%; height: 88%; color: color-mix(in srgb, var(--accent) 6%, rgb(255 255 255 / 0.06));
   -webkit-mask-image: radial-gradient(60% 60% at 50% 50%, #000 40%, transparent); mask-image: radial-gradient(60% 60% at 50% 50%, #000 40%, transparent); }
 .hx-band-pitch .hx-table tbody tr:not(.is-us) td { background: none; }
