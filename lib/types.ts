@@ -104,17 +104,7 @@ export interface Player {
   photo: string | null;
   /** The photo is a PNG, so it can be a cut-out with no background. A JPEG always has one and is shown framed in a circle. */
   photoCutout: boolean;
-  /** URL of the head cut from the photo, to wear the shirt, or null. */
-  head: string | null;
-  /** The photo has been through the current head cutter (it may have found no head). */
-  headChecked: boolean;
 }
-
-/**
- * Raised when the head cutter changes, so heads made by an older one stop showing and settings offers to make
- * them again.
- */
-export const HEAD_VERSION = 2;
 
 export type Venue = "H" | "A";
 

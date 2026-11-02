@@ -370,8 +370,8 @@ export const NL_SETTINGS: Record<string, string> = {
     "Open de link die je club met je heeft gedeeld. Elke club heeft een eigen adres, zoals /c/jouw-club.",
   "Your clubs": "Jouw clubs",
   // Cut-out photos
-  "For the player pages and the graphics. It's cut out for you: their head goes on the shirt, and they stand free in the graphics.":
-    "Voor de spelerspagina's en de graphics. Hij wordt voor je uitgeknipt: het hoofd komt op het shirt, en in de graphics staat de speler vrij.",
+  "For the player pages and the graphics. The background is cut out for you, so they stand like the shirt.":
+    "Voor de spelerspagina's en de graphics. De achtergrond wordt voor je weggeknipt, zodat de speler staat zoals het shirt.",
   "Cutting out the background…": "Achtergrond wegknippen…",
   "No person found to cut out, so the photo is kept as it is.": "Geen persoon gevonden om uit te knippen, dus de foto blijft zoals hij is.",
   "Couldn't cut out the background (no connection?), so the photo is kept as it is.":
@@ -381,9 +381,9 @@ export const NL_SETTINGS: Record<string, string> = {
   "{n} photos cut out.": "{n} foto's uitgeknipt.",
   "No clear person in: {names}. Those stay as they are.": "Geen duidelijke persoon in: {names}. Die blijven zoals ze zijn.",
   "Couldn't load the cut-out tool. Check the connection and try again.": "Het uitknip-hulpmiddel kon niet laden. Controleer de verbinding en probeer opnieuw.",
-  "{n} photo isn't cut out yet.": "{n} foto is nog niet uitgeknipt.",
-  "{n} photos aren't cut out yet.": "{n} foto's zijn nog niet uitgeknipt.",
-  "Cut them out so the players wear the shirt on their pages, and stand free in the graphics.":
-    "Knip ze uit, zodat de spelers op hun pagina het shirt dragen en in de graphics vrij staan.",
+  "{n} photo still has its background.": "{n} foto heeft nog een achtergrond.",
+  "{n} photos still have their background.": "{n} foto's hebben nog een achtergrond.",
+  "Cut them out so the players stand like the shirt on their pages and in the graphics.":
+    "Knip ze uit, zodat de spelers op hun pagina en in de graphics staan zoals het shirt.",
   "Cut out photos": "Foto's uitknippen",
 };

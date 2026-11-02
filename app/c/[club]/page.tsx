@@ -250,7 +250,7 @@ export default async function ClubHome({ params }: { params: Promise<{ club: str
             <Rail label={t("Squad")}>
               {squad.map((p) => (
                 <Link key={p.id} href={`${st.base}/players/${p.id}`} className="hx-player" draggable={false}>
-                  <Kit main={club.accent} trim={club.gold} number={p.number} logo={club.logo} head={p.head} className="hx-player-kit" t={t} />
+                  <Kit main={club.accent} trim={club.gold} number={p.number} logo={club.logo} className="hx-player-kit" t={t} />
                   <span className="hx-player-name">{p.name}</span>
                   <span className="hx-player-pos">{p.position}</span>
                 </Link>
